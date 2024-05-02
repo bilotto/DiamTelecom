@@ -22,23 +22,22 @@ class DiameterSession:
 
 
 class DiameterSessions:
-    diameter_sessions: List[DiameterSession]
-    
     def __init__(self):
-        self.diameter_sessions: List[DiameterSession] = []
-    
+        self.diameter_sessions = {}  # Dicionário para armazenar as sessões
+
     def add_diameter_session(self, diameter_session: DiameterSession):
-        self.diameter_sessions.append(diameter_session)
-    
+        # Adiciona a sessão usando o session_id como chave
+        self.diameter_sessions[diameter_session.session_id] = diameter_session
+
     def get_diameter_session(self, session_id: str) -> DiameterSession:
-        for diameter_session in self.diameter_sessions:
-            if diameter_session.session_id == session_id:
-                return diameter_session
+        # Retorna a sessão com o session_id especificado ou levanta uma exceção se não encontrado
+        if session_id in self.diameter_sessions:
+            return self.diameter_sessions[session_id]
         raise ValueError("DiameterSession not found")
-    
+
     def remove_diameter_session(self, session_id: str):
-        for diameter_session in self.diameter_sessions:
-            if diameter_session.session_id == session_id:
-                self.diameter_sessions.remove(diameter_session)
-                return
+        # Remove a sessão com o session_id especificado ou levanta uma exceção se não encontrado
+        if session_id in self.diameter_sessions:
+            del self.diameter_sessions[session_id]
+            return
         raise ValueError("DiameterSession not found")
