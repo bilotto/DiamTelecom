@@ -1,4 +1,4 @@
-from telecom.diameter_session import DiameterSession, DiameterSessions
+from .diameter_session import DiameterSession, DiameterSessions
 
 class RxSession(DiameterSession):
     session_id: str

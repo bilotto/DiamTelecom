@@ -1,4 +1,4 @@
-from telecom.diameter_session import DiameterSession, DiameterSessions
+from .diameter_session import DiameterSession, DiameterSessions
 from .rx_session import RxSessions
 from .sy_session import SySessions
 
@@ -27,4 +27,9 @@ class GxSessions(DiameterSessions):
 
     def remove_gx_session(self, session_id: str):
         self.remove_diameter_session(session_id)
+
+    def create_gx_session(self, subscriber, session_id: str, framed_ip_address: str) -> GxSession:
+        gx_session = GxSession(subscriber, session_id, framed_ip_address)
+        self.add_gx_session(gx_session)
+        return gx_session
     
