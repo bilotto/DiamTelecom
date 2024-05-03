@@ -13,6 +13,10 @@ class GxSession(DiameterSession):
         self.framed_ip_address = framed_ip_address
         self.rx_sessions: RxSessions = RxSessions()
         self.sy_sessions: SySessions = SySessions()
+        self.cc_request_number = 0
+        self.mcc_mnc = None
+        self.rat_type = None
+        self.apn = None
 
 
 class GxSessions(DiameterSessions):

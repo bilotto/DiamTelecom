@@ -3,7 +3,7 @@ import re
 def is_valid_msisdn(msisdn: str) -> bool:
     # Add your MSISDN validation logic here
     # For example, you can use a regular expression
-    pattern = r"^\d{10}$"  # Assuming MSISDN is a 10-digit number
+    pattern = r"^\d{10,15}$"  # Assuming MSISDN is a 10 to 15-digit number
     return re.match(pattern, msisdn) is not None
 
 def is_valid_imsi(imsi: str) -> bool:

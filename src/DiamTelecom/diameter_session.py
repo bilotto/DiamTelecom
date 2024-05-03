@@ -4,12 +4,19 @@ from typing import List, Dict
 class DiameterSession:
     subscriber: Subscriber
     session_id: str
+    active: bool
+    error: bool
+    messages: list
     start_time: str
     end_time: str
+
     
     def __init__(self, subscriber, session_id: str):
         self.subscriber = subscriber
         self.session_id = session_id
+        self.active = False
+        self.error = False
+        self.messages = []
         #
         self.start_time = None
         self.end_time = None
@@ -19,6 +26,25 @@ class DiameterSession:
 
     def set_end_time(self, end_time: str):
         self.end_time = end_time
+
+    def add_message(self, message):
+        self.messages.append(message)
+
+    @property
+    def last_message(self):
+        return self.messages[-1]
+    
+    @property
+    def n_messages(self):
+        return len(self.messages)
+
+    @property
+    def msisdn(self):
+        return self.subscriber.msisdn
+    
+    @property
+    def imsi(self):
+        return self.subscriber.imsi
 
 class DiameterSessions:
     diameter_sessions: Dict[str, DiameterSession]

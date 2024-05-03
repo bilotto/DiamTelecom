@@ -18,3 +18,8 @@ class SySessions(DiameterSessions):
 
     def remove_sy_session(self, session_id: str):
         self.remove_diameter_session(session_id)
+
+    def create_sy_session(self, subscriber, session_id: str) -> SySession:
+        sy_session = SySession(subscriber, session_id)
+        self.add_sy_session(sy_session)
+        return sy_session
