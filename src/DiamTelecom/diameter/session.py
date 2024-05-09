@@ -1,5 +1,5 @@
 from ..subscriber import Subscriber
-from .message import DiameterMessage, DiameterMessages
+from .message import DiameterMessage, DiameterMessages, Message, create_diameter_message_from_message
 from typing import List, Dict
 import logging
 logger = logging.getLogger(__name__)
@@ -39,7 +39,11 @@ class DiameterSession:
         self.end_time = end_time
 
     def add_message(self, message):
-        self.messages.add_message(message)
+        if isinstance(message, DiameterMessage):
+            diameter_message = message
+        elif isinstance(message, Message):
+            diameter_message = create_diameter_message_from_message(message)
+        self.messages.add_message(diameter_message)
 
     def get_messages(self):
         return self.messages.messages
@@ -157,7 +161,7 @@ class GxSessions(DiameterSessions):
         self.add_gx_session(gx_session)
         return gx_session
     
-    def add_message(self, session_id: str, message: DiameterMessage):
+    def add_message(self, session_id: str, message):
         self.get_gx_session(session_id).add_message(message)
 
 
