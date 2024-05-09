@@ -18,9 +18,9 @@ class Subscriber:
         msisdn = str(msisdn)
         imsi = str(imsi)
         if not is_valid_msisdn(msisdn):
-            raise ValueError("Invalid MSISDN")
+            raise ValueError(f"Invalid MSISDN: {msisdn}")
         if not is_valid_imsi(imsi):
-            raise ValueError("Invalid IMSI")
+            raise ValueError(f"Invalid IMSI: {imsi}")
         #
         self.id = id
         self.msisdn = msisdn
@@ -46,3 +46,7 @@ class Subscribers:
             if subscriber.msisdn == msisdn:
                 return subscriber
         return None
+    
+    def get_subscriber(self, id: str) -> Subscriber:
+        logger.debug("Buscando subscriber com ID: %s", id)
+        return self.subscribers.get(id)
