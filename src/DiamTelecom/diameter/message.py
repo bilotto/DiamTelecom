@@ -26,14 +26,20 @@ class DiameterMessages:
         self.messages = []
 
     def add_message(self, message: DiameterMessage):
+        if self.last_message and self.last_message.name == message.name:
+            print("Won't add message with same name")
+            return
         # if self.n_messages != 0:
         #     expected_message = self.last_message.next_message
         #     if expected_message.request_flag != message.request_flag:
         #         print(f"Expected request_flag {expected_message.request_flag} but got {message.request_flag}")
         #         return
         self.messages.append(message)
+
     @property
-    def last_message(self):
+    def last_message(self) -> DiameterMessage:
+        if self.n_messages == 0:
+            return None
         return self.messages[-1]
     
     @property
@@ -42,6 +48,9 @@ class DiameterMessages:
     
     def __repr__(self):
         return f"DiameterMessages({self.messages})"
+    
+    def __len__(self):
+        return len(self.messages)
 
 def create_diameter_message(cmd_code, request_flag, cc_request_type=None) -> DiameterMessage:
     # Convert to right type
