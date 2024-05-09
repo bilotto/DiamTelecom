@@ -34,6 +34,7 @@ class DiameterSession:
    
     def set_start_time(self, start_time: str):
         self.start_time = start_time
+        self.active = True
 
     def set_end_time(self, end_time: str):
         self.end_time = end_time
