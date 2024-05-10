@@ -1,24 +1,24 @@
-
 from diameter.message.constants import *
 from diameter.message.commands import *
 from typing import List
 from typing import NamedTuple
 
-next_message = NamedTuple("next_message", [("request_flag", int), ("cmd_code", int)])
-
 class DiameterMessage:
     name: str
     message: Message
+    timestamp: float
     
     def __init__(self, name, message):
         self.name = name
         self.message = message
+        self.timestamp = None
 
+    def set_timestamp(self, timestamp):
+        self.timestamp = timestamp
 
     def __repr__(self) -> str:
         return f"DiameterMessage({self.name})"
 
-    
 class DiameterMessages:
     messages: List[Message]
 
@@ -29,12 +29,10 @@ class DiameterMessages:
         if self.last_message and self.last_message.name == message.name:
             print("Won't add message with same name")
             return
-        # if self.n_messages != 0:
-        #     expected_message = self.last_message.next_message
-        #     if expected_message.request_flag != message.request_flag:
-        #         print(f"Expected request_flag {expected_message.request_flag} but got {message.request_flag}")
-        #         return
         self.messages.append(message)
+
+    def get_messages(self):
+        return self.messages
 
     @property
     def last_message(self) -> DiameterMessage:

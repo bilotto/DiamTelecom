@@ -1,4 +1,4 @@
-from ..subscriber import Subscriber
+from .subscriber import Subscriber
 from .message import DiameterMessage, DiameterMessages, Message, create_diameter_message_from_message
 from typing import List, Dict
 import logging
@@ -38,6 +38,7 @@ class DiameterSession:
 
     def set_end_time(self, end_time: str):
         self.end_time = end_time
+        self.active = False
 
     def add_message(self, message):
         if isinstance(message, DiameterMessage):
@@ -117,6 +118,10 @@ class DiameterSessions:
     def get_all(self) -> List[DiameterSession]:
         # Retorna uma lista de todas as sessões
         return list(self.diameter_sessions.values())
+    
+    @property
+    def all_msisdn(self):
+        return list(self.msisdn_to_session_id.keys())
 
 class GxSession(DiameterSession):
     session_id: str
@@ -136,23 +141,47 @@ class GxSession(DiameterSession):
 
 class GxSessions(DiameterSessions):
     framed_ip_address_to_session_id: Dict[str, List[str]]
+    msisdn_to_session_id: Dict[str, List[str]]
 
     def __init__(self):
         super().__init__()
         self.framed_ip_address_to_session_id = {}
+        self.msisdn_to_session_id = {}
 
     def add_gx_session(self, gx_session: GxSession):
         self.add_diameter_session(gx_session)
-        self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = gx_session.session_id
+        if self.framed_ip_address_to_session_id.get(gx_session.framed_ip_address) is None:
+            self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = []
+        self.framed_ip_address_to_session_id[gx_session.framed_ip_address].append(gx_session.session_id)
+        if self.msisdn_to_session_id.get(gx_session.msisdn) is None:
+            self.msisdn_to_session_id[gx_session.msisdn] = []
+        self.msisdn_to_session_id[gx_session.msisdn].append(gx_session.session_id)
+
+        # self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = gx_session.session_id
+        # self.
 
     def get_gx_session(self, session_id: str) -> GxSession:
         return self.get_diameter_session(session_id)
     
     def get_gx_session_by_framed_ip_address(self, framed_ip_address: str) -> GxSession:
-        session_id = self.framed_ip_address_to_session_id.get(framed_ip_address)
-        if session_id is None:
+        session_id_list = self.framed_ip_address_to_session_id.get(framed_ip_address)
+        if session_id_list is None:
             raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
-        return self.get_gx_session(session_id)
+        # Return the first active session
+        for session_id in session_id_list:
+            gx_session = self.get_gx_session(session_id)
+            if gx_session.active:
+                return gx_session
+    
+    def get_gx_session_by_msisdn(self, msisdn: str) -> GxSession:
+        session_id_list = self.msisdn_to_session_id.get(msisdn)
+        if session_id_list is None:
+            raise ValueError(f"No GxSession found with MSISDN {msisdn}")
+        # Return the first active session
+        for session_id in session_id_list:
+            gx_session = self.get_gx_session(session_id)
+            if gx_session.active:
+                return gx_session
 
     def remove_gx_session(self, session_id: str):
         self.remove_diameter_session(session_id)

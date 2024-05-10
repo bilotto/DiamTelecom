@@ -1,4 +1,4 @@
-from .helpers import is_valid_msisdn, is_valid_imsi
+from ..helpers import is_valid_msisdn, is_valid_imsi
 from typing import List, Dict
 
 import logging
@@ -25,6 +25,7 @@ class Subscriber:
         self.id = id
         self.msisdn = msisdn
         self.imsi = imsi
+        # self.messages = DiameterMessages()
 
 class Subscribers:
     subscribers: Dict[str, Subscriber]
@@ -50,3 +51,6 @@ class Subscribers:
     def get_subscriber(self, id: str) -> Subscriber:
         logger.debug("Buscando subscriber com ID: %s", id)
         return self.subscribers.get(id)
+    
+    def get_subscribers(self) -> List[Subscriber]:
+        return list(self.subscribers.values())
