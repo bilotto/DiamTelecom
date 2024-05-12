@@ -2,23 +2,70 @@ from diameter.message.constants import *
 from diameter.message.commands import *
 from typing import List
 from typing import NamedTuple
+import logging
+logger = logging.getLogger(__name__)
+from ..helpers import convert_timestamp
+
+class AVPs():
+    FIELDS_SEPARATOR = "\|"
+    def __init__(self):
+        self.avps = {}
+
+    def set_avps(self, avps):
+        self.avps = avps
+
+    def get_fields_string(self):
+        message_fields = ""
+        for key, value in self.avps.items():
+            print(key, value)
+            message_fields += f"{value}"
+            if key != list(self.avps.keys())[-1]:
+                message_fields += self.FIELDS_SEPARATOR
+        return message_fields
 
 class DiameterMessage:
     name: str
     message: Message
     timestamp: float
+    session_id: str
+    framed_ip_address: str
     
     def __init__(self, name, message):
         self.name = name
         self.message = message
+        self.avps = AVPs()
+        # Attributes to be set later
         self.timestamp = None
-
-    def set_timestamp(self, timestamp):
-        self.timestamp = timestamp
+        self.session_id = None
+        self.framed_ip_address = None
 
     def __repr__(self) -> str:
         return f"DiameterMessage({self.name})"
 
+    def set_timestamp(self, timestamp):
+        self.timestamp = timestamp
+
+    def set_session_id(self, session_id):
+        self.session_id = session_id
+
+    def set_framed_ip_address(self, framed_ip_address):
+        self.framed_ip_address = framed_ip_address
+
+    @property
+    def time(self):
+        if self.timestamp:
+            return convert_timestamp(self.timestamp)
+        return None
+
+    def to_csv(self):
+        return [
+                self.time,
+                self.name,
+                self.framed_ip_address,
+                self.avps.get_fields_string(),
+                self.session_id,
+                ]
+    
 class DiameterMessages:
     messages: List[Message]
 
@@ -27,7 +74,8 @@ class DiameterMessages:
 
     def add_message(self, message: DiameterMessage):
         if self.last_message and self.last_message.name == message.name:
-            print("Won't add message with same name")
+            # print("Won't add message with same name")
+            logging.error(f"Message with same name {message.name} already exists. Won't add to Session. Last message: {self.last_message.name}")
             return
         self.messages.append(message)
 
@@ -45,7 +93,7 @@ class DiameterMessages:
         return len(self.messages)
     
     def __repr__(self):
-        return f"DiameterMessages({self.messages})"
+        return f"DiameterMessages({self.n_messages}, {self.last_message})"
     
     def __len__(self):
         return len(self.messages)
@@ -148,6 +196,44 @@ def create_diameter_message_from_message(message: Message):
         message_name = "CER" if request_flag else "CEA"
 
     return DiameterMessage(message_name, message_object)
+
+def name_diameter_message(cmd_code, request_flag, cc_request_type=None):
+    cmd_code = int(cmd_code)
+    request_flag = int(request_flag)
+    if cmd_code == CMD_CREDIT_CONTROL:
+        cc_request_type = int(cc_request_type)
+        if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
+            message_name = "CCR-I" if request_flag else "CCA-I"
+        elif cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
+            message_name = "CCR-U" if request_flag else "CCA-U"
+        elif cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
+            message_name = "CCR-T" if request_flag else "CCA-T"
+
+    elif cmd_code == CMD_RE_AUTH:
+        message_name = "RAR" if request_flag else "RAA"
+
+    elif cmd_code == CMD_AA:
+        message_name = "AAR" if request_flag else "AAA"
+
+    elif cmd_code == CMD_SESSION_TERMINATION:
+        message_name = "STR" if request_flag else "STA"
+
+    elif cmd_code == CMD_ABORT_SESSION:
+        message_name = "ASR" if request_flag else "ASA"
+
+    elif cmd_code == CMD_SPENDING_LIMIT:
+        message_name = "SLR" if request_flag else "SLA"
+
+    elif cmd_code == CMD_SPENDING_STATUS_NOTIFICATION:
+        message_name = "SSNR" if request_flag else "SSNA"
+
+    elif cmd_code == CMD_DEVICE_WATCHDOG:
+        message_name = "DWR" if request_flag else "DWA"
+
+    elif cmd_code == CMD_CAPABILITIES_EXCHANGE:
+        message_name = "CER" if request_flag else "CEA"
+
+    return message_name
 
 # class DiameterMessage:
 #     def __init__(self,

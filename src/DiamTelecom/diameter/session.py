@@ -1,6 +1,6 @@
 from .subscriber import Subscriber
 from .message import DiameterMessage, DiameterMessages, Message, create_diameter_message_from_message
-from typing import List, Dict
+from typing import List, Dict, Set
 import logging
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class DiameterSession:
         return self.session_id == other.session_id
     
     def __repr__(self):
-        return f"DiameterSession(n_messages={self.n_messages})"
+        return f"DiameterSession(n_messages={self.n_messages}, last_message={self.last_message})"
    
     def set_start_time(self, start_time: str):
         self.start_time = start_time
@@ -68,7 +68,7 @@ class DiameterSession:
 
 class DiameterSessions:
     diameter_sessions: Dict[str, DiameterSession]
-    msisdn_to_session_id: Dict[str, List[str]]
+    msisdn_to_session_id: Dict[str, Set[str]]
 
     def __init__(self):
         self.diameter_sessions = {}  # Dicionário para armazenar as sessões
@@ -83,8 +83,8 @@ class DiameterSessions:
         self.diameter_sessions[diameter_session.session_id] = diameter_session
         # Mapeia o MSISDN para o session_id
         if not diameter_session.subscriber.msisdn in self.msisdn_to_session_id:
-            self.msisdn_to_session_id[diameter_session.subscriber.msisdn] = []
-        self.msisdn_to_session_id[diameter_session.subscriber.msisdn].append(diameter_session.session_id)
+            self.msisdn_to_session_id[diameter_session.subscriber.msisdn] = set()
+        self.msisdn_to_session_id[diameter_session.subscriber.msisdn].add(diameter_session.session_id)
 
     def get_diameter_session(self, session_id: str) -> DiameterSession:
         # Retorna a sessão com o session_id especificado ou levanta uma exceção se não encontrado
@@ -104,6 +104,12 @@ class DiameterSessions:
         if msisdn in self.msisdn_to_session_id:
             return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]
         return []
+    
+    def get_subscriber_active_session(self, msisdn: int):
+        if self.get_msisdn_sessions(msisdn):
+            for session in self.get_msisdn_sessions(msisdn):
+                if session.active:
+                    return session
 
     def create_diameter_session(self, subscriber: Subscriber, session_id: str) -> DiameterSession:
         # Cria uma nova sessão e a adiciona ao dicionário de sessões
@@ -136,29 +142,23 @@ class GxSession(DiameterSession):
         self.apn = None
 
     def __repr__(self):
-        return f"GxSession({self.framed_ip_address},n_messages={self.n_messages})"
+        return f"GxSession({self.session_id},{self.framed_ip_address},n_messages={self.n_messages})"
 
 
 class GxSessions(DiameterSessions):
     framed_ip_address_to_session_id: Dict[str, List[str]]
-    msisdn_to_session_id: Dict[str, List[str]]
+    # msisdn_to_session_id: Dict[str, List[str]]
 
     def __init__(self):
         super().__init__()
         self.framed_ip_address_to_session_id = {}
-        self.msisdn_to_session_id = {}
+        # self.msisdn_to_session_id = {}
 
     def add_gx_session(self, gx_session: GxSession):
         self.add_diameter_session(gx_session)
         if self.framed_ip_address_to_session_id.get(gx_session.framed_ip_address) is None:
             self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = []
         self.framed_ip_address_to_session_id[gx_session.framed_ip_address].append(gx_session.session_id)
-        if self.msisdn_to_session_id.get(gx_session.msisdn) is None:
-            self.msisdn_to_session_id[gx_session.msisdn] = []
-        self.msisdn_to_session_id[gx_session.msisdn].append(gx_session.session_id)
-
-        # self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = gx_session.session_id
-        # self.
 
     def get_gx_session(self, session_id: str) -> GxSession:
         return self.get_diameter_session(session_id)
@@ -173,15 +173,15 @@ class GxSessions(DiameterSessions):
             if gx_session.active:
                 return gx_session
     
-    def get_gx_session_by_msisdn(self, msisdn: str) -> GxSession:
-        session_id_list = self.msisdn_to_session_id.get(msisdn)
-        if session_id_list is None:
-            raise ValueError(f"No GxSession found with MSISDN {msisdn}")
-        # Return the first active session
-        for session_id in session_id_list:
-            gx_session = self.get_gx_session(session_id)
-            if gx_session.active:
-                return gx_session
+    # def get_gx_session_by_msisdn(self, msisdn: str) -> GxSession:
+    #     session_id_list = self.msisdn_to_session_id.get(msisdn)
+    #     if session_id_list is None:
+    #         raise ValueError(f"No GxSession found with MSISDN {msisdn}")
+    #     # Return the first active session
+    #     for session_id in session_id_list:
+    #         gx_session = self.get_gx_session(session_id)
+    #         if gx_session.active:
+    #             return gx_session
 
     def remove_gx_session(self, session_id: str):
         self.remove_diameter_session(session_id)
@@ -197,9 +197,14 @@ class GxSessions(DiameterSessions):
 
 class RxSession(DiameterSession):
     session_id: str
+    gx_session_id: str
 
     def __init__(self, subscriber, session_id):
         super().__init__(subscriber, session_id)
+        self.gx_session_id = None
+
+    def set_gx_session_id(self, gx_session_id: str):
+        self.gx_session_id = gx_session_id
 
 
 class RxSessions(DiameterSessions):
@@ -224,9 +229,14 @@ class RxSessions(DiameterSessions):
 
 class SySession(DiameterSession):
     session_id: str
+    gx_session_id: str
 
     def __init__(self, subscriber, session_id: str):
         super().__init__(subscriber, session_id)
+        self.gx_session_id = None
+
+    def set_gx_session_id(self, gx_session_id: str):
+        self.gx_session_id = gx_session_id
 
 class SySessions(DiameterSessions):
     def __init__(self):

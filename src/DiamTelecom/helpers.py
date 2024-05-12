@@ -1,4 +1,6 @@
 import re
+import datetime
+import yaml
 
 def is_valid_msisdn(msisdn: str) -> bool:
     # Add your MSISDN validation logic here
@@ -11,3 +13,13 @@ def is_valid_imsi(imsi: str) -> bool:
     # For example, you can use a regular expression
     pattern = r"^\d{15}$"  # Assuming IMSI is a 15-digit number
     return re.match(pattern, imsi) is not None
+
+
+def convert_timestamp(timestamp: float) -> str:
+    # Convert timestamp to datetime
+    return datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+# self.time = datetime.datetime.fromtimestamp(float(self.timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+
+def load_yaml_file(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
