@@ -1,6 +1,6 @@
-from diameter.message.constants import *
 from diameter.message import *
 from DiamTelecom import *
+from DiamTelecom.diameter.constants import *
 #
 import pyshark
 
@@ -72,7 +72,7 @@ def process_pkt(pkt, session_manager: SessionManager):
     diameter_message.set_session_id(session_id)
     set_fields_from_pkt(diameter_message, pkt)
     if app_id == APP_3GPP_GX:
-        if diameter_message.name == "CCR-I":
+        if diameter_message.name == CCR_I:
             if not subscribers.get_subscriber(msisdn):
                 subscriber = subscribers.create_subscriber(id=msisdn, msisdn=msisdn, imsi=imsi)
             if gx_sessions.get(session_id):
@@ -90,7 +90,7 @@ def process_pkt(pkt, session_manager: SessionManager):
         diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
         gx_sessions.add_message(session_id, diameter_message)
     elif app_id == APP_3GPP_RX:
-        if diameter_message.name == "AAR":
+        if diameter_message.name == AAR:
             gx_session = None
             if framed_ip_address:
                 gx_session = gx_sessions.get_gx_session_by_framed_ip_address(framed_ip_address)
@@ -98,7 +98,7 @@ def process_pkt(pkt, session_manager: SessionManager):
                 raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
             rx_session = rx_sessions.create_rx_session(gx_session.subscriber, session_id)
             rx_session.set_gx_session_id(gx_session.session_id)
-        elif diameter_message.name == "AAA":
+        elif diameter_message.name == AAA:
             rx_session = rx_sessions.get(session_id)
             gx_session = gx_sessions.get(rx_session.gx_session_id)
             rx_session.set_start_time(pkt_timestamp)
@@ -106,7 +106,7 @@ def process_pkt(pkt, session_manager: SessionManager):
         diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
         rx_sessions.add_message(session_id, diameter_message)
     elif app_id == APP_3GPP_SY:
-        if diameter_message.name == "SLR":
+        if diameter_message.name == SLR:
             subscriber = subscribers.get_subscriber(msisdn)
             if not subscriber:
                 logging.warning(f"Subscriber with MSISDN {msisdn} not found")
@@ -114,7 +114,7 @@ def process_pkt(pkt, session_manager: SessionManager):
             gx_session = gx_sessions.get_subscriber_active_session(msisdn)
             sy_session = sy_sessions.create_sy_session(subscriber, session_id)
             sy_session.set_gx_session_id(gx_session.session_id)
-        elif diameter_message.name == "SLA":
+        elif diameter_message.name == SLA:
             sy_session = sy_sessions.get(session_id)
             if not sy_session:
                 return

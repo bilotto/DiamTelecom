@@ -1,4 +1,4 @@
-from diameter.message.constants import *
+from diameter.constants import *
 from diameter.message.commands import *
 from typing import List
 from typing import NamedTuple
@@ -111,48 +111,48 @@ def create_diameter_message(cmd_code, request_flag, cc_request_type=None) -> Dia
 
     if cmd_code == CMD_CREDIT_CONTROL:
         if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
-            message_name = "CCR-I" if request_flag else "CCA-I"
+            message_name = CCR_I if request_flag else CCA_I
             message_object = CreditControlRequest() if request_flag else CreditControlAnswer()
             message_object.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
         elif cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
-            message_name = "CCR-U" if request_flag else "CCA-U"
+            message_name = CCR_U if request_flag else CCA_U
             message_object = CreditControlRequest() if request_flag else CreditControlAnswer()
             message_object.cc_request_type = E_CC_REQUEST_TYPE_UPDATE_REQUEST
         elif cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
-            message_name = "CCR-T" if request_flag else "CCA-T"
+            message_name = CCR_T if request_flag else CCA_T
             message_object = CreditControlRequest() if request_flag else CreditControlAnswer()
             message_object.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
 
     elif cmd_code == CMD_RE_AUTH:
-        message_name = "RAR" if request_flag else "RAA"
+        message_name = RAR if request_flag else RAA
         message_object = ReAuthRequest() if request_flag else ReAuthAnswer()
 
     elif cmd_code == CMD_AA:
-        message_name = "AAR" if request_flag else "AAA"
+        message_name = AAR if request_flag else AAA
         message_object = AaRequest() if request_flag else AaAnswer()
 
     elif cmd_code == CMD_SESSION_TERMINATION:
-        message_name = "STR" if request_flag else "STA"
+        message_name = STR if request_flag else STA
         message_object = SessionTerminationRequest() if request_flag else SessionTerminationAnswer()
 
     elif cmd_code == CMD_ABORT_SESSION:
-        message_name = "ASR" if request_flag else "ASA"
+        message_name = ASR if request_flag else ASA
         message_object = AbortSessionRequest() if request_flag else AbortSessionAnswer()
 
     elif cmd_code == CMD_SPENDING_LIMIT:
-        message_name = "SLR" if request_flag else "SLA"
+        message_name = SLR if request_flag else SLA
         message_object = SpendingLimitRequest() if request_flag else SpendingLimitAnswer()
 
     elif cmd_code == CMD_SPENDING_STATUS_NOTIFICATION:
-        message_name = "SSNR" if request_flag else "SSNA"
+        message_name = SSNR if request_flag else SSNA
         message_object = SpendingStatusNotificationRequest() if request_flag else SpendingStatusNotificationAnswer()
 
     elif cmd_code == CMD_DEVICE_WATCHDOG:
-        message_name = "DWR" if request_flag else "DWA"
+        message_name = DWR if request_flag else DWA
         message_object = DeviceWatchdogRequest() if request_flag else DeviceWatchdogAnswer()
 
     elif cmd_code == CMD_CAPABILITIES_EXCHANGE:
-        message_name = "CER" if request_flag else "CEA"
+        message_name = CER if request_flag else CEA
         message_object = CapabilitiesExchangeRequest() if request_flag else CapabilitiesExchangeAnswer()
     return DiameterMessage(message_name, message_object)
 
@@ -165,35 +165,35 @@ def create_diameter_message_from_message(message: Message):
     if cmd_code == CMD_CREDIT_CONTROL:
         cc_request_type = message.cc_request_type
         if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
-            message_name = "CCR-I" if request_flag else "CCA-I"
+            message_name = CCR_I if request_flag else CCA_I
         elif cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
-            message_name = "CCR-U" if request_flag else "CCA-U"
+            message_name = CCR_U if request_flag else CCA_U
         elif cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
-            message_name = "CCR-T" if request_flag else "CCA-T"
+            message_name = CCR_T if request_flag else CCA_T
 
     elif cmd_code == CMD_RE_AUTH:
-        message_name = "RAR" if request_flag else "RAA"
+        message_name = RAR if request_flag else RAA
 
     elif cmd_code == CMD_AA:
-        message_name = "AAR" if request_flag else "AAA"
+        message_name = AAR if request_flag else AAA
 
     elif cmd_code == CMD_SESSION_TERMINATION:
-        message_name = "STR" if request_flag else "STA"
+        message_name = STR if request_flag else STA
 
     elif cmd_code == CMD_ABORT_SESSION:
-        message_name = "ASR" if request_flag else "ASA"
+        message_name = ASR if request_flag else ASA
 
     elif cmd_code == CMD_SPENDING_LIMIT:
-        message_name = "SLR" if request_flag else "SLA"
+        message_name = SLR if request_flag else SLA
 
     elif cmd_code == CMD_SPENDING_STATUS_NOTIFICATION:
-        message_name = "SSNR" if request_flag else "SSNA"
+        message_name = SSNR if request_flag else SSNA
 
     elif cmd_code == CMD_DEVICE_WATCHDOG:
-        message_name = "DWR" if request_flag else "DWA"
+        message_name = DWR if request_flag else DWA
 
     elif cmd_code == CMD_CAPABILITIES_EXCHANGE:
-        message_name = "CER" if request_flag else "CEA"
+        message_name = CER if request_flag else CEA
 
     return DiameterMessage(message_name, message_object)
 
@@ -203,35 +203,35 @@ def name_diameter_message(cmd_code, request_flag, cc_request_type=None):
     if cmd_code == CMD_CREDIT_CONTROL:
         cc_request_type = int(cc_request_type)
         if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
-            message_name = "CCR-I" if request_flag else "CCA-I"
+            message_name = CCR_I if request_flag else CCA_I
         elif cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
-            message_name = "CCR-U" if request_flag else "CCA-U"
+            message_name = CCR_U if request_flag else CCA_U
         elif cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
-            message_name = "CCR-T" if request_flag else "CCA-T"
+            message_name = CCR_T if request_flag else CCA_T
 
     elif cmd_code == CMD_RE_AUTH:
-        message_name = "RAR" if request_flag else "RAA"
+        message_name = RAR if request_flag else RAA
 
     elif cmd_code == CMD_AA:
-        message_name = "AAR" if request_flag else "AAA"
+        message_name = AAR if request_flag else AAA
 
     elif cmd_code == CMD_SESSION_TERMINATION:
-        message_name = "STR" if request_flag else "STA"
+        message_name = STR if request_flag else STA
 
     elif cmd_code == CMD_ABORT_SESSION:
-        message_name = "ASR" if request_flag else "ASA"
+        message_name = ASR if request_flag else ASA
 
     elif cmd_code == CMD_SPENDING_LIMIT:
-        message_name = "SLR" if request_flag else "SLA"
+        message_name = SLR if request_flag else SLA
 
     elif cmd_code == CMD_SPENDING_STATUS_NOTIFICATION:
-        message_name = "SSNR" if request_flag else "SSNA"
+        message_name = SSNR if request_flag else SSNA
 
     elif cmd_code == CMD_DEVICE_WATCHDOG:
-        message_name = "DWR" if request_flag else "DWA"
+        message_name = DWR if request_flag else DWA
 
     elif cmd_code == CMD_CAPABILITIES_EXCHANGE:
-        message_name = "CER" if request_flag else "CEA"
+        message_name = CER if request_flag else CEA
 
     return message_name
 
