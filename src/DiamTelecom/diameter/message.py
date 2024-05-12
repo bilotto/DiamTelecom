@@ -1,4 +1,4 @@
-from diameter.constants import *
+from .constants import *
 from diameter.message.commands import *
 from typing import List
 from typing import NamedTuple

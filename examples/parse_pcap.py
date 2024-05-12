@@ -80,7 +80,12 @@ def process_pkt(pkt, session_manager: SessionManager):
                 logging.warning(f"GxSession with session_id {session_id} already exists")
                 return
             gx_session = gx_sessions.create_gx_session(subscriber, session_id, framed_ip_address)
+        elif diameter_message.name == CCA_I:
+            gx_session = gx_sessions.get(session_id)
             gx_session.set_start_time(pkt_timestamp)
+        elif diameter_message.name == CCA_T:
+            gx_session = gx_sessions.get(session_id)
+            gx_session.set_end_time(pkt_timestamp)
         else:
             gx_session = gx_sessions.get(session_id)
             if not gx_session:
@@ -103,6 +108,9 @@ def process_pkt(pkt, session_manager: SessionManager):
             gx_session = gx_sessions.get(rx_session.gx_session_id)
             rx_session.set_start_time(pkt_timestamp)
         #
+        elif diameter_message.name == STA:
+            rx_session = rx_sessions.get(session_id)
+            rx_session.set_end_time(pkt_timestamp)
         diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
         rx_sessions.add_message(session_id, diameter_message)
     elif app_id == APP_3GPP_SY:
@@ -119,6 +127,11 @@ def process_pkt(pkt, session_manager: SessionManager):
             if not sy_session:
                 return
             sy_session.set_start_time(pkt_timestamp)
+        elif diameter_message.name == STA:
+            sy_session = sy_sessions.get(session_id)
+            if not sy_session:
+                return
+            sy_session.set_end_time(pkt_timestamp)
         else:
             sy_session = sy_sessions.get(session_id)
             if not sy_session:
