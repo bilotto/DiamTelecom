@@ -163,6 +163,9 @@ class GxSessions(DiameterSessions):
     def get_gx_session(self, session_id: str) -> GxSession:
         return self.get_diameter_session(session_id)
     
+    def get(self, session_id: str) -> GxSession:
+        return self.diameter_sessions.get(session_id, None)
+    
     def get_gx_session_by_framed_ip_address(self, framed_ip_address: str) -> GxSession:
         session_id_list = self.framed_ip_address_to_session_id.get(framed_ip_address)
         if session_id_list is None:
@@ -216,6 +219,9 @@ class RxSessions(DiameterSessions):
 
     def get_rx_session(self, session_id: str) -> RxSession:
         return self.get_diameter_session(session_id)
+    
+    def get(self, session_id: str) -> RxSession:
+        return self.diameter_sessions.get(session_id, None)
 
     def remove_rx_session(self, session_id: str):
         self.remove_diameter_session(session_id)
@@ -247,6 +253,9 @@ class SySessions(DiameterSessions):
 
     def get_sy_session(self, session_id: str) -> SySession:
         return self.get_diameter_session(session_id)
+    
+    def get(self, session_id: str) -> SySession:
+        return self.diameter_sessions.get(session_id, None)
 
     def remove_sy_session(self, session_id: str):
         self.remove_diameter_session(session_id)
