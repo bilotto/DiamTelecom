@@ -13,3 +13,7 @@ class Pcap:
         for port in self.ports:
             decode_as[f"tcp.port=={port}"] = 'diameter'
         return decode_as
+    
+def create_pyshark_object(pcap_file: Pcap):
+    import pyshark
+    return pyshark.FileCapture(pcap_file.filepath, decode_as=pcap_file.decode_as, display_filter=pcap_file.filter, debug=False)

@@ -23,3 +23,11 @@ def convert_timestamp(timestamp: float) -> str:
 def load_yaml_file(file_path):
     with open(file_path, 'r') as file:
         return yaml.safe_load(file)
+
+def decode_hex_string(hex_string: str) -> str:
+    # Remover os ':' para que possamos converter de hex para bytes
+    hex_string = hex_string.replace(':', '')
+    # Convertendo a string hexadecimal em bytes
+    byte_data = bytes.fromhex(hex_string)
+    # Decodificando os bytes para obter a string ASCII
+    return byte_data.decode('ascii')
