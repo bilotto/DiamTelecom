@@ -26,7 +26,17 @@ diameter_fields:
     - Flow-Usage
   AAA:
     - Result-Code
-
+  SLR:
+    - SL-Request-Type
+  SLA:
+    - Result-Code
+    - Policy-Counter-Identifier
+    - Policy-Counter-Status
+  SSNR:
+    - Policy-Counter-Identifier
+    - Policy-Counter-Status
+  SSNA:
+    - Result-Code
   # - Error-Message
   
   # # - Rule-Failure-Code

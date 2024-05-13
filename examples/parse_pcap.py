@@ -1,8 +1,10 @@
 from diameter.message import *
 from DiamTelecom import *
+from DiamTelecom.pcap import *
 from DiamTelecom.diameter.constants import *
+from DiamTelecom.helpers import decode_hex_string
 #
-import pyshark
+# import pyshark
 
 import logging
 import sys
@@ -31,13 +33,8 @@ def set_fields_from_pkt(diameter_message: DiameterMessage, pkt):
             try:
                 if p.get_field_value(field):
                     avp_value = p.get_field_value(field)
-                    if ":" in avp_value:
-                        # Remover os ':' para que possamos converter de hex para bytes
-                        hex_string = avp_value.replace(':', '')
-                        # Convertendo a string hexadecimal em bytes
-                        byte_data = bytes.fromhex(hex_string)
-                        # Decodificando os bytes para obter a string ASCII
-                        avp_value = byte_data.decode('ascii')
+                    if ":" in avp_value: # hex string
+                        avp_value = decode_hex_string(avp_value)
                     if avp_values.get(field):
                         fields[field] = avp_values.get(field).get(avp_value) or avp_value
                     else:
@@ -57,6 +54,7 @@ def process_pkt(pkt, session_manager: SessionManager):
     request = int(pkt.diameter.flags_request)
     cmd_code = int(pkt.diameter.cmd_code)
     pkt_timestamp = pkt.frame_info.time_epoch
+    #
     cc_request_type = pkt.diameter.get_field_value("CC-Request-Type")
     #
     session_id = pkt.diameter.session_id
@@ -80,18 +78,18 @@ def process_pkt(pkt, session_manager: SessionManager):
                 logging.warning(f"GxSession with session_id {session_id} already exists")
                 return
             gx_session = gx_sessions.create_gx_session(subscriber, session_id, framed_ip_address)
-        elif diameter_message.name == CCA_I:
-            gx_session = gx_sessions.get(session_id)
             gx_session.set_start_time(pkt_timestamp)
-        elif diameter_message.name == CCA_T:
-            gx_session = gx_sessions.get(session_id)
-            gx_session.set_end_time(pkt_timestamp)
         else:
             gx_session = gx_sessions.get(session_id)
             if not gx_session:
+                logger.error(f"")
                 return
-            if gx_session.last_message and gx_session.last_message.name == diameter_message.name:
-                return
+            if diameter_message.name == CCA_I:
+                pass
+            elif diameter_message.name == CCR_T:
+                gx_session.set_end_time(pkt_timestamp)
+        if gx_session.last_message and gx_session.last_message.name == diameter_message.name:
+            return
         diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
         gx_sessions.add_message(session_id, diameter_message)
     elif app_id == APP_3GPP_RX:
@@ -103,14 +101,13 @@ def process_pkt(pkt, session_manager: SessionManager):
                 raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
             rx_session = rx_sessions.create_rx_session(gx_session.subscriber, session_id)
             rx_session.set_gx_session_id(gx_session.session_id)
-        elif diameter_message.name == AAA:
+            rx_session.set_start_time(pkt_timestamp)
+        else:
             rx_session = rx_sessions.get(session_id)
             gx_session = gx_sessions.get(rx_session.gx_session_id)
-            rx_session.set_start_time(pkt_timestamp)
-        #
-        elif diameter_message.name == STA:
-            rx_session = rx_sessions.get(session_id)
-            rx_session.set_end_time(pkt_timestamp)
+            # diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
+            if diameter_message.name == STR:
+                rx_session.set_end_time(pkt_timestamp)
         diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
         rx_sessions.add_message(session_id, diameter_message)
     elif app_id == APP_3GPP_SY:
@@ -122,28 +119,44 @@ def process_pkt(pkt, session_manager: SessionManager):
             gx_session = gx_sessions.get_subscriber_active_session(msisdn)
             sy_session = sy_sessions.create_sy_session(subscriber, session_id)
             sy_session.set_gx_session_id(gx_session.session_id)
-        elif diameter_message.name == SLA:
-            sy_session = sy_sessions.get(session_id)
-            if not sy_session:
-                return
             sy_session.set_start_time(pkt_timestamp)
-        elif diameter_message.name == STA:
-            sy_session = sy_sessions.get(session_id)
-            if not sy_session:
-                return
-            sy_session.set_end_time(pkt_timestamp)
         else:
             sy_session = sy_sessions.get(session_id)
-            if not sy_session:
-                return
             gx_session = gx_sessions.get(sy_session.gx_session_id)
+            if diameter_message.name == SLA:
+                pass
+            elif diameter_message.name == STR:
+                sy_session.set_end_time(pkt_timestamp)
         diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
         sy_sessions.add_message(session_id, diameter_message)
+        # elif diameter_message.name == SLA:
+        #     sy_session = sy_sessions.get(session_id)
+        #     if not sy_session:
+        #         return
+        #     sy_session.set_start_time(pkt_timestamp)
+        # elif diameter_message.name == STA:
+        #     sy_session = sy_sessions.get(session_id)
+        #     if not sy_session:
+        #         return
+        #     sy_session.set_end_time(pkt_timestamp)
+        # else:
+        #     sy_session = sy_sessions.get(session_id)
+        #     if not sy_session:
+        #         return
+        #     gx_session = gx_sessions.get(sy_session.gx_session_id)
+        # gx_session = gx_sessions.get(sy_session.gx_session_id)
+        # diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
+        # sy_sessions.add_message(session_id, diameter_message)
+        # print(diameter_message)
 
-def run_pyshark(pcap_file: Pcap, session_manager: SessionManager):
-    with pyshark.FileCapture(pcap_file.filepath, decode_as=pcap_file.decode_as, display_filter=pcap_file.filter, debug=False) as cap:
-        for pkt in cap:
-            process_pkt(pkt, session_manager)
+
+# def run_pyshark(pcap_file: Pcap, session_manager: SessionManager):
+#     with pyshark.FileCapture(pcap_file.filepath, decode_as=pcap_file.decode_as, display_filter=pcap_file.filter, debug=False) as cap:
+#         for pkt in cap:
+#             process_pkt(pkt, session_manager)
+
+BASE_FILTER = "diameter && !(diameter.cmd.code == 280) && !(diameter.cmd.code == 257)"
+DIAMETER_PORTS = [30101, 30001, 31501, 31601, 30003]
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -155,9 +168,16 @@ if __name__ == "__main__":
         print("The specified pcap file does not exist.")
         sys.exit(1)
 
-    BASE_FILTER = "diameter && !(diameter.cmd.code == 280) && !(diameter.cmd.code == 257)"
-    DIAMETER_PORTS = [30101, 30001, 31501, 31601, 30003]
     session_manager = SessionManager()
     pcap = Pcap(pcap_path, DIAMETER_PORTS, BASE_FILTER)
-    run_pyshark(pcap, session_manager)
+    cap = create_pyshark_object(pcap)
+    while True:
+        try:
+            pkt = cap.next()
+            multiple_layers = pkt.get_multiple_layers('diameter')
+            print(multiple_layers)
+            process_pkt(pkt, session_manager)
+        except StopIteration:
+            break
+    # run_pyshark(pcap, session_manager)
     session_manager.parse_sessions()
