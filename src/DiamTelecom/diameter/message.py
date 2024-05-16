@@ -7,12 +7,20 @@ logger = logging.getLogger(__name__)
 from ..helpers import convert_timestamp
 
 class AVPs():
+
     FIELDS_SEPARATOR = "\|"
+    
     def __init__(self):
         self.avps = {}
 
+    def add_avp(self, key, value):
+        self.avps[key] = value
+
     def set_avps(self, avps):
         self.avps = avps
+
+    def get(self, key):
+        return self.avps.get(key, None)
 
     def get_fields_string(self):
         message_fields = ""
@@ -32,12 +40,13 @@ class DiameterMessage:
     
     def __init__(self, name, message):
         self.name = name
-        self.message = message
+        self._message = message
         self.avps = AVPs()
         # Attributes to be set later
         self.timestamp = None
         self.session_id = None
         self.framed_ip_address = None
+        self.parse_message()
 
     def __repr__(self) -> str:
         return f"DiameterMessage({self.name})"
@@ -66,6 +75,21 @@ class DiameterMessage:
                 self.session_id,
                 ]
     
+    def get_message_attribute(self, attr_name):
+        try:
+            return getattr(self._message, attr_name)
+        except AttributeError:
+            # logger.error(f"Attribute {attr_name} not found in {self.name}")
+            return None
+        
+    def parse_message(self):
+        if self.get_message_attribute('qos_information'):
+            self.avps.add_avp("qos_information", self.get_message_attribute('qos_information'))
+        if self.get_message_attribute('charging_rule_install'):
+            self.avps.add_avp("charging_rule_install", self.get_message_attribute('charging_rule_install'))
+        if self.get_message_attribute('charging_rule_remove'):
+            self.avps.add_avp("charging_rule_remove", self.get_message_attribute('charging_rule_remove'))
+    
 class DiameterMessages:
     messages: List[Message]
 
@@ -73,11 +97,14 @@ class DiameterMessages:
         self.messages = []
 
     def add_message(self, message: DiameterMessage):
+        if not isinstance(message, DiameterMessage):
+            raise TypeError("Message must be of type DiameterMessage")
         if self.last_message and self.last_message.name == message.name:
             # print("Won't add message with same name")
             logging.error(f"Message with same name {message.name} already exists. Won't add to Session. Last message: {self.last_message.name}")
             return
         self.messages.append(message)
+        return message
 
     def get_messages(self):
         return self.messages

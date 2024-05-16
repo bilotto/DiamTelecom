@@ -1,3 +1,4 @@
+from .constants import *
 from .subscriber import Subscriber
 from .message import DiameterMessage, DiameterMessages, Message, create_diameter_message_from_message
 from typing import List, Dict, Set
@@ -45,7 +46,7 @@ class DiameterSession:
             diameter_message = message
         elif isinstance(message, Message):
             diameter_message = create_diameter_message_from_message(message)
-        self.messages.add_message(diameter_message)
+        return self.messages.add_message(diameter_message)
 
     def get_messages(self):
         return self.messages.messages
@@ -140,11 +141,45 @@ class GxSession(DiameterSession):
         self.mcc_mnc = None
         self.rat_type = None
         self.apn = None
+        self.qos_information = None
+        self.pcc_rules = []
 
     def __repr__(self):
-        return f"GxSession({self.session_id},{self.framed_ip_address},n_messages={self.n_messages})"
+        return (f"\nGxSession(Session ID: {self.session_id},\n"
+                f"          IP Address: {self.framed_ip_address},\n"
+                f"          MCC/MNC: {self.mcc_mnc},\n"
+                f"          RAT Type: {self.rat_type},\n"
+                f"          APN: {self.apn},\n"
+                f"          QoS Info: {self.qos_information},\n"
+                f"          PCC Rules: {self.pcc_rules})")
 
-
+    
+    def add_message(self, message):
+        message = super().add_message(message)
+        if message.avps.get('qos_information'):
+            if not self.qos_information:
+                self.qos_information = message.avps.get('qos_information')
+            else:
+                if self.qos_information == message.avps.get('qos_information'):
+                    logger.info("QoS Mirror")
+                else:
+                    logger.info("QoS not mirror")
+                self.qos_information = message.avps.get('qos_information')
+        if message.avps.get('charging_rule_install'):
+            charging_rule_install = message.avps.get('charging_rule_install')
+            for item in charging_rule_install:
+                for rule in item.charging_rule_base_name:
+                    self.pcc_rules.append(rule)
+                for rule in item.charging_rule_name:
+                    self.pcc_rules.append(rule)
+        if message.avps.get('charging_rule_remove'):
+            charging_rule_remove = message.avps.get('charging_rule_remove')
+            for item in charging_rule_remove:
+                for rule in item.charging_rule_base_name:
+                    self.pcc_rules.remove(rule)
+                for rule in item.charging_rule_name:
+                    self.pcc_rules.remove(rule)
+                    
 class GxSessions(DiameterSessions):
     framed_ip_address_to_session_id: Dict[str, List[str]]
     # msisdn_to_session_id: Dict[str, List[str]]
