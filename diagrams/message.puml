@@ -1,0 +1,16 @@
+@startuml
+class DiameterMessage {
+  +app_id: int
+  +command_code: int
+  +is_request: bool
+  +cc_request_type: int
+  +content
+}
+
+class DiameterMessages {
+  +messages: List[DiameterMessage]
+}
+
+DiameterMessages o-- DiameterMessage
+
+@enduml

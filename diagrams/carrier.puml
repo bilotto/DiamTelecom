@@ -1,0 +1,23 @@
+@startuml
+class Subscriber {
+    +id
+    +msisdn
+    +imsi
+}
+
+class Subscribers {
+  +subscribers: List[Subscriber]
+}
+
+Subscribers o-- Subscriber
+
+class Carrier {
+    +id
+    +name
+    +subscriber: Subscribers
+}
+
+Carrier *-- Subscribers
+
+
+@enduml

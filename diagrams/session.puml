@@ -1,0 +1,56 @@
+@startuml
+!include message.puml
+
+class DiameterSession {
+  +session_id: str
+  +messages: DiameterMessages
+}
+
+DiameterSession *-- DiameterMessages
+
+class DiameterSessions {
+  +sessions: List[DiameterSession]
+}
+
+DiameterSessions o-- DiameterSession
+
+class GxSession {
+  +framed_ip_address: str
+}
+
+class GxSessions {
+  +sessions: List[GxSession]
+}
+
+GxSessions --|> DiameterSessions
+GxSession --|> DiameterSession
+GxSessions o-- GxSession
+
+
+class RxSession {
+  +gx_session_id: str
+}
+
+class RxSessions {
+  +sessions: List[RxSession]
+}
+
+RxSessions --|> DiameterSessions
+RxSession --|> DiameterSession
+RxSessions o-- RxSession
+
+
+class SySession {
+  +gx_session_id: str
+}
+
+class SySessions {
+  +sessions: List[SySession]
+}
+
+SySessions --|> DiameterSessions
+SySession --|> DiameterSession
+SySessions o-- SySession
+
+
+@enduml
