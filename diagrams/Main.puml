@@ -1,6 +1,14 @@
 @startuml class_diagram
-!include ./session.puml
+!include ./styles.puml
+!include ./diameter/main.puml
 !include ./carrier.puml
 
+package Diameter {
+    class ThreadingApplication {
+        +handle_message(DiameterMessage): void
+    }
+
+    CustomThreadingApplication --|> ThreadingApplication
+}
 
 @enduml

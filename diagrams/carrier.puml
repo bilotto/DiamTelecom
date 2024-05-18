@@ -1,23 +1,22 @@
 @startuml
-class Subscriber {
-    +id
-    +msisdn
-    +imsi
+package DiamTelecom {
+    class Subscriber {
+        +id
+        +msisdn
+        +imsi
+    }
+
+    class Subscribers {
+        +subscribers: List[Subscriber]
+    }
+
+    class Carrier {
+        +id
+        +name
+        +subscriber: Subscribers
+    }
+
+    Carrier *-- Subscribers
+    Subscribers o-- Subscriber
 }
-
-class Subscribers {
-  +subscribers: List[Subscriber]
-}
-
-Subscribers o-- Subscriber
-
-class Carrier {
-    +id
-    +name
-    +subscriber: Subscribers
-}
-
-Carrier *-- Subscribers
-
-
 @enduml

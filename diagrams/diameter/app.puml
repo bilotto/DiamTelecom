@@ -1,0 +1,21 @@
+@startuml
+package DiamTelecom {
+    class CustomThreadingApplication {
+    }
+
+    class GxApplication {
+    }
+
+    class RxApplication {
+    }
+
+    class SyApplication {
+    }
+
+    GxApplication --|> CustomThreadingApplication
+    RxApplication --|> CustomThreadingApplication
+    SyApplication --|> CustomThreadingApplication
+
+
+}
+@enduml

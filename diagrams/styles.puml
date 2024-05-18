@@ -1,0 +1,4 @@
+skinparam class {
+    DiamTelecomBackgroundColor<<DiamTelecom>> #lightblue
+    DiameterBackgroundColor<<Diameter>> #lightgreen
+}
