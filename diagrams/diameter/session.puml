@@ -2,56 +2,56 @@
 !include message.puml
 
 package DiamTelecom {
-    class DiameterSession {
-      +session_id: str
-      +messages: DiameterMessages
+    class DiameterSession <<DiamTelecom>> {
+        +session_id: str
+        +messages: DiameterMessages
     }
 
     DiameterSession *-- DiameterMessages
 
-    class DiameterSessions {
-      +sessions: List[DiameterSession]
+    class DiameterSessions <<DiamTelecom>> {
+        +sessions: Map[str, DiameterSession]
+        +create() -> DiameterSession
     }
 
     DiameterSessions o-- DiameterSession
 
-    class GxSession {
-      +framed_ip_address: str
+    class GxSession <<DiamTelecom>> {
+        +framed_ip_address: str
     }
 
-    class GxSessions {
-      +sessions: List[GxSession]
+    class GxSessions <<DiamTelecom>> {
+        +create() -> GxSession
     }
 
     GxSessions --|> DiameterSessions
     GxSession --|> DiameterSession
     GxSessions o-- GxSession
 
-
-    class RxSession {
-      +gx_session_id: str
+    class RxSession <<DiamTelecom>> {
+        +gx_session_id: str
     }
 
-    class RxSessions {
-      +sessions: List[RxSession]
+    class RxSessions <<DiamTelecom>> {
+        +create() -> RxSession
     }
 
     RxSessions --|> DiameterSessions
     RxSession --|> DiameterSession
     RxSessions o-- RxSession
 
-
-    class SySession {
-      +gx_session_id: str
+    class SySession <<DiamTelecom>> {
+        +gx_session_id: str
     }
 
-    class SySessions {
-      +sessions: List[SySession]
+    class SySessions <<DiamTelecom>> {
+        +create() -> SySession
     }
-
     SySessions --|> DiameterSessions
     SySession --|> DiameterSession
     SySessions o-- SySession
-}
 
+
+
+}
 @enduml

@@ -1,21 +1,31 @@
 @startuml
+!include session.puml
 package DiamTelecom {
-    class CustomThreadingApplication {
+    class CustomThreadingApplication <<DiamTelecom>> {
+        +custom_start() -> void
+        +custom_stop() -> void
+        +get_session_by_id(session_id: string) -> Session
+        +get_subscriber_sessions_by_msisdn(msisdn: string) -> Session[]
+        +get_subscriber_active_session(msisdn: string) -> Session
+        +started: boolean
+        +sessions: DiameterSessions
     }
 
-    class GxApplication {
+    class GxApplication <<DiamTelecom>> {
     }
 
-    class RxApplication {
+    class RxApplication <<DiamTelecom>> {
     }
 
-    class SyApplication {
+    class SyApplication <<DiamTelecom>> {
     }
 
+    CustomThreadingApplication *-- DiameterSessions
     GxApplication --|> CustomThreadingApplication
     RxApplication --|> CustomThreadingApplication
     SyApplication --|> CustomThreadingApplication
-
-
+    GxApplication *-- GxSessions
+    RxApplication *-- RxSessions
+    SyApplication *-- SySessions
 }
 @enduml

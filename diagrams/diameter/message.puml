@@ -1,17 +1,16 @@
 @startuml
 package DiamTelecom {
-    class DiameterMessage {
+    class DiameterMessage <<DiamTelecom>> {
         +app_id: int
         +command_code: int
         +is_request: bool
         +cc_request_type: int
-        +content
+        +message: Message
     }
 
-    class DiameterMessages {
-        +messages: List[DiameterMessage]
+    class DiameterMessages <<DiamTelecom>> {
     }
 
-DiameterMessages o-- DiameterMessage
+    DiameterMessages o-- DiameterMessage
 }
 @enduml

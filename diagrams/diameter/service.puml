@@ -1,23 +1,29 @@
 @startuml
 !include app.puml
 package DiamTelecom {
-
-    class GxService {
-        +gx_app: GxApplication
+    class GxService <<DiamTelecom>> {
     }
 
-    class RxService {
-        +rx_app: RxApplication
+    class RxService <<DiamTelecom>> {
     }
 
-    class SyService {
-        +sy_app: SyApplication
+    class SyService <<DiamTelecom>> {
     }
 
     GxService *-- GxApplication
     RxService *-- RxApplication
     SyService *-- SyApplication
 
+    class DataService <<DiamTelecom>> {
+    }
+
+    class VoiceService <<DiamTelecom>> {
+    }
+
+    DataService *-- GxService
+    DataService *-- SyService
+    VoiceService *-- GxService
+    VoiceService *-- RxService
 
 }
 @enduml

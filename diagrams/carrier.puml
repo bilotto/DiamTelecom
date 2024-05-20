@@ -1,22 +1,40 @@
 @startuml
+!include diameter/service.puml
 package DiamTelecom {
-    class Subscriber {
+    class Subscriber <<DiamTelecom>> {
         +id
         +msisdn
         +imsi
+        +gx_sessions: GxSessions
+        +sy_sessions: SySessions
+        +rx_sessions: RxSessions
     }
 
-    class Subscribers {
-        +subscribers: List[Subscriber]
+    class Subscribers <<DiamTelecom>> {
+        +subscribers: Map<String, Subscriber>
     }
 
-    class Carrier {
+    class Carrier <<DiamTelecom>> {
         +id
         +name
-        +subscriber: Subscribers
+        +subscribers: Subscribers
+        +data_service: DataService
+        +voice_service: VoiceService
+
     }
 
+    class Carriers <<DiamTelecom>> {
+        +carriers: Map<String, Carrier>
+    }
+
+
+    Carriers *-- Carrier
     Carrier *-- Subscribers
     Subscribers o-- Subscriber
+    Carrier *-- DataService
+    Carrier *-- VoiceService
+    Subscriber o-- GxSessions
+    Subscriber o-- SySessions
+    Subscriber o-- RxSessions
 }
 @enduml
