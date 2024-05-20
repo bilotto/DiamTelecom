@@ -1,8 +1,9 @@
-from .subscriber import Subscriber
 from .message import DiameterMessage, DiameterMessages, Message, create_diameter_message_from_message
-from typing import List, Dict, Set
+from typing import List, Dict, Set, NamedTuple
 import logging
 logger = logging.getLogger(__name__)
+
+Subscriber = NamedTuple('Subscriber', [('msisdn', str), ('imsi', str)])
 
 class DiameterSession:
     subscriber: Subscriber

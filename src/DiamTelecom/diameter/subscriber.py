@@ -1,5 +1,6 @@
 from ..helpers import is_valid_msisdn, is_valid_imsi
 from typing import List, Dict
+from .session import GxSessions, RxSessions, SySessions
 
 import logging
 logger = logging.getLogger(__name__)
@@ -26,6 +27,9 @@ class Subscriber:
         self.msisdn = msisdn
         self.imsi = imsi
         # self.messages = DiameterMessages()
+        self.gx_sessions = GxSessions()
+        self.rx_sessions = RxSessions()
+        self.sy_sessions = SySessions()
 
 class Subscribers:
     subscribers: Dict[str, Subscriber]
