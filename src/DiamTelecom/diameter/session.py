@@ -46,6 +46,7 @@ class DiameterSession:
             diameter_message = message
         elif isinstance(message, Message):
             diameter_message = create_diameter_message_from_message(message)
+        diameter_message.msisdn = self.subscriber.msisdn
         return self.messages.add_message(diameter_message)
 
     def get_messages(self):
@@ -79,7 +80,6 @@ class DiameterSessions:
         return self.diameter_sessions.get(session_id, None)
 
     def add_session(self, diameter_session: DiameterSession):
-        logger.debug(f"Adicionando sessão {diameter_session}")  
         # Adiciona a sessão usando o session_id como chave
         self.diameter_sessions[diameter_session.session_id] = diameter_session
         # Mapeia o MSISDN para o session_id
@@ -126,6 +126,62 @@ class DiameterSessions:
     def all_msisdn(self):
         return list(self.msisdn_to_session_id.keys())
 
+class RxSession(DiameterSession):
+    subscriber: Subscriber
+    session_id: str
+    gx_session_id: str
+
+    def __init__(self, subscriber, session_id, gx_session_id):
+        super().__init__(subscriber, session_id)
+        self.gx_session_id = gx_session_id
+
+    def __repr__(self):
+        return (f"\nRxSession(Session ID: {self.session_id},\n"
+                f"          GX Session ID: {self.gx_session_id})")
+
+    def set_gx_session_id(self, gx_session_id: str):
+        self.gx_session_id = gx_session_id
+
+    @property
+    def is_voice_call(self):
+        for message in self.messages.get_messages():
+            if message.avps.get('Media-Type') == 'AUDIO':
+                return True
+        return False
+
+    # def __repr__(self):
+    #     return (f"\nGxSession(Session ID: {self.session_id},\n"
+    #             f"          IP Address: {self.framed_ip_address},\n"
+    #             f"          MCC/MNC: {self.mcc_mnc},\n"
+    #             f"          RAT Type: {self.rat_type},\n"
+    #             f"          APN: {self.apn},\n"
+    #             f"          QoS Info: {self.qos_information},\n"
+    #             f"          PCC Rules: {self.pcc_rules})")
+
+
+class RxSessions(DiameterSessions):
+    def __init__(self):
+        super().__init__()
+
+    def add_rx_session(self, rx_session: RxSession):
+        self.add_session(rx_session)
+
+    def get_rx_session(self, session_id: str) -> RxSession:
+        return self.get_session(session_id)
+    
+    def get(self, session_id: str) -> RxSession:
+        return self.diameter_sessions.get(session_id, None)
+
+    # def remove_rx_session(self, session_id: str):
+    #     self.remove_session(session_id)
+
+    def create_session(self, subscriber, session_id: str, gx_session_id: str) -> RxSession:
+        rx_session = RxSession(subscriber, session_id, gx_session_id)
+        self.add_rx_session(rx_session)
+        return rx_session
+
+
+
 class GxSession(DiameterSession):
     session_id: str
     framed_ip_address: str
@@ -139,6 +195,7 @@ class GxSession(DiameterSession):
         self.apn = None
         self.qos_information = None
         self.pcc_rules = []
+        self.rx_sessions = []
 
     def __repr__(self):
         return (f"\nGxSession(Session ID: {self.session_id},\n"
@@ -155,6 +212,9 @@ class GxSession(DiameterSession):
     
     def add_message(self, message):
         message = super().add_message(message)
+
+    def add_rx_session(self, rx_session):
+        self.rx_sessions.append(rx_session)
         
         # if message.avps.get('qos_information'):
         #     if not self.qos_information:
@@ -208,8 +268,11 @@ class GxSessions(DiameterSessions):
         # Return the first active session
         for session_id in session_id_list:
             gx_session = self.get_session(session_id)
-            if gx_session.active:
-                return gx_session
+            # need to return the session even though its not active
+            # it was causing a bug when Rx messages continue to be sent after the session is closed
+            # if gx_session.active:
+            #     return gx_session
+            return gx_session
     
     # def get_gx_session_by_msisdn(self, msisdn: str) -> GxSession:
     #     session_id_list = self.msisdn_to_session_id.get(msisdn)
@@ -233,48 +296,6 @@ class GxSessions(DiameterSessions):
         self.get_session(session_id).add_message(message)
 
 
-class RxSession(DiameterSession):
-    subscriber: Subscriber
-    session_id: str
-    gx_session_id: str
-
-    def __init__(self, subscriber, session_id, gx_session_id):
-        super().__init__(subscriber, session_id)
-        self.gx_session_id = gx_session_id
-
-    def set_gx_session_id(self, gx_session_id: str):
-        self.gx_session_id = gx_session_id
-
-    # def __repr__(self):
-    #     return (f"\nGxSession(Session ID: {self.session_id},\n"
-    #             f"          IP Address: {self.framed_ip_address},\n"
-    #             f"          MCC/MNC: {self.mcc_mnc},\n"
-    #             f"          RAT Type: {self.rat_type},\n"
-    #             f"          APN: {self.apn},\n"
-    #             f"          QoS Info: {self.qos_information},\n"
-    #             f"          PCC Rules: {self.pcc_rules})")
-
-
-class RxSessions(DiameterSessions):
-    def __init__(self):
-        super().__init__()
-
-    def add_rx_session(self, rx_session: RxSession):
-        self.add_session(rx_session)
-
-    def get_rx_session(self, session_id: str) -> RxSession:
-        return self.get_session(session_id)
-    
-    def get(self, session_id: str) -> RxSession:
-        return self.diameter_sessions.get(session_id, None)
-
-    # def remove_rx_session(self, session_id: str):
-    #     self.remove_session(session_id)
-
-    def create_session(self, subscriber, session_id: str, gx_session_id: str) -> RxSession:
-        rx_session = RxSession(subscriber, session_id, gx_session_id)
-        self.add_rx_session(rx_session)
-        return rx_session
 
 
 

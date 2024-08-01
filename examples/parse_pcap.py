@@ -1,5 +1,6 @@
 from diameter.message import *
 from DiamTelecom import *
+from DiamTelecom.diameter.subscriber import *
 from DiamTelecom.pcap import *
 from DiamTelecom.diameter.constants import *
 from DiamTelecom.helpers import decode_hex_string
@@ -59,6 +60,9 @@ def process_pkt(pkt, session_manager: SessionManager):
     try:
         #
         cc_request_type = pkt.diameter.get_field_value("CC-Request-Type")
+        diameter_message = create_diameter_message(cmd_code, request, cc_request_type)
+        if not diameter_message:
+            return
         #
         session_id = pkt.diameter.session_id
         framed_ip_address = pkt.diameter.get_field_value("framed_ip_address_ipv4")
@@ -68,15 +72,17 @@ def process_pkt(pkt, session_manager: SessionManager):
         country_code = pkt.diameter.get_field_value("e164_country_code")
         mcc = pkt.diameter.get_field_value("e212_mcc")
         mnc = pkt.diameter.get_field_value("e212_mnc")
-        diameter_message = create_diameter_message(cmd_code, request, cc_request_type)
         diameter_message.set_timestamp(pkt_timestamp)
         diameter_message.set_session_id(session_id)
         set_fields_from_pkt(diameter_message, pkt)
         if app_id == APP_3GPP_GX:
             if diameter_message.name == CCR_I:
-                if not subscribers.get_subscriber(msisdn):
+                if session_manager.create_subscribers and not(subscribers.get_subscriber(msisdn)):
                     subscriber = subscribers.create_subscriber(id=msisdn, msisdn=msisdn, imsi=imsi)
                 subscriber = subscribers.get_subscriber(msisdn)
+                if not subscriber:
+                    # logging.warning(f"Subscriber with MSISDN {msisdn} not found")
+                    return
                 if gx_sessions.get(session_id):
                     # The pcap sometimes has duplicated messages
                     logging.warning(f"GxSession with session_id {session_id} already exists")
@@ -86,7 +92,7 @@ def process_pkt(pkt, session_manager: SessionManager):
             else:
                 gx_session = gx_sessions.get(session_id)
                 if not gx_session:
-                    logger.error(f"")
+                    # logger.error(f"")
                     return
                 if diameter_message.name == CCA_I:
                     pass
@@ -96,24 +102,33 @@ def process_pkt(pkt, session_manager: SessionManager):
                 return
             diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
             gx_sessions.add_message(session_id, diameter_message)
+
         elif app_id == APP_3GPP_RX:
             if diameter_message.name == AAR:
                 gx_session = None
                 if framed_ip_address:
                     gx_session = gx_sessions.get_gx_session_by_framed_ip_address(framed_ip_address)
                 if not gx_session:
-                    raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
+                    logging.warn(f"No GxSession found with framed IP address {framed_ip_address}")
+                    return
+                if not gx_session.active:
+                    logging.error(f"GxSession with session_id {gx_session.session_id} is not active. Continuing...")
+                    return
                 rx_session = rx_sessions.create_session(gx_session.subscriber, session_id, gx_session.session_id)
                 rx_session.set_gx_session_id(gx_session.session_id)
                 rx_session.set_start_time(pkt_timestamp)
+                gx_session.add_rx_session(rx_session)
             else:
                 rx_session = rx_sessions.get(session_id)
+                if not rx_session:
+                    return
                 gx_session = gx_sessions.get(rx_session.gx_session_id)
                 # diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
                 if diameter_message.name == STR:
                     rx_session.set_end_time(pkt_timestamp)
             diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
             rx_sessions.add_message(session_id, diameter_message)
+
         elif app_id == APP_3GPP_SY:
             if diameter_message.name == SLR:
                 subscriber = subscribers.get_subscriber(msisdn)
@@ -136,6 +151,8 @@ def process_pkt(pkt, session_manager: SessionManager):
 
     except Exception as e:
         logger.error(f"Error processing packet number {pkt_number}: {e}")
+        session_manager.parse_sessions()
+        raise e
 
 
 BASE_FILTER = "diameter && !(diameter.cmd.code == 280) && !(diameter.cmd.code == 257)"
@@ -151,8 +168,16 @@ if __name__ == "__main__":
         print("The specified pcap file does not exist.")
         sys.exit(1)
 
+    custom_subscribers = Subscribers()
+    # 56946117399_730030540816245
+    # 56950018795_730030540816229
+    # 56954225424_730030540816243
+    custom_subscribers.create_subscriber("56946117399", "56946117399", "730030540816245")
+    custom_subscribers.create_subscriber("56950018795", "56950018795", "730030540816229")
+    custom_subscribers.create_subscriber("56954225424", "56954225424", "730030540816243")
+
     pcap = Pcap(pcap_path, DIAMETER_PORTS, BASE_FILTER)
-    session_manager = SessionManager(pcap.filename)
+    session_manager = SessionManager(subscribers=custom_subscribers, pcap_filename=pcap.filename)
     cap = create_pyshark_object(pcap)
     while True:
         try:
@@ -164,3 +189,4 @@ if __name__ == "__main__":
     # run_pyshark(pcap, session_manager)
     session_manager.parse_sessions()
     # session_manager.to_csv()
+    session_manager.parse_voice_sessions()

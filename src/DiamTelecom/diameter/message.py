@@ -5,6 +5,8 @@ from typing import NamedTuple
 import logging
 logger = logging.getLogger(__name__)
 from ..helpers import convert_timestamp
+import os
+import csv
 
 class AVPs():
 
@@ -48,6 +50,7 @@ class DiameterMessage:
         self.framed_ip_address = None
         self.parse_message()
         self.pkt = None
+        self.msisdn = None
 
     def __repr__(self) -> str:
         return f"DiameterMessage({self.name})"
@@ -70,10 +73,11 @@ class DiameterMessage:
     def to_csv(self):
         return [
                 self.time,
+                self.msisdn,
                 self.name,
                 self.framed_ip_address,
                 self.avps.get_fields_string(),
-                self.session_id,
+                # self.session_id,
                 ]
     
     def get_message_attribute(self, attr_name):
@@ -112,7 +116,9 @@ class DiameterMessages:
         return message
 
     def get_messages(self):
-        return self.messages
+        # return self.messages
+        messages_sorted = sorted(self.messages, key=lambda x: x.timestamp)
+        return messages_sorted
 
     @property
     def last_message(self) -> DiameterMessage:
@@ -147,6 +153,13 @@ class DiameterMessages:
         str_ = SessionTerminationRequest()
         str_.auth_application_id = APP_3GPP_RX
         return str_
+    
+    def to_csv(self, csv_filepath="./output.csv"):
+        # csv_filepath = os.path.join(output_dir, "{}_{}.csv".format(self.subscriber.msisdn, self.subscriber.imsi))
+        with open(csv_filepath, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for diameter_message in self.get_messages():
+                csvwriter.writerow(diameter_message.to_csv())
 
 
 def create_diameter_message(cmd_code, request_flag, cc_request_type=None) -> DiameterMessage:
@@ -173,6 +186,9 @@ def create_diameter_message(cmd_code, request_flag, cc_request_type=None) -> Dia
             message_name = CCR_T if request_flag else CCA_T
             message_object = CreditControlRequest() if request_flag else CreditControlAnswer()
             message_object.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
+        else:
+            message_name = CCR if request_flag else CCA
+            message_object = CreditControlRequest() if request_flag else CreditControlAnswer()
 
     elif cmd_code == CMD_RE_AUTH:
         message_name = RAR if request_flag else RAA
@@ -198,14 +214,16 @@ def create_diameter_message(cmd_code, request_flag, cc_request_type=None) -> Dia
         message_name = SSNR if request_flag else SSNA
         message_object = SpendingStatusNotificationRequest() if request_flag else SpendingStatusNotificationAnswer()
 
-    elif cmd_code == CMD_DEVICE_WATCHDOG:
-        message_name = DWR if request_flag else DWA
-        message_object = DeviceWatchdogRequest() if request_flag else DeviceWatchdogAnswer()
+    # elif cmd_code == CMD_DEVICE_WATCHDOG:
+    #     message_name = DWR if request_flag else DWA
+    #     message_object = DeviceWatchdogRequest() if request_flag else DeviceWatchdogAnswer()
 
-    elif cmd_code == CMD_CAPABILITIES_EXCHANGE:
-        message_name = CER if request_flag else CEA
-        message_object = CapabilitiesExchangeRequest() if request_flag else CapabilitiesExchangeAnswer()
-    return DiameterMessage(message_name, message_object)
+    # elif cmd_code == CMD_CAPABILITIES_EXCHANGE:
+    #     message_name = CER if request_flag else CEA
+    #     message_object = CapabilitiesExchangeRequest() if request_flag else CapabilitiesExchangeAnswer()
+    if message_name and message_object:
+        return DiameterMessage(message_name, message_object)
+    return None
 
 def create_diameter_message_from_message(message: Message):
     cmd_code = int(message.header.command_code)
@@ -249,18 +267,26 @@ def create_diameter_message_from_message(message: Message):
     return DiameterMessage(message_name, message_object)
 
 def name_diameter_message(cmd_code, request_flag, cc_request_type=None):
+    message_name = None
     cmd_code = int(cmd_code)
     request_flag = int(request_flag)
     if cmd_code == CMD_CREDIT_CONTROL:
-        if not cc_request_type:
-            # raise ValueError("cc_request_type must be provided for Credit-Control messages")
-            message_name = CCR
-        cc_request_type = int(cc_request_type)
-        if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
+        # if not cc_request_type:
+        #     # raise ValueError("cc_request_type must be provided for Credit-Control messages")
+        #     message_name = CCR
+        # cc_request_type = int(cc_request_type)
+        # if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
+        #     message_name = CCR_I if request_flag else CCA_I
+        # elif cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
+        #     message_name = CCR_U if request_flag else CCA_U
+        # elif cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
+        #     message_name = CCR_T if request_flag else CCA_T
+        # message_name = CCR if request_flag else CCA
+        if cc_request_type and cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
             message_name = CCR_I if request_flag else CCA_I
-        elif cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
+        elif cc_request_type and cc_request_type == E_CC_REQUEST_TYPE_UPDATE_REQUEST:
             message_name = CCR_U if request_flag else CCA_U
-        elif cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
+        elif cc_request_type and cc_request_type == E_CC_REQUEST_TYPE_TERMINATION_REQUEST:
             message_name = CCR_T if request_flag else CCA_T
 
     elif cmd_code == CMD_RE_AUTH:

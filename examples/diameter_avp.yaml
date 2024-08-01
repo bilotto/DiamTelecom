@@ -22,8 +22,8 @@ diameter_fields:
     - RAT-Type
     - IP-CAN-Type
     - Media-Type
-    - Media-Component-Number
-    - Flow-Usage
+    # - Media-Component-Number
+    # - Flow-Usage
   AAA:
     - Result-Code
   SLR:
