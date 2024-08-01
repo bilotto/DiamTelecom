@@ -2,6 +2,7 @@ from .diameter.subscriber import Subscribers
 from .diameter import *
 import os
 import csv
+from typing import List
 
 class SubscriberMessages:
     messages: list
@@ -14,12 +15,10 @@ class SubscriberMessages:
     def append(self, message):
         self.messages.append(message)
 
-    def get_messages(self):
-        print(self.messages)
+    def get_messages(self) -> List[DiameterMessage]:
         messages_sorted = sorted(self.messages, key=lambda x: x.timestamp)
-        print(messages_sorted)
         return messages_sorted
-    
+
     def __repr__(self):
         return f"SubscriberMessages({self.subscriber.msisdn},n_messages={len(self.messages)})"
     
@@ -28,7 +27,23 @@ class SubscriberMessages:
         with open(csv_filepath, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
             for diameter_message in self.get_messages():
-                csvwriter.writerow(diameter_message.to_csv())
+                row = []
+                time = diameter_message.time
+                name = diameter_message.name
+                msisdn = self.subscriber.msisdn
+                framed_ip_address = diameter_message.framed_ip_address
+                session_id = diameter_message.session_id
+                avps_string = diameter_message.avps.get_fields_string()
+                origin_host = diameter_message.get_from_pkt("Origin-Host")
+                row.append(time)
+                row.append(msisdn)
+                row.append(name)
+                row.append(origin_host)
+                row.append(framed_ip_address)
+                row.append(avps_string)
+                row.append(session_id)
+                # row = diameter_message.to_csv()
+                csvwriter.writerow(row)
 
 class SessionManager:
     subscribers: Subscribers
@@ -39,11 +54,13 @@ class SessionManager:
     Manages the sessions of subscribers.
     """
 
-    def __init__(self):
+    def __init__(self, pcap_filename=None):
         self.subscribers = Subscribers()
         self.gx_sessions = GxSessions()
         self.rx_sessions = RxSessions()
         self.sy_sessions = SySessions()
+        self.pcap_filename = pcap_filename
+        self.all_messages = []
 
     def parse_sessions(self):
         for subscriber in self.subscribers.get_subscribers():
@@ -51,10 +68,13 @@ class SessionManager:
             for gx_session in self.gx_sessions.get_msisdn_sessions(subscriber.msisdn):
                 for message in gx_session.messages.get_messages():
                     subscriber_messages.append(message)
+                    self.all_messages.append(message)
             for sy_session in self.sy_sessions.get_msisdn_sessions(subscriber.msisdn):
                 for message in sy_session.messages.get_messages():
                     subscriber_messages.append(message)
+                    self.all_messages.append(message)
             for rx_session in self.rx_sessions.get_msisdn_sessions(subscriber.msisdn):
                 for message in rx_session.messages.get_messages():
                     subscriber_messages.append(message)
+                    self.all_messages.append(message)
             subscriber_messages.to_csv()

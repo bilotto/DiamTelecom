@@ -1,6 +1,7 @@
 from diameter.message.constants import *
 
 # Message Names
+CCR = "CCR-?"
 CCR_I = "CCR-I"
 CCA_I = "CCA-I"
 CCR_U = "CCR-U"

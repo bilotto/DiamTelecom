@@ -47,6 +47,7 @@ class DiameterMessage:
         self.session_id = None
         self.framed_ip_address = None
         self.parse_message()
+        self.pkt = None
 
     def __repr__(self) -> str:
         return f"DiameterMessage({self.name})"
@@ -89,6 +90,10 @@ class DiameterMessage:
             self.avps.add_avp("charging_rule_install", self.get_message_attribute('charging_rule_install'))
         if self.get_message_attribute('charging_rule_remove'):
             self.avps.add_avp("charging_rule_remove", self.get_message_attribute('charging_rule_remove'))
+
+    def get_from_pkt(self, key):
+        if self.pkt:
+            return self.pkt.diameter.get_field_value(key)
     
 class DiameterMessages:
     messages: List[Message]
@@ -124,6 +129,25 @@ class DiameterMessages:
     
     def __len__(self):
         return len(self.messages)
+    
+    def create_ccr(self) -> CreditControlRequest:
+        ccr = CreditControlRequest()
+        ccr.auth_application_id = APP_3GPP_GX
+        ccr.header.hop_by_hop_identifier = 2
+        ccr.header.end_to_end_identifier = 2
+        ccr.header.is_proxyable = True
+        return ccr
+    
+    def create_aar(self) -> AaRequest:
+        aar = AaRequest()
+        aar.auth_application_id = APP_3GPP_RX
+        return aar
+    
+    def create_str(self):
+        str_ = SessionTerminationRequest()
+        str_.auth_application_id = APP_3GPP_RX
+        return str_
+
 
 def create_diameter_message(cmd_code, request_flag, cc_request_type=None) -> DiameterMessage:
     # Convert to right type
@@ -228,6 +252,9 @@ def name_diameter_message(cmd_code, request_flag, cc_request_type=None):
     cmd_code = int(cmd_code)
     request_flag = int(request_flag)
     if cmd_code == CMD_CREDIT_CONTROL:
+        if not cc_request_type:
+            # raise ValueError("cc_request_type must be provided for Credit-Control messages")
+            message_name = CCR
         cc_request_type = int(cc_request_type)
         if cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
             message_name = CCR_I if request_flag else CCA_I
