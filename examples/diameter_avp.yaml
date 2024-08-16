@@ -1,0 +1,53 @@
+diameter_fields:
+  CCR-I:
+    - RAT-Type
+    - IP-CAN-Type
+    - Called-Station-Id
+  CCA-I:
+    - Result-Code
+    - RAT-Type
+    - IP-CAN-Type
+    - Charging-Rule-Base-Name
+    - Charging-Rule-Name
+    - Event-Trigger
+  RAR:
+    - RAT-Type
+    - IP-CAN-Type
+    - Charging-Rule-Base-Name
+    - Charging-Rule-Name
+    - Event-Trigger
+  RAA:
+    - Result-Code
+  AAR:
+    - RAT-Type
+    - IP-CAN-Type
+    - Media-Type
+    # - Media-Component-Number
+    # - Flow-Usage
+  AAA:
+    - Result-Code
+  SLR:
+    - SL-Request-Type
+  SLA:
+    - Result-Code
+    - Policy-Counter-Identifier
+    - Policy-Counter-Status
+  SSNR:
+    - Policy-Counter-Identifier
+    - Policy-Counter-Status
+  SSNA:
+    - Result-Code
+  # - Error-Message
+  
+  # # - Rule-Failure-Code
+  # # - PCC-Rule-Status
+
+  # - Rating-Group
+
+  # - Media-Component-Number
+  # - Media-Type
+  # - Specific-Action
+  # - Flow-Usage
+  # - Termination-Cause
+  # - Called-Station-Id
+  # - SIP-Forking-Indication

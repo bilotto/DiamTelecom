@@ -1,0 +1,8 @@
+skinparam class {
+    BackgroundColor<<DiamTelecom>> #lightblue
+    BackgroundColor<<Diameter>> #lightgreen
+    BorderColor<<DiamTelecom>> #000000
+    BorderColor<<Diameter>> #000000
+    ArrowColor<<DiamTelecom>> #000000
+    ArrowColor<<Diameter>> #000000
+}

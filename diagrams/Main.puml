@@ -1,0 +1,34 @@
+@startuml class_diagram
+!include ./styles.puml
+' !include ./diameter/main.puml
+' !include ./diameter/service.puml
+' !include ./diameter/session.puml
+!include ./carrier.puml
+' !include ./diameter/app.puml
+
+' DiameterSession *-- DiameterMessages : contains
+' DiameterMessages o-- DiameterMessage : aggregation
+' GxSession --|> DiameterSession : inheritance
+
+
+package diameter {
+    class ThreadingApplication <<diameter>> {
+        +handle_message(Message)
+        +send_request(Message)
+    }
+    class Message <<diameter>> {
+    }
+    class Node <<diameter>> {
+        +add_peer(Peer)
+    }
+    class Peer <<diameter>> {
+    }
+
+}
+
+ThreadingApplication o-- Node
+Node *-- Peer
+CustomThreadingApplication --|> ThreadingApplication
+DiameterMessage *-- Message
+
+@enduml

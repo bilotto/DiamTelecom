@@ -1,0 +1,32 @@
+@startuml
+!include app.puml
+package DiamTelecom {
+    class GxService <<DiamTelecom>> {
+    }
+
+    class RxService <<DiamTelecom>> {
+    }
+
+    class SyService <<DiamTelecom>> {
+    }
+
+    GxService *-- GxApplication
+    RxService *-- RxApplication
+    SyService *-- SyApplication
+    GxService --- GxSession
+    RxService --- RxSession
+    SyService --- SySession
+
+    class DataService <<DiamTelecom>> {
+    }
+
+    class VoiceService <<DiamTelecom>> {
+    }
+
+    DataService *-- GxService
+    DataService *-- SyService
+    VoiceService *-- GxService
+    VoiceService *-- RxService
+
+}
+@enduml

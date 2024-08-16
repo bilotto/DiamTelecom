@@ -1,0 +1,56 @@
+@startuml
+!include message.puml
+
+package DiamTelecom {
+    class DiameterSession <<DiamTelecom>> {
+        session_id: str
+        messages: DiameterMessages
+    }
+
+    DiameterSession *-- DiameterMessages
+
+    class DiameterSessions <<DiamTelecom>> {
+        create_session() -> DiameterSession
+    }
+
+    DiameterSessions o-- DiameterSession
+
+    class GxSession <<DiamTelecom>> {
+        framed_ip_address: str
+    }
+
+    class GxSessions <<DiamTelecom>> {
+        create_session() -> GxSession
+    }
+
+    GxSessions --|> DiameterSessions
+    GxSession --|> DiameterSession
+    GxSessions o-- GxSession
+
+    class RxSession <<DiamTelecom>> {
+        gx_session_id: str
+    }
+
+    class RxSessions <<DiamTelecom>> {
+        create_session() -> RxSession
+    }
+
+    RxSessions --|> DiameterSessions
+    RxSession --|> DiameterSession
+    RxSessions o-- RxSession
+
+    class SySession <<DiamTelecom>> {
+        gx_session_id: str
+    }
+
+    class SySessions <<DiamTelecom>> {
+        create_session() -> SySession
+    }
+    SySessions --|> DiameterSessions
+    SySession --|> DiameterSession
+    SySessions o-- SySession
+
+
+
+}
+@enduml
