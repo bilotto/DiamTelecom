@@ -3,6 +3,9 @@ from .diameter import *
 import os
 import csv
 from typing import List
+from .pcap import Pcap
+import logging
+logger = logging.getLogger(__name__)
 
 # class SubscriberMessages:
 #     messages: list
@@ -47,6 +50,7 @@ from typing import List
 
 class SessionManager:
     subscribers: Subscribers
+    pcap: Pcap
     gx_sessions: GxSessions
     rx_sessions: RxSessions
     sy_sessions: SySessions
@@ -54,7 +58,7 @@ class SessionManager:
     Manages the sessions of subscribers.
     """
 
-    def __init__(self, subscribers=None, pcap_filename=None):
+    def __init__(self, pcap, subscribers=None):
         if subscribers:
             self.subscribers = subscribers
             self.create_subscribers = False
@@ -64,16 +68,18 @@ class SessionManager:
         self.gx_sessions = GxSessions()
         self.rx_sessions = RxSessions()
         self.sy_sessions = SySessions()
-        self.pcap_filename = pcap_filename
+        self.pcap = pcap
+        self.pcap_filename = pcap.filename
         self.all_messages = DiameterMessages()
         self.subscriber_messages = dict()
+        self.voice_call_rx_sessions = dict()
 
     def parse_sessions(self):
         for subscriber in self.subscribers.get_subscribers():
             # subscriber_messages = SubscriberMessages(subscriber)
             for gx_session in self.gx_sessions.get_msisdn_sessions(subscriber.msisdn):
-                if not gx_session.rx_sessions:
-                    continue
+                # if not gx_session.rx_sessions:
+                #     continue
                 for message in gx_session.messages.get_messages():
                     self.all_messages.add_message(message)
             for sy_session in self.sy_sessions.get_msisdn_sessions(subscriber.msisdn):
@@ -82,10 +88,11 @@ class SessionManager:
             for rx_session in self.rx_sessions.get_msisdn_sessions(subscriber.msisdn):
                 for message in rx_session.messages.get_messages():
                     self.all_messages.add_message(message)
-        self.all_messages.to_csv(f"{self.pcap_filename}.csv")
+        self.all_messages.to_csv(f"output/{self.pcap_filename}.csv")
 
 
     def parse_voice_sessions(self):
+        logging.info("Tshark filters for voice calls")
         for subscriber in self.subscribers.get_subscribers():
             for i, gx_session in enumerate(self.gx_sessions.get_msisdn_sessions(subscriber.msisdn)):
                 if not gx_session.rx_sessions:
@@ -98,5 +105,8 @@ class SessionManager:
                         diameter_messages.add_message(diameter_message)
                 for gx_message in gx_session.messages.get_messages():
                     diameter_messages.add_message(gx_message)
-                filename = f"{subscriber.msisdn}_{i}.csv"
-                diameter_messages.to_csv(filename)
+                filename = f"output/{subscriber.msisdn}_{i}.csv"
+                # diameter_messages.to_csv(filename)
+                # self.pcap.dump_packets(gx_session.tshark_filter, f"{filename}.pcap")
+                logger.info(gx_session.tshark_filter)
+                logger.info("")

@@ -18,6 +18,12 @@ class GxApplication(CustomSimpleThreadingApplication):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = GxSessions()
 
+class GyApplication(CustomSimpleThreadingApplication):
+    sessions: GxSessions
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
+        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+        self.sessions = DiameterSessions()
+
 class RxAppication(CustomSimpleThreadingApplication):
     sessions: RxSessions
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):

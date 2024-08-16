@@ -7,11 +7,20 @@ from DiamTelecom.helpers import decode_hex_string
 #
 # import pyshark
 
+# Init blank output.log 
+open("output.log", "w").close()
+
+handlers = [
+    logging.FileHandler("output.log"),
+    logging.StreamHandler()
+]
+
 import logging
 import sys
 import os
-logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s",
-                    level=logging.DEBUG)
+# logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s", level=logging.DEBUG)
+logging.basicConfig(format="%(message)s", level=logging.DEBUG, handlers=handlers)
+# Need to stream log to output.log
 logger = logging.getLogger(__name__)
 
 from data_input import diameter_fields, avp_values
@@ -81,7 +90,6 @@ def process_pkt(pkt, session_manager: SessionManager):
                     subscriber = subscribers.create_subscriber(id=msisdn, msisdn=msisdn, imsi=imsi)
                 subscriber = subscribers.get_subscriber(msisdn)
                 if not subscriber:
-                    # logging.warning(f"Subscriber with MSISDN {msisdn} not found")
                     return
                 if gx_sessions.get(session_id):
                     # The pcap sometimes has duplicated messages
@@ -92,7 +100,6 @@ def process_pkt(pkt, session_manager: SessionManager):
             else:
                 gx_session = gx_sessions.get(session_id)
                 if not gx_session:
-                    # logger.error(f"")
                     return
                 if diameter_message.name == CCA_I:
                     pass
@@ -109,23 +116,35 @@ def process_pkt(pkt, session_manager: SessionManager):
                 if framed_ip_address:
                     gx_session = gx_sessions.get_gx_session_by_framed_ip_address(framed_ip_address)
                 if not gx_session:
-                    logging.warn(f"No GxSession found with framed IP address {framed_ip_address}")
+                    logging.warn(f"Received AAR on frame {pkt_number} but no GxSession found with framed IP address {framed_ip_address}")
                     return
                 if not gx_session.active:
-                    logging.error(f"GxSession with session_id {gx_session.session_id} is not active. Continuing...")
+                    logging.error(f"Received AAR on frame {pkt_number} but corresponding GxSession with session_id {gx_session.session_id} is no longer active. Returning...")
                     return
-                rx_session = rx_sessions.create_session(gx_session.subscriber, session_id, gx_session.session_id)
-                rx_session.set_gx_session_id(gx_session.session_id)
-                rx_session.set_start_time(pkt_timestamp)
-                gx_session.add_rx_session(rx_session)
+                # Check if there's already a RxSession with same id
+                if not rx_sessions.get(session_id):
+                    rx_session = rx_sessions.create_session(gx_session.subscriber, session_id, gx_session.session_id)
+                    rx_session.set_gx_session_id(gx_session.session_id)
+                    rx_session.framed_ip_address = gx_session.framed_ip_address
+                    rx_session.set_start_time(pkt_timestamp)
+                    gx_session.add_rx_session(rx_session)
+                else:
+                    rx_session = rx_sessions.get(session_id)
+
+                # Check if is voice call and print it
+                # if diameter_message.avps.get('Media-Type') == 'AUDIO':
+                #     if not session_manager.voice_call_rx_sessions.get(rx_session.session_id):
+                #         session_manager.voice_call_rx_sessions[rx_session.session_id] = rx_session
+                #         logging.info(f"Subscriber {gx_session.subscriber.msisdn} started voice call")
+
             else:
                 rx_session = rx_sessions.get(session_id)
                 if not rx_session:
                     return
                 gx_session = gx_sessions.get(rx_session.gx_session_id)
-                # diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
                 if diameter_message.name == STR:
                     rx_session.set_end_time(pkt_timestamp)
+
             diameter_message.set_framed_ip_address(gx_session.framed_ip_address)
             rx_sessions.add_message(session_id, diameter_message)
 
@@ -151,12 +170,14 @@ def process_pkt(pkt, session_manager: SessionManager):
 
     except Exception as e:
         logger.error(f"Error processing packet number {pkt_number}: {e}")
-        session_manager.parse_sessions()
-        raise e
+        # session_manager.parse_sessions()
+        # raise e
 
 
 BASE_FILTER = "diameter && !(diameter.cmd.code == 280) && !(diameter.cmd.code == 257)"
-DIAMETER_PORTS = [30101, 30001, 31501, 31601, 30003, 31009, 31115]
+# DIAMETER_PORTS = [30101, 30001, 31501, 31601, 30003, 31009, 31115]
+DIAMETER_PORTS = [31009, 31115]
+# DIAMETER_PORTS = [3868, 3870]
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -169,15 +190,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     custom_subscribers = Subscribers()
-    # 56946117399_730030540816245
-    # 56950018795_730030540816229
-    # 56954225424_730030540816243
     custom_subscribers.create_subscriber("56946117399", "56946117399", "730030540816245")
     custom_subscribers.create_subscriber("56950018795", "56950018795", "730030540816229")
     custom_subscribers.create_subscriber("56954225424", "56954225424", "730030540816243")
 
-    pcap = Pcap(pcap_path, DIAMETER_PORTS, BASE_FILTER)
-    session_manager = SessionManager(subscribers=custom_subscribers, pcap_filename=pcap.filename)
+    pcap = Pcap(pcap_path, DIAMETER_PORTS, BASE_FILTER, start_timestamp=1722520800)
+    session_manager = SessionManager(pcap=pcap, subscribers=custom_subscribers)
+    # session_manager = SessionManager(pcap=pcap)
     cap = create_pyshark_object(pcap)
     while True:
         try:

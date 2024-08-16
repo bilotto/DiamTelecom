@@ -27,7 +27,7 @@ class AVPs():
     def get_fields_string(self):
         message_fields = ""
         for key, value in self.avps.items():
-            print(key, value)
+            # print(key, value)
             message_fields += f"{value}"
             if key != list(self.avps.keys())[-1]:
                 message_fields += self.FIELDS_SEPARATOR
@@ -63,6 +63,12 @@ class DiameterMessage:
 
     def set_framed_ip_address(self, framed_ip_address):
         self.framed_ip_address = framed_ip_address
+
+    @property
+    def pkt_number(self):
+        if self.pkt:
+            return self.pkt.number
+        return None
 
     @property
     def time(self):

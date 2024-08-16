@@ -49,7 +49,6 @@ class Subscribers:
         return None
     
     def get_subscriber(self, id: str) -> Subscriber:
-        logger.debug("Buscando subscriber com ID: %s", id)
         return self.subscribers.get(id)
     
     def get_subscribers(self) -> List[Subscriber]:
