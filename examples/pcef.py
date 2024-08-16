@@ -12,6 +12,9 @@ logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
 
 from DiamTelecom.diameter.create_nodes import *
 
+def handle_request(app: CustomSimpleThreadingApplication, message: Message):
+    pass
+
 if __name__ == "__main__":
     pcef_node = create_node("pcef", "example.com", ["localhost"], 3869)
 
@@ -26,7 +29,7 @@ if __name__ == "__main__":
         }
     ]
     pcef_peers = add_peers(pcef_node, pcef_peers_list)
-    pcef = create_gx_app(10)
+    pcef = create_gx_app(10, handle_request)
     pcef_node.add_application(pcef, pcef_peers)
     pcef.node.vendor_id = VENDOR_TGPP
     pcef.node.product_name = "PCEF"
