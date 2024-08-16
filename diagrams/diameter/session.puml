@@ -3,25 +3,24 @@
 
 package DiamTelecom {
     class DiameterSession <<DiamTelecom>> {
-        +session_id: str
-        +messages: DiameterMessages
+        session_id: str
+        messages: DiameterMessages
     }
 
     DiameterSession *-- DiameterMessages
 
     class DiameterSessions <<DiamTelecom>> {
-        +sessions: Map[str, DiameterSession]
-        +create() -> DiameterSession
+        create_session() -> DiameterSession
     }
 
     DiameterSessions o-- DiameterSession
 
     class GxSession <<DiamTelecom>> {
-        +framed_ip_address: str
+        framed_ip_address: str
     }
 
     class GxSessions <<DiamTelecom>> {
-        +create() -> GxSession
+        create_session() -> GxSession
     }
 
     GxSessions --|> DiameterSessions
@@ -29,11 +28,11 @@ package DiamTelecom {
     GxSessions o-- GxSession
 
     class RxSession <<DiamTelecom>> {
-        +gx_session_id: str
+        gx_session_id: str
     }
 
     class RxSessions <<DiamTelecom>> {
-        +create() -> RxSession
+        create_session() -> RxSession
     }
 
     RxSessions --|> DiameterSessions
@@ -41,11 +40,11 @@ package DiamTelecom {
     RxSessions o-- RxSession
 
     class SySession <<DiamTelecom>> {
-        +gx_session_id: str
+        gx_session_id: str
     }
 
     class SySessions <<DiamTelecom>> {
-        +create() -> SySession
+        create_session() -> SySession
     }
     SySessions --|> DiameterSessions
     SySession --|> DiameterSession

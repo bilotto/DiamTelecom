@@ -2,39 +2,39 @@
 !include diameter/service.puml
 package DiamTelecom {
     class Subscriber <<DiamTelecom>> {
-        +id
-        +msisdn
-        +imsi
-        +gx_sessions: GxSessions
-        +sy_sessions: SySessions
-        +rx_sessions: RxSessions
+        id
+        msisdn
+        imsi
+        ' gx_sessions: GxSessions
+        ' sy_sessions: SySessions
+        ' rx_sessions: RxSessions
     }
 
     class Subscribers <<DiamTelecom>> {
-        +subscribers: Map<String, Subscriber>
     }
+
+    Subscribers o-- Subscriber
 
     class Carrier <<DiamTelecom>> {
-        +id
-        +name
-        +subscribers: Subscribers
-        +data_service: DataService
-        +voice_service: VoiceService
+        id
+        name
+        subscribers: Subscribers
+        data_service: DataService
+        voice_service: VoiceService
 
     }
 
-    class Carriers <<DiamTelecom>> {
-        +carriers: Map<String, Carrier>
-    }
-
-
-    Carriers *-- Carrier
     Carrier *-- Subscribers
-    Subscribers o-- Subscriber
     Carrier *-- DataService
     Carrier *-- VoiceService
-    Subscriber o-- GxSessions
-    Subscriber o-- SySessions
-    Subscriber o-- RxSessions
+
+    class Carriers <<DiamTelecom>> {
+    }
+
+    Carriers *-- Carrier
+
+    DiameterSession o-- Subscriber
+
+
 }
 @enduml
