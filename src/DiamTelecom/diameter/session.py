@@ -1,5 +1,5 @@
 from .constants import *
-from .subscriber import Subscriber
+from ..telecom import Subscriber
 from .message import DiameterMessage, DiameterMessages, Message, create_diameter_message_from_message
 from typing import List, Dict, Set
 import logging

@@ -1,6 +1,6 @@
 from .ip_queue import IpQueue, ip_to_bytes
 from DiamTelecom.diameter import *
-from carrier.subscriber import CustomSubscriber
+from DiamTelecom.telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
 from diameter.message.avp.grouped import *
@@ -66,7 +66,7 @@ class RxService:
         str_.auth_application_id = APP_3GPP_RX
         return str_
 
-    def create_rx_session(self, subscriber: CustomSubscriber, gx_session: GxSession):
+    def create_rx_session(self, subscriber: Subscriber, gx_session: GxSession):
         rx_session_id = self.af.node.session_generator.next_id()
         # rx_session = RxSession(subscriber, rx_session_id, gx_session)
         rx_session = RxSession(subscriber, rx_session_id, gx_session.session_id)
@@ -204,7 +204,7 @@ class GxService:
         ccr.header.is_proxyable = True
         return ccr
     
-    def create_gx_session(self, subscriber: CustomSubscriber):
+    def create_gx_session(self, subscriber: Subscriber):
         gx_session_id = self.pcef.node.session_generator.next_id()
         framed_ip_address = self.ip_queue.get_ip()
         gx_session = self.pcef.sessions.create_session(subscriber, gx_session_id, framed_ip_address)

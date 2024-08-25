@@ -1,6 +1,6 @@
-from DiamTelecom.diameter import *
+from ..diameter import *
 from .ip_queue import IpQueue, ip_to_bytes
-from carrier.subscriber import *
+from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
@@ -17,7 +17,7 @@ class DataService(Service):
     def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
         return self.sy_service.wait_for_sy_session(subscriber_msisdn, timeout)
     
-    def create_gx_session(self, subscriber: CustomSubscriber):
+    def create_gx_session(self, subscriber: Subscriber):
         return self.gx_service.create_gx_session(subscriber)
 
     def start_gx_session(self, gx_session: GxSession):
