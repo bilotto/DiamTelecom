@@ -1,9 +1,9 @@
 from diameter.message.constants import *
-from carrier.custom_app import CustomSimpleThreadingApplication, PCEF, AF, OCS
+from .diameter.app import CustomSimpleThreadingApplication, GxApplication, RxAppication, SyApplication
 from diameter.message.commands import Message, ReAuthRequest, ReAuthAnswer, SpendingLimitRequest, SpendingLimitAnswer, SessionTerminationRequest, SessionTerminationAnswer
 from diameter.message.avp.grouped import PolicyCounterStatusReport
 import logging
-from DiamTelecom import *
+from .diameter.session import *
 logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s",
                     level=logging.DEBUG)
 # this shows a human-readable message dump in the logs
@@ -28,7 +28,7 @@ def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
     session.add_message(answer)
     return answer
 
-def handle_slr(app: OCS, message: SpendingLimitRequest):
+def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     if message.auth_application_id == APP_3GPP_SY:
         session_id = message.session_id
         subscription_id = message.subscription_id
