@@ -9,10 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class RxService:
-    rx_app: RxAppication
+    rx_app: RxApplication
     rx_config: dict
 
-    def __init__(self, rx_app: RxAppication, rx_config: dict):
+    def __init__(self, rx_app: RxApplication, rx_config: dict):
         self.rx_app = rx_app
         self.rx_config = rx_config
 

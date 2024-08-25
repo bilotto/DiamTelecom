@@ -10,7 +10,7 @@ from .services import Service, GxService, RxService
 import time
 
 class VoiceService(Service):
-    def __init__(self, gx_config: dict, rx_config: dict, carrier_data: dict, gx_app: GxApplication, rx_app: RxAppication):
+    def __init__(self, gx_config: dict, rx_config: dict, carrier_data: dict, gx_app: GxApplication, rx_app: RxApplication):
         super().__init__(gx_service=GxService(gx_app, gx_config), rx_service=RxService(rx_app, rx_config))
 
     # def send_rx_request(self, rx_session: RxSession, message, timeout=5):

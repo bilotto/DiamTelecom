@@ -1,5 +1,5 @@
 from diameter.message.constants import *
-from .diameter.app import CustomSimpleThreadingApplication, GxApplication, RxAppication, SyApplication
+from .diameter.app import CustomSimpleThreadingApplication, GxApplication, RxApplication, SyApplication
 from diameter.message.commands import Message, ReAuthRequest, ReAuthAnswer, SpendingLimitRequest, SpendingLimitAnswer, SessionTerminationRequest, SessionTerminationAnswer
 from diameter.message.avp.grouped import PolicyCounterStatusReport
 import logging
