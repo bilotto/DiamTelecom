@@ -27,29 +27,25 @@ class Subscriber:
         self.imsi = imsi
         # self.messages = DiameterMessages()
 
-class Subscribers:
-    subscribers: Dict[str, Subscriber]
+class Subscribers(dict):
     """
     Represents a collection of subscribers.
     """
-    def __init__(self):
-        self.subscribers = {}
-
     def create_subscriber(self, id: str, msisdn: str, imsi: str):
-        if id in self.subscribers:
+        if id in self:
             raise ValueError("Subscriber ID already exists")
         subscriber = Subscriber(id, msisdn, imsi)
-        self.subscribers[subscriber.id] = subscriber
+        self[id] = subscriber
         return subscriber
     
     def get_subscriber_by_msisdn(self, msisdn: str) -> Subscriber:
-        for subscriber in self.subscribers.values():
+        for subscriber in self.values():
             if subscriber.msisdn == msisdn:
                 return subscriber
         return None
     
     def get_subscriber(self, id: str) -> Subscriber:
-        return self.subscribers.get(id)
+        return self.get(id)
     
     def get_subscribers(self) -> List[Subscriber]:
-        return list(self.subscribers.values())
+        return list(self.values())

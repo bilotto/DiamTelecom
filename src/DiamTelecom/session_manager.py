@@ -1,4 +1,4 @@
-from .diameter.subscriber import Subscribers
+from .telecom.subscriber import Subscribers
 from .diameter import *
 import os
 import csv
