@@ -1,0 +1,98 @@
+
+peers:
+  - id: ocs_miami
+    app_id: 'sy'
+    origin_host: hss.dmg.miami.com
+    tcp_port: 31124
+    origin_realm: dmg.miami.com
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: ocs_guyana
+    app_id: 'sy'
+    origin_host: hss.dmg.guyana.com
+    tcp_port: 31123
+    origin_realm: dmg.guyana.com
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: pgw_gtt
+    app_id: 'gx'
+    origin_host: pgw.pcef.realm
+    tcp_port: 21053
+    origin_realm: pcef.realm
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: aop-guy-gtt-sigm-gx-data-0
+    app_id: 'gx'
+    origin_host: aop-guy-gtt-sigm-gx-data-0
+    tcp_port: 30001
+    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: aop-guy-gtt-sigm-gx-data-1
+    app_id: 'gx'
+    origin_host: aop-guy-gtt-sigm-gx-data-1
+    tcp_port: 30002
+    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: aop-guy-guy-sigm-sy-data-0
+    app_id: 'sy'
+    origin_host: aop-guy-guy-sigm-sy-data-0
+    tcp_port: 30101
+    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: aop-guy-guy-sigm-sy-data-1
+    app_id: 'sy'
+    origin_host: aop-guy-guy-sigm-sy-data-1
+    tcp_port: 30102
+    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: aop-guy-mia-sigm-sy-data-0
+    app_id: 'sy'
+    origin_host: aop-guy-mia-sigm-sy-data-0
+    tcp_port: 30103
+    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+  - id: aop-guy-mia-sigm-sy-data-1
+    app_id: 'sy'
+    origin_host: aop-guy-mia-sigm-sy-data-1
+    tcp_port: 30104
+    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+    ip_addresses:
+      - localhost
+    is_persistent: False
+    is_default: False
+
+
+    # nodes['aop-guy-gtt-sigm-sy-data-0'] = create_node("aop-guy-gtt-sigm-sy-data-0", "aop.data.mnc002.mcc738.3gppnetwork.org", ["localhost"], 30101)
+    # nodes['aop-guy-gtt-sigm-sy-data-1'] = create_node("aop-guy-gtt-sigm-sy-data-1", "aop.data.mnc002.mcc738.3gppnetwork.org", ["localhost"], 30102)
+    # nodes['aop-mia-gtt-sigm-sy-data-0'] = create_node("aop-mia-gtt-sigm-sy-data-0", "aop.data.mnc002.mcc738.3gppnetwork.org", ["localhost"], 30103)
+    # nodes['aop-mia-gtt-sigm-sy-data-1'] = create_node("aop-mia-gtt-sigm-sy-data-1", "aop.data.mnc002.mcc738.3gppnetwork.org", ["localhost"], 30104)
+
