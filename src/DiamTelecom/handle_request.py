@@ -1,13 +1,23 @@
 from diameter.message.constants import *
 from .diameter.app import CustomSimpleThreadingApplication, GxApplication, RxApplication, SyApplication
-from diameter.message.commands import Message, ReAuthRequest, ReAuthAnswer, SpendingLimitRequest, SpendingLimitAnswer, SessionTerminationRequest, SessionTerminationAnswer
+from diameter.message.commands import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
 import logging
 from .diameter.session import *
-logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s",
-                    level=logging.DEBUG)
-# this shows a human-readable message dump in the logs
-# logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def handle_request(app: CustomSimpleThreadingApplication, message: Message):
+    logger.info(f"Received message {message}")
+    if isinstance(message, ReAuthRequest):
+        return handle_rar(app, message)
+    elif isinstance(message, SpendingLimitRequest):
+        return handle_slr(app, message)
+    elif isinstance(message, SessionTerminationRequest):
+        return handle_str(app, message)
+    elif isinstance(message, CreditControlRequest):
+        return handle_ccr(app, message)
+    return None
+
 
 
 def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
@@ -94,11 +104,19 @@ def handle_str(app: CustomSimpleThreadingApplication, message: SessionTerminatio
     session.add_message(answer)
     return answer
 
-def handle_request(app: CustomSimpleThreadingApplication, message: Message):
-    if isinstance(message, ReAuthRequest):
-        return handle_rar(app, message)
-    elif isinstance(message, SpendingLimitRequest):
-        return handle_slr(app, message)
-    elif isinstance(message, SessionTerminationRequest):
-        return handle_str(app, message)
-    return None
+def handle_ccr(app: CustomSimpleThreadingApplication, message: CreditControlRequest):
+    answer = message.to_answer()
+    if not isinstance(answer, CreditControlAnswer):
+        raise Exception("Not a Credit-Control-Answer message")
+    session_id = message.session_id
+    print(f"Received message {message} with session_id {session_id}")
+    answer.session_id = message.session_id
+    answer.origin_host = app.node.origin_host.encode()
+    answer.origin_realm = app.node.realm_name.encode()
+    answer.destination_realm = message.origin_realm
+    answer.cc_request_type = message.cc_request_type
+    answer.cc_request_number = message.cc_request_number
+    answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
+    answer.auth_application_id = message.auth_application_id
+    return answer
+
