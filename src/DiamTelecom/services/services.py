@@ -158,7 +158,12 @@ class GxService:
                  ):
         self.gx_app = gx_app
         self.gx_config = gx_config
-        self.ip_queue = IpQueue(gx_config['ip_start'], gx_config['ip_end'])
+        if gx_config.get('ip_start') and gx_config.get('ip_end'):
+            self.ip_queue = IpQueue(gx_config['ip_start'], gx_config['ip_end'])
+        else:
+            ip_start = "10.0.0.0"
+            ip_end = "10.0.0.100"
+            self.ip_queue = IpQueue(ip_start, ip_end)
 
     @property
     def pcef(self):
@@ -204,7 +209,8 @@ class GxService:
         ccr.header.is_proxyable = True
         return ccr
     
-    def create_gx_session(self, subscriber: Subscriber):
+    def create_gx_session(self, subscriber: Subscriber) -> GxSession:
+        logger.info(f"Creating GX session for {subscriber.msisdn}")
         gx_session_id = self.pcef.node.session_generator.next_id()
         framed_ip_address = self.ip_queue.get_ip()
         gx_session = self.pcef.sessions.create_session(subscriber, gx_session_id, framed_ip_address)

@@ -6,6 +6,8 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = DiameterSessions()
         self.started = False
+        #
+        self.init_connection = False
 
     def get_session_by_id(self, session_id: str) -> DiameterSession:
         return self.sessions.get_session(session_id)

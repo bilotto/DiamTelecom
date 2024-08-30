@@ -49,3 +49,11 @@ class Subscribers(dict):
     
     def get_subscribers(self) -> List[Subscriber]:
         return list(self.values())
+
+    def add_subscriber(self, msisdn: str, imsi: str, carrier_id: int) -> Subscriber:
+        subscriber = self.create_subscriber(msisdn, msisdn, imsi)
+        return subscriber
+    
+
+    def get_random_subscriber(self) -> Subscriber:
+        return next(iter(self.values()))

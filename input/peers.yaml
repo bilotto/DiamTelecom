@@ -1,14 +1,14 @@
 
 peers:
-  - id: ocs_miami
-    app_id: 'sy'
-    origin_host: hss.dmg.miami.com
-    tcp_port: 31124
-    origin_realm: dmg.miami.com
-    ip_addresses:
-      - localhost
-    is_persistent: False
-    is_default: False
+  # - id: ocs_miami
+  #   app_id: 'sy'
+  #   origin_host: hss.dmg.miami.com
+  #   tcp_port: 31124
+  #   origin_realm: dmg.miami.com
+  #   ip_addresses:
+  #     - localhost
+  #   is_persistent: False
+  #   is_default: False
 
   - id: ocs_guyana
     app_id: 'sy'
@@ -29,16 +29,27 @@ peers:
       - localhost
     is_persistent: False
     is_default: False
+    apn: gtt.com
 
-  - id: pgw_ocm
+  - id: miadsc
     app_id: 'gx'
-    origin_host: pgw2.pcef.realmx
-    tcp_port: 21052
-    origin_realm: pcef2.realm
+    origin_host: miadsc.epc.mnc040.mcc311.3gppnetwork.org
+    tcp_port: 21001
+    origin_realm: epc.mnc040.mcc311.3gppnetwork.org
     ip_addresses:
       - localhost
     is_persistent: False
     is_default: False
+
+  # - id: pgw_ocm
+  #   app_id: 'gx'
+  #   origin_host: pgw2.pcef.realm
+  #   tcp_port: 21052
+  #   origin_realm: pcef2.realm
+  #   ip_addresses:
+  #     - localhost
+  #   is_persistent: False
+  #   is_default: False
 
   - id: aop-guy-gtt-sigm-gx-data-0
     app_id: 'gx'
@@ -80,67 +91,43 @@ peers:
     is_persistent: False
     is_default: False
 
-  - id: aop-guy-mia-sigm-sy-data-0
-    app_id: 'sy'
-    origin_host: aop-guy-mia-sigm-sy-data-0
-    tcp_port: 30103
-    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
-    ip_addresses:
-      - localhost
-    is_persistent: False
-    is_default: False
+  # - id: aop-guy-mia-sigm-sy-data-0
+  #   app_id: 'sy'
+  #   origin_host: aop-guy-mia-sigm-sy-data-0
+  #   tcp_port: 30103
+  #   origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+  #   ip_addresses:
+  #     - localhost
+  #   is_persistent: False
+  #   is_default: False
 
-  - id: aop-guy-mia-sigm-sy-data-1
-    app_id: 'sy'
-    origin_host: aop-guy-mia-sigm-sy-data-1
-    tcp_port: 30104
-    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
-    ip_addresses:
-      - localhost
-    is_persistent: False
-    is_default: False
+  # - id: aop-guy-mia-sigm-sy-data-1
+  #   app_id: 'sy'
+  #   origin_host: aop-guy-mia-sigm-sy-data-1
+  #   tcp_port: 30104
+  #   origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+  #   ip_addresses:
+  #     - localhost
+  #   is_persistent: False
+  #   is_default: False
 
-  - id: aop-guy-ocm-sigm-gx-data-0
-    app_id: 'gx'
-    origin_host: aop-guy-ocm-sigm-gx-data-0
-    tcp_port: 30003
-    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
-    ip_addresses:
-      - localhost
-    is_persistent: False
-    is_default: False
+  # - id: aop-guy-ocm-sigm-gx-data-0
+  #   app_id: 'gx'
+  #   origin_host: aop-guy-ocm-sigm-gx-data-0
+  #   tcp_port: 30003
+  #   origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+  #   ip_addresses:
+  #     - localhost
+  #   is_persistent: False
+  #   is_default: False
 
-  - id: aop-guy-ocm-sigm-gx-data-1
-    app_id: 'gx'
-    origin_host: aop-guy-ocm-sigm-gx-data-1
-    tcp_port: 30004
-    origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
-    ip_addresses:
-      - localhost
-    is_persistent: False
-    is_default: False
+  # - id: aop-guy-ocm-sigm-gx-data-1
+  #   app_id: 'gx'
+  #   origin_host: aop-guy-ocm-sigm-gx-data-1
+  #   tcp_port: 30004
+  #   origin_realm: aop.data.mnc002.mcc738.3gppnetwork.org
+  #   ip_addresses:
+  #     - localhost
+  #   is_persistent: False
+  #   is_default: False
 
-
-      # gx: 
-      #   origin_host: pgw2.pcef.realmx
-      #   realm: pcef2.realm
-      #   ip_addresses: ["127.0.0.1"]
-      #   tcp_port: 21052
-      #   # destination_host: aop-mia-gtt-sigm-gx-0
-      #   destination_realm: aop.data.mnc000.mcc350.3gppnetwork.org
-      #   ip_start: "10.0.0.1"
-      #   ip_end: "10.0.0.255"
-      #   apn: web.c1.bm
-      #   peers:
-      #     - host: aop-guy-ocm-sigm-gx-data-0
-      #       port: 30003
-      #       realm: aop.data.mnc000.mcc350.3gppnetwork.org
-      #       ip_addresses: ["localhost"]
-      #       is_persistent: true
-      #       is_default: false
-      #     - host: aop-guy-ocm-sigm-gx-data-1
-      #       port: 30004
-      #       realm: aop.data.mnc000.mcc350.3gppnetwork.org
-      #       ip_addresses: ["localhost"]
-      #       is_persistent: true
-      #       is_default: false

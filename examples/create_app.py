@@ -1,17 +1,10 @@
 from diameter.message.constants import *
 from DiamTelecom.diameter.app import *
 from typing import List, Dict
-import logging
-# this shows a human-readable message dump in the logs
-logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s [%(threadName)s]",
-                    level=logging.DEBUG)
-
-# this shows a human-readable message dump in the logs
-logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
-
 from DiamTelecom.diameter.create_nodes import *
 from DiamTelecom.handle_request import handle_request
 
+from DiamTelecom.services import DataService
 
 import yaml
 
@@ -19,7 +12,9 @@ class PeersYaml:
     def __init__(self, file_path):
         self.file_path = file_path
         self.peers_config = self.read_file()
-        self.apps = []
+        # self.apps = []
+        self.apps = dict()
+        self.apps_config = dict()
 
     def read_file(self):
         with open(self.file_path, 'r') as stream:
@@ -34,7 +29,7 @@ class PeersYaml:
                 return i
             
     def get_apps(self) -> List[CustomSimpleThreadingApplication]:
-        return self.apps
+        return list(self.apps.values())
 
     def create_node_and_add_peers(self, node_id, peer_id_list, node_init_connection=False) -> CustomSimpleThreadingApplication:
         node_config = self.get_peer_attributes(node_id)
@@ -56,26 +51,32 @@ class PeersYaml:
         elif node_config['app_id'] == 'sy':
             app = create_sy_app(1, handle_request)
         node.add_application(app, actual_peer_list)
-        self.apps.append(app)
+        if node_init_connection == True:
+            app.init_connection = True
+        # self.apps.append(app)
+        self.apps[node_id] = app
+        self.apps_config[node_id] = node_config
         return app
 
-            
-
-if __name__ == "__main__":
-    peers_file = "../input/peers.yaml"
-    peers_yaml = PeersYaml(peers_file)
+    def get_app(self, app_id):
+        return self.apps[app_id]
     
-    peers_yaml.create_node_and_add_peers('aop-guy-gtt-sigm-gx-data-0', ['pgw_gtt'])
-    peers_yaml.create_node_and_add_peers('aop-guy-gtt-sigm-gx-data-1', ['pgw_gtt'])
-    # peers_yaml.create_node_and_add_peers('aop-guy-ocm-sigm-gx-data-0', ['pgw_ocm'])
-    # peers_yaml.create_node_and_add_peers('aop-guy-ocm-sigm-gx-data-1', ['pgw_ocm'])
-    peers_yaml.create_node_and_add_peers('aop-guy-guy-sigm-sy-data-0', ['ocs_guyana'])
-    peers_yaml.create_node_and_add_peers('aop-guy-guy-sigm-sy-data-1', ['ocs_guyana'])
-    peers_yaml.create_node_and_add_peers('aop-guy-mia-sigm-sy-data-0', ['ocs_miami'])
-    peers_yaml.create_node_and_add_peers('aop-guy-mia-sigm-sy-data-1', ['ocs_miami'])
+    def get_app_config(self, app_id):
+        return self.apps_config[app_id]
 
-    for app in peers_yaml.get_apps():
-        app.node.start()
-    for app in peers_yaml.get_apps():
-        app.wait_for_ready()
+
+# if __name__ == "__main__":
+peers_file = "../input/peers.yaml"
+peers_yaml = PeersYaml(peers_file)
+
+# peers_yaml.create_node_and_add_peers('aop-guy-gtt-sigm-gx-data-0', ['miadsc'])
+# peers_yaml.create_node_and_add_peers('aop-guy-gtt-sigm-gx-data-1', ['miadsc'])
+# peers_yaml.create_node_and_add_peers('pgw_gtt', ['miadsc'])
+# peers_yaml.create_node_and_add_peers('miadsc', ['aop-guy-gtt-sigm-gx-data-0', 'aop-guy-gtt-sigm-gx-data-1', 'pgw_gtt'], node_init_connection=True)
+
+
+peers_yaml.create_node_and_add_peers('aop-guy-gtt-sigm-gx-data-0', ['pgw_gtt'])
+peers_yaml.create_node_and_add_peers('aop-guy-guy-sigm-sy-data-0', ['ocs_guyana'])
+peers_yaml.create_node_and_add_peers('pgw_gtt', ['aop-guy-gtt-sigm-gx-data-0'], True)
+peers_yaml.create_node_and_add_peers('ocs_guyana', ['aop-guy-guy-sigm-sy-data-0'], True)
 
