@@ -94,7 +94,7 @@ class SyService:
     def sy_destination_realm(self) -> str:
         if self.sy_config.get('destination_realm'):
             return self.sy_config['destination_realm']
-        return None
+        return self.ocs.node.realm_name
     
     def start(self):
         self.ocs.custom_start()
@@ -105,11 +105,14 @@ class SyService:
     def set_sy_hosts(self, message):
         origin_host = self.ocs.node.origin_host
         origin_realm = self.ocs.node.realm_name
-        destination_host = self.sy_destination_host
+        if self.sy_destination_host:
+            destination_host = self.sy_destination_host
+            message.destination_host = destination_host.encode()
+        
         destination_realm = self.sy_destination_realm
         message.origin_host = origin_host.encode()
         message.origin_realm = origin_realm.encode()
-        message.destination_host = destination_host.encode()
+        
         message.destination_realm = destination_realm.encode()
         # message.route_record = origin_host.encode()
         return message
@@ -409,15 +412,19 @@ class Service:
         return ports
 
     def start(self):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
-        self.gx_service.start()
-        time.sleep(1)
+        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         if self.sy_service:
             self.sy_service.start()
         if self.rx_service:
             self.rx_service.start()
-        time.sleep(1)
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        self.gx_service.start()
+
+    def wait_for_ready(self):
+        if self.sy_service:
+            self.sy_service.ocs.wait_for_ready()
+        if self.rx_service:
+            self.rx_service.af.wait_for_ready()
+        self.gx_service.pcef.wait_for_ready()
 
     def stop(self):
         logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
