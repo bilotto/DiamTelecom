@@ -24,7 +24,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
     def custom_start(self):
         if not self.started:
             self.node.start()
-            self.wait_for_ready()
+            # self.wait_for_ready()
             self.started = True
 
     def custom_stop(self):

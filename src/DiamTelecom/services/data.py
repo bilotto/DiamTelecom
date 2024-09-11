@@ -3,7 +3,7 @@ from .ip_queue import IpQueue, ip_to_bytes
 from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
-from diameter.message.avp.grouped import PolicyCounterStatusReport
+from diameter.message.avp.grouped import *
 import time
 from .services import Service, GxService, SyService
 
@@ -73,11 +73,10 @@ class DataService(Service):
         #
         ccr.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
 
+        ccr.supported_features = SupportedFeatures()
         ccr.supported_features.vendor_id = VENDOR_TGPP
         ccr.supported_features.feature_list = 1032
         ccr.supported_features.feature_list_id = 1
-
-        ccr.qos_information = None
 
         ccr.origin_state_id = 1448374171
 

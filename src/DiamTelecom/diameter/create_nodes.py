@@ -36,8 +36,8 @@ def create_node(origin_host, realm, ip_addresses, tcp_port) -> Node:
     return node
 
 def add_peers(node: Node, peers_list: List[Dict]) -> List[Peer]:
-    return [node.add_peer(f"aaa://{peer['origin_host']}:{peer['tcp_port']};transport=tcp",
-                          peer['origin_realm'],
+    return [node.add_peer(f"aaa://{peer['host']}:{peer['port']};transport=tcp",
+                          peer['realm'],
                           ip_addresses=peer.get('ip_addresses'),
                           is_persistent=peer['is_persistent'],
                           is_default=peer.get('is_default', False))
