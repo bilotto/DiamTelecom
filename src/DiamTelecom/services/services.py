@@ -175,7 +175,9 @@ class GxService:
 
     @property
     def gx_destination_realm(self):
-        return self.gx_config.get('destination_realm')
+        if self.gx_config.get('destination_realm'):
+            return self.gx_config['destination_realm']
+        return self.pcef.node.realm_name
 
     def start(self):
         self.pcef.custom_start()
@@ -230,6 +232,154 @@ class GxService:
                 logger.warn("Timeout")
                 return False
         return True
+    
+    def start_gx_session(self, gx_session: GxSession):
+        logger.info(f"Starting GX session: {gx_session}")
+        # ccr_i = self.create_ccr_i(gx_session)
+        ccr_i = self.create_ccr_i(self.gx_destination_host,
+                                  self.gx_destination_realm,
+                                  gx_session.session_id,
+                                  gx_session.framed_ip_address,
+                                  gx_session.mcc_mnc,
+                                  gx_session.rat_type,
+                                  gx_session.apn,
+                                  gx_session.msisdn,
+                                  gx_session.imsi)
+        try:
+            cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
+        except:
+            # First one failed. Try again
+            logger.info("Sending CCR-I request again")
+            cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
+        if cca_i.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
+            logger.info(f"CCA-I Result-Code is not 2001. RC: {cca_i.result_code}")
+            return gx_session
+        logger.info("GX session started")
+        #
+        return gx_session
+    
+    # def create_ccr_i(self, gx_session: GxSession) -> CreditControlRequest:
+    #     from diameter.message.avp.grouped import SupportedFeatures, QosInformation, DefaultEpsBearerQos
+    #     ccr = self.create_ccr()
+    #     ccr.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+    #     ccr.cc_request_number = 0
+    #     #
+    #     ccr.session_id = gx_session.session_id
+    #     ccr.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
+    #     if not gx_session.mcc_mnc:
+    #         raise ValueError("MCC-MNC is required")
+    #     ccr.sgsn_mcc_mnc = str(gx_session.mcc_mnc)
+    #     #
+    #     ccr.rat_type = E_RAT_TYPE_EUTRAN
+    #     if gx_session.rat_type:
+    #         ccr.rat_type = gx_session.rat_type
+
+    #     ccr.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+    #     if not gx_session.apn:
+    #         ccr.called_station_id = "apn"
+    #     else:
+    #         ccr.called_station_id = gx_session.apn
+            
+    #     ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(gx_session.msisdn))
+    #     ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(gx_session.imsi))
+
+    #     # ccr.user_equipment_info = UserEquipmentInfo()
+    #     # ccr.user_equipment_info.user_equipment_info_type = E_USER_EQUIPMENT_INFO_TYPE_IMEISV
+    #     # ccr.user_equipment_info.user_equipment_info_value = b"3576260906721501"
+
+    #     ccr.supported_features = SupportedFeatures()
+    #     ccr.supported_features.vendor_id = VENDOR_TGPP
+    #     ccr.supported_features.feature_list = 1032
+    #     ccr.supported_features.feature_list_id = 1
+
+    #     ccr.qos_information = QosInformation()
+    #     ccr.qos_information.apn_aggregate_max_bitrate_ul = 300000000
+    #     ccr.qos_information.apn_aggregate_max_bitrate_dl = 150000000
+
+    #     ccr.default_eps_bearer_qos = DefaultEpsBearerQos()
+    #     ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+    #     ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+    #     ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+    #     ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+
+    #     ccr.bearer_usage = E_BEARER_USAGE_GENERAL
+    #     ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+    #     ccr.origin_state_id = 1448374171
+    #     return ccr
+    
+    def create_ccr_i(self,
+                     destination_host: str,
+                     destination_realm: str,
+                     session_id,
+                     framed_ip_address,
+                     mcc_mnc,
+                     rat_type,
+                     apn,
+                     msisdn,
+                     imsi) -> CreditControlRequest:
+        from diameter.message.avp.grouped import SupportedFeatures, QosInformation, DefaultEpsBearerQos
+
+        ccr = CreditControlRequest()
+        origin_host = self.pcef.node.origin_host
+        origin_realm = self.pcef.node.realm_name
+        ccr.origin_host = origin_host.encode()
+        ccr.origin_realm = origin_realm.encode()
+        #
+        if destination_host:
+            ccr.destination_host = destination_host.encode()
+        ccr.destination_realm = destination_realm.encode()
+        #
+
+        ccr.auth_application_id = APP_3GPP_GX
+        ccr.header.hop_by_hop_identifier = 2
+        ccr.header.end_to_end_identifier = 2
+        ccr.header.is_proxyable = True
+
+        ccr.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+        ccr.cc_request_number = 0
+        #
+        ccr.session_id = session_id
+        ccr.framed_ip_address = ip_to_bytes(framed_ip_address)
+        if not mcc_mnc:
+            raise ValueError("MCC-MNC is required")
+        ccr.sgsn_mcc_mnc = str(mcc_mnc)
+        #
+        ccr.rat_type = E_RAT_TYPE_EUTRAN
+        if rat_type:
+            ccr.rat_type = rat_type
+
+        ccr.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+        if not apn:
+            ccr.called_station_id = "apn"
+        else:
+            ccr.called_station_id = apn
+            
+        ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(msisdn))
+        ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(imsi))
+
+        # ccr.user_equipment_info = UserEquipmentInfo()
+        # ccr.user_equipment_info.user_equipment_info_type = E_USER_EQUIPMENT_INFO_TYPE_IMEISV
+        # ccr.user_equipment_info.user_equipment_info_value = b"3576260906721501"
+
+        ccr.supported_features = SupportedFeatures()
+        ccr.supported_features.vendor_id = VENDOR_TGPP
+        ccr.supported_features.feature_list = 1032
+        ccr.supported_features.feature_list_id = 1
+
+        ccr.qos_information = QosInformation()
+        ccr.qos_information.apn_aggregate_max_bitrate_ul = 300000000
+        ccr.qos_information.apn_aggregate_max_bitrate_dl = 150000000
+
+        ccr.default_eps_bearer_qos = DefaultEpsBearerQos()
+        ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+        ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+        ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+        ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+
+        ccr.bearer_usage = E_BEARER_USAGE_GENERAL
+        ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+        ccr.origin_state_id = 1448374171
+        return ccr
 
 class Service:
     gx_service: GxService
