@@ -8,10 +8,15 @@ class Subscriber:
     id: str
     msisdn: str
     imsi: str
+    carrier_id: int
     """
     Represents a telecommunications subscriber with an MSISDN and an IMSI.
     """
-    def __init__(self, id: str, msisdn: str, imsi: str):
+    def __init__(self,
+                 id: str,
+                 msisdn: str,
+                 imsi: str,
+                 carrier_id: int = None):
         logger.debug("Inicializando Subscriber com MSISDN: %s e IMSI: %s", msisdn, imsi)
         # Convert
         id = str(id)
@@ -25,6 +30,7 @@ class Subscriber:
         self.id = id
         self.msisdn = msisdn
         self.imsi = imsi
+        self.carrier_id = carrier_id
         # self.messages = DiameterMessages()
 
 class Subscribers(dict):
@@ -56,11 +62,9 @@ class Subscribers(dict):
         self[subscriber.id] = subscriber
         return subscriber
     
-
     def get_random_subscriber(self) -> Subscriber:
         return next(iter(self.values()))
     
-
     def get_subscriber_by_msisdn_imsi(self, msisdn: str, imsi: str) -> Subscriber:
         for subscriber in self.values():
             if subscriber.msisdn == msisdn and subscriber.imsi == imsi:
