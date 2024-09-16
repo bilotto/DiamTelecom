@@ -31,6 +31,7 @@ class Subscriber:
         self.msisdn = msisdn
         self.imsi = imsi
         self.carrier_id = carrier_id
+        self.use_case = None
         # self.messages = DiameterMessages()
 
 class Subscribers(dict):
