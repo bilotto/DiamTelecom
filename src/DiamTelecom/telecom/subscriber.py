@@ -50,10 +50,19 @@ class Subscribers(dict):
     def get_subscribers(self) -> List[Subscriber]:
         return list(self.values())
 
-    def add_subscriber(self, msisdn: str, imsi: str, carrier_id: int) -> Subscriber:
-        subscriber = self.create_subscriber(msisdn, msisdn, imsi)
+    def add_subscriber(self, subscriber: Subscriber) -> Subscriber:
+        if subscriber.id in self:
+            raise ValueError("Subscriber ID already exists")
+        self[subscriber.id] = subscriber
         return subscriber
     
 
     def get_random_subscriber(self) -> Subscriber:
         return next(iter(self.values()))
+    
+
+    def get_subscriber_by_msisdn_imsi(self, msisdn: str, imsi: str) -> Subscriber:
+        for subscriber in self.values():
+            if subscriber.msisdn == msisdn and subscriber.imsi == imsi:
+                return subscriber
+        return None
