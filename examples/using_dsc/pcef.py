@@ -14,23 +14,19 @@ from DiamTelecom.diameter.create_nodes import *
 
 from DiamTelecom.handle_request import handle_request
 from constant import *
+import time
 
 
 if __name__ == "__main__":
-    pcef_node = create_node(PCEF_HOST, PCEF_REALM, ["localhost"], 3869)
+    pcef_node = create_node(PCEF_HOST, PCEF_REALM, ["localhost"], PCEF_PORT)
+    pcef_node.vendor_id = VENDOR_TGPP
+    pcef_node.product_name = "PCEF"
+
 
     pcef_peers_list = [
-        # {
-        #     "host": "pcrf",
-        #     "port": 3868,
-        #     "realm": "example.com",
-        #     "ip_addresses": ["127.0.0.1"],
-        #     "is_persistent": True,
-        #     "is_default": False
-        # },
         {
             "host": DSC_HOST,
-            "port": 3870,
+            "port": DSC_PORT,
             "realm": DSC_REALM,
             "ip_addresses": ["127.0.0.1"],
             "is_persistent": False,
@@ -40,13 +36,10 @@ if __name__ == "__main__":
 
     pcef_peers = add_peers(pcef_node, pcef_peers_list)
     pcef = create_gx_app(10, handle_request)
-    pcef_node.add_application(pcef, pcef_peers, [PCRF_REALM])
-    pcef.node.vendor_id = VENDOR_TGPP
-    pcef.node.product_name = "PCEF"
+    pcef_node.add_application(pcef, pcef_peers, [PCEF_REALM, PCRF_REALM])
     pcef.node.start()
     pcef.wait_for_ready()
 
-    import time
     time.sleep(5)
     from DiamTelecom.services import GxService
 
@@ -59,8 +52,8 @@ if __name__ == "__main__":
     gx_session.apn = "internet"
 
     ccr_i = pcef_svc.create_ccr_i(
-                                PCRF_HOST,
-                                PCRF_REALM,
+                                None,
+                                PCEF_REALM,
                                 gx_session.session_id,
                                 gx_session.framed_ip_address,
                                 gx_session.mcc_mnc,
@@ -69,10 +62,10 @@ if __name__ == "__main__":
                                 gx_session.msisdn,
                                 gx_session.imsi
                                 )
+    
     cca_i = pcef_svc.send_gx_request(gx_session, ccr_i, timeout=10)
 
 
-    import time
     try:
         while True:
             time.sleep(1)

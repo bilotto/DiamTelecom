@@ -14,22 +14,25 @@ logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s"
 # this shows a human-readable message dump in the logs
 logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
 from constant import *
+import time
 
-dsc_node = create_node('dsc', 'dsc.realm', ['localhost'], 3870)
+dsc_node = create_node('dsc', 'dsc.realm', ['localhost'], DSC_PORT)
+dsc_node.vendor_id = VENDOR_TGPP
+dsc_node.product_name = "DSC"
 
 dsc_gx_peers = [
     {
-        "host": "pcrf",
-        "port": 3868,
-        "realm": "example.com",
+        "host": PCRF_HOST,
+        "port": PCRF_PORT,
+        "realm": PCRF_REALM,
         "ip_addresses": ["127.0.0.1"],
         "is_persistent": True,
         "is_default": False
     },
     {
-        "host": "pcef",
-        "port": 3869,
-        "realm": "example.com",
+        "host": PCEF_HOST,
+        "port": PCEF_PORT,
+        "realm": PCEF_REALM,
         "ip_addresses": ["localhost"],
         "is_persistent": True,
         "is_default": False
@@ -38,16 +41,21 @@ dsc_gx_peers = [
 
 gx_peers_obj = add_peers(dsc_node, dsc_gx_peers)
 dsc_gx_app = create_gx_app(10, handle_request_dsc)
-dsc_node.add_application(dsc_gx_app, gx_peers_obj)
-dsc_node.vendor_id = VENDOR_TGPP
-dsc_node.product_name = "DSC"
+dsc_node.add_application(dsc_gx_app, gx_peers_obj, [PCRF_REALM, PCEF_REALM])
+
 
 dsc_node.start()
+dsc_gx_app.wait_for_ready()
 
-import time
+
+
 try:
     while True:
-        time.sleep(1)
+        for peer in dsc_node.peers:
+            print(peer)
+            print(dsc_node.peers[peer])
+            print(dsc_node.peers[peer].connection)
+        time.sleep(5)
 
 except (KeyboardInterrupt, SystemExit) as e:
     dsc_node.stop()

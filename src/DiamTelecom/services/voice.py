@@ -4,7 +4,7 @@ from DiamTelecom.diameter import *
 from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
-from diameter.message.avp.grouped import MediaSubComponent
+# from diameter.message.avp.grouped import MediaSubComponent
 from .services import Service, GxService, RxService
 
 import time
