@@ -161,6 +161,9 @@ class GxService:
                  ):
         self.gx_app = gx_app
         self.gx_config = gx_config
+        self.request_count = dict()
+        self.request_count['success'] = 0
+        self.request_count['failure'] = 0
         if gx_config.get('ip_start') and gx_config.get('ip_end'):
             self.ip_queue = IpQueue(gx_config['ip_start'], gx_config['ip_end'])
         else:
@@ -188,11 +191,16 @@ class GxService:
     def stop(self):
         self.pcef.custom_stop()
 
-    def send_gx_request(self, gx_session: GxSession, ccr: CreditControlRequest, timeout=5):
-        gx_session.add_message(ccr)
-        cca = self.pcef.send_request(ccr, timeout)
-        gx_session.add_message(cca)
-        return cca
+    def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
+        try:
+            answer = self.pcef.send_request(request, timeout)
+            gx_session.add_message(request)
+            gx_session.add_message(answer)
+            self.request_count['success'] += 1
+            return answer
+        except Exception as e:
+            self.request_count['failure'] += 1
+            logger.error(f"Error sending request: {e}")
 
     def set_gx_hosts(self, message):
         origin_host = self.pcef.node.origin_host
@@ -215,7 +223,6 @@ class GxService:
         return ccr
     
     def create_gx_session(self, subscriber: Subscriber) -> GxSession:
-        logger.info(f"Creating GX session for {subscriber.msisdn}")
         gx_session_id = self.pcef.node.session_generator.next_id()
         framed_ip_address = self.ip_queue.get_ip()
         gx_session = self.pcef.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
@@ -336,6 +343,7 @@ class GxService:
         return ccr
     
     def send_request_list(self, request_list):
+        print(f"Sending {len(request_list)} requests")
         start_time = time.time()
 
         for index, ccr in enumerate(request_list, start=1):
