@@ -5,15 +5,32 @@ from diameter.message.constants import *
 from diameter.message.commands import *
 from diameter.message.avp.grouped import *
 import time
-from .services import Service, GxService, SyService
+# from .services import Service, GxService, SyService
+from .services import GxService, SyService
 
 import logging
 logger = logging.getLogger(__name__)
 
-class DataService(Service):
-    def __init__(self, gx_config: dict, sy_config: dict, carrier_data: dict, gx_app: GxApplication, sy_app: SyApplication):
-        super().__init__(gx_service=GxService(gx_app, gx_config), sy_service=SyService(sy_app, sy_config))
-    
+class DataService():
+    def __init__(self, gx_service: GxService, sy_service: SyService = None):
+        self.gx_service = gx_service
+        self.sy_service = sy_service
+
+    def start(self):
+        if self.sy_service:
+            self.sy_service.start()
+        self.gx_service.start()
+
+    def wait_for_ready(self):
+        if self.sy_service:
+            self.sy_service.ocs.wait_for_ready()
+        self.gx_service.pcef.wait_for_ready()
+
+    def stop(self):
+        if self.sy_service:
+            self.sy_service.stop()
+        self.gx_service.stop()
+
     def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
         return self.sy_service.wait_for_sy_session(subscriber_msisdn, timeout)
     

@@ -4,14 +4,30 @@ from DiamTelecom.diameter import *
 from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
-# from diameter.message.avp.grouped import MediaSubComponent
-from .services import Service, GxService, RxService
+from .services import GxService, RxService
 
 import time
 
-class VoiceService(Service):
-    def __init__(self, gx_config: dict, rx_config: dict, carrier_data: dict, gx_app: GxApplication, rx_app: RxApplication):
-        super().__init__(gx_service=GxService(gx_app, gx_config), rx_service=RxService(rx_app, rx_config))
+class VoiceService():
+    def __init__(self, gx_service: GxService, rx_service: RxService):
+        self.gx_service = gx_service
+        self.rx_service = rx_service
+
+    def start(self):
+        if self.rx_service:
+            self.rx_service.start()
+        self.gx_service.start()
+
+    def wait_for_ready(self):
+        if self.rx_service:
+            self.rx_service.rx_app.wait_for_ready()
+        self.gx_service.pcef.wait_for_ready()
+
+    def stop(self):
+        if self.rx_service:
+            self.rx_service.stop()
+        self.gx_service.stop()
+
 
     # def send_rx_request(self, rx_session: RxSession, message, timeout=5):
     #     rx_session.add_message(message)

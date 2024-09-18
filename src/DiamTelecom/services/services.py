@@ -377,52 +377,52 @@ class GxService:
         print(f"TPS Final: {tps_final:.2f}")
 
 
-class Service:
-    gx_service: GxService
-    rx_service: RxService
-    sy_service: SyService
+# class Service:
+#     gx_service: GxService
+#     rx_service: RxService
+#     sy_service: SyService
 
-    def __init__(self,
-                 gx_service: GxService,
-                 rx_service: RxService = None,
-                 sy_service: SyService = None,
-                 ):
-        self.gx_service = gx_service
-        self.rx_service = rx_service
-        self.sy_service = sy_service
+#     def __init__(self,
+#                  gx_service: GxService,
+#                  rx_service: RxService = None,
+#                  sy_service: SyService = None,
+#                  ):
+#         self.gx_service = gx_service
+#         self.rx_service = rx_service
+#         self.sy_service = sy_service
 
-    @property
-    def all_peers_ports(self):
-        ports = []
-        for peer in self.gx_service.gx_config['peers']:
-            ports.append(peer['port'])
-        if self.rx_service:
-            for peer in self.rx_service.rx_config['peers']:
-                ports.append(peer['port'])
-        if self.sy_service:
-            for peer in self.sy_service.sy_config['peers']:
-                ports.append(peer['port'])
-        return ports
+#     @property
+#     def all_peers_ports(self):
+#         ports = []
+#         for peer in self.gx_service.gx_config['peers']:
+#             ports.append(peer['port'])
+#         if self.rx_service:
+#             for peer in self.rx_service.rx_config['peers']:
+#                 ports.append(peer['port'])
+#         if self.sy_service:
+#             for peer in self.sy_service.sy_config['peers']:
+#                 ports.append(peer['port'])
+#         return ports
 
-    def start(self):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
-        if self.sy_service:
-            self.sy_service.start()
-        if self.rx_service:
-            self.rx_service.start()
-        self.gx_service.start()
+#     def start(self):
+#         logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+#         if self.sy_service:
+#             self.sy_service.start()
+#         if self.rx_service:
+#             self.rx_service.start()
+#         self.gx_service.start()
 
-    def wait_for_ready(self):
-        if self.sy_service:
-            self.sy_service.ocs.wait_for_ready()
-        if self.rx_service:
-            self.rx_service.af.wait_for_ready()
-        self.gx_service.pcef.wait_for_ready()
+#     def wait_for_ready(self):
+#         if self.sy_service:
+#             self.sy_service.ocs.wait_for_ready()
+#         if self.rx_service:
+#             self.rx_service.af.wait_for_ready()
+#         self.gx_service.pcef.wait_for_ready()
 
-    def stop(self):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
-        self.gx_service.stop()
-        if self.rx_service:
-            self.rx_service.stop()
-        if self.sy_service:
-            self.sy_service.stop()
+#     def stop(self):
+#         logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+#         self.gx_service.stop()
+#         if self.rx_service:
+#             self.rx_service.stop()
+#         if self.sy_service:
+#             self.sy_service.stop()
