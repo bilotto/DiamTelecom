@@ -121,6 +121,7 @@ class VoiceService():
         aar.specific_action.append(E_SPECIFIC_ACTION_ACCESS_NETWORK_INFO_REPORT)
         aar.specific_action.append(E_SPECIFIC_ACTION_INDICATION_OF_FAILED_RESOURCES_ALLOCATION)
         #
+        aar.supported_features = SupportedFeatures()
         aar.supported_features.vendor_id = VENDOR_TGPP
         aar.supported_features.feature_list = 35
         aar.supported_features.feature_list_id = 1
@@ -135,6 +136,7 @@ class VoiceService():
         aar.header.end_to_end_identifier = 4
         aar.header.is_proxyable = True
         #
+        aar.media_component_description = MediaComponentDescription()
         mdc = aar.media_component_description
         mdc.media_component_number = 0
         # mdc.af_application_identifier = "urn:3gpp:service.ims.icsi.mmtel".encode()
