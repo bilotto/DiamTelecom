@@ -34,11 +34,11 @@ class VoiceService():
         self.gx_service.stop()
 
 
-    def create_aar(self) -> AaRequest:
-        aar = AaRequest()
-        aar = self.rx_service.set_rx_hosts(aar)
-        aar.auth_application_id = APP_3GPP_RX
-        return aar
+    # def create_aar(self) -> AaRequest:
+    #     aar = AaRequest()
+    #     aar = self.rx_service.set_rx_hosts(aar)
+    #     aar.auth_application_id = APP_3GPP_RX
+    #     return aar
 
     def create_str(self):
         str_ = SessionTerminationRequest()
@@ -46,9 +46,6 @@ class VoiceService():
         str_.auth_application_id = APP_3GPP_RX
         return str_
 
-    
-
-    
     def start_rx_session(self, rx_session: RxSession):
         logger.info(f"Starting RX session: {rx_session}")
         aar = self.create_aar_audio(rx_session)
@@ -58,55 +55,66 @@ class VoiceService():
         logger.info("RX session started")
         return rx_session
 
-    def start_gx_session(self, gx_session: GxSession):
-        logger.info(f"Starting GX session: {gx_session}")
-        ccr_i = self.create_ccr_i(gx_session)
-        try:
-            cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
-        except:
-            # First one failed. Try again
-            logger.info("Sending CCR-I request again")
-            cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
-        ts = time.time()
-        gx_session.set_start_time(ts)
-        # gx_session.active = True
-        logger.info("GX session started")
-        #
-        return gx_session
+    # def start_gx_session(self, gx_session: GxSession):
+    #     logger.info(f"Starting GX session: {gx_session}")
+    #     ccr_i = self.create_ccr_i(gx_session)
+    #     try:
+    #         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
+    #     except:
+    #         # First one failed. Try again
+    #         logger.info("Sending CCR-I request again")
+    #         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
+    #     ts = time.time()
+    #     gx_session.set_start_time(ts)
+    #     # gx_session.active = True
+    #     logger.info("GX session started")
+    #     #
+    #     return gx_session
 
-    def stop_gx_session(self, gx_session: GxSession):
-        logger.info(f"Stopping GX session: {gx_session}")
-        ccr_t = self.create_ccr_t(gx_session)
-        cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
-        if not isinstance(cca_t, CreditControlAnswer):
-            raise Exception("CCA is not received")
-        if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-            self.gx_service.ip_queue.put_ip(gx_session.framed_ip_address)
-            ts = time.time()
-            gx_session.set_end_time(ts)
-        logger.info("GX session stopped")
-        return gx_session
+    # def stop_gx_session(self, gx_session: GxSession):
+    #     logger.info(f"Stopping GX session: {gx_session}")
+    #     ccr_t = self.create_ccr_t(gx_session)
+    #     cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
+    #     if not isinstance(cca_t, CreditControlAnswer):
+    #         raise Exception("CCA is not received")
+    #     if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+    #         self.gx_service.ip_queue.put_ip(gx_session.framed_ip_address)
+    #         ts = time.time()
+    #         gx_session.set_end_time(ts)
+    #     logger.info("GX session stopped")
+    #     return gx_session
 
-    def create_ccr_t(self, gx_session: GxSession) -> CreditControlRequest:
-        ccr = self.gx_service.create_ccr()
-        ccr.session_id = gx_session.session_id
-        ccr.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
-        ccr.cc_request_number = gx_session.cc_request_number + 1
-        #
-        ccr.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
+    # def create_ccr_t(self, gx_session: GxSession) -> CreditControlRequest:
+    #     ccr = self.gx_service.create_ccr()
+    #     ccr.session_id = gx_session.session_id
+    #     ccr.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
+    #     ccr.cc_request_number = gx_session.cc_request_number + 1
+    #     #
+    #     ccr.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
 
-        ccr.supported_features.vendor_id = VENDOR_TGPP
-        ccr.supported_features.feature_list = 1032
-        ccr.supported_features.feature_list_id = 1
+    #     ccr.supported_features.vendor_id = VENDOR_TGPP
+    #     ccr.supported_features.feature_list = 1032
+    #     ccr.supported_features.feature_list_id = 1
 
-        ccr.qos_information = None
+    #     ccr.qos_information = None
 
-        ccr.origin_state_id = 1448374171
+    #     ccr.origin_state_id = 1448374171
 
-        return ccr
+    #     return ccr
 
     def create_aar_audio(self, rx_session: RxSession) -> AaRequest:
-        aar = self.create_aar()
+        # aar = self.create_aar()
+        aar = AaRequest()
+        aar.auth_application_id = APP_3GPP_RX
+
+        origin_host = self.rx_service.af.node.origin_host
+        origin_realm = self.rx_service.af.node.realm_name
+        destination_host = self.rx_destination_host
+        destination_realm = self.rx_destination_realm
+        aar.origin_host = origin_host.encode()
+        aar.origin_realm = origin_realm.encode()
+        aar.destination_realm = destination_realm.encode() if destination_realm else None
+
         aar.session_id = rx_session.session_id
 
         aar.specific_action.append(E_SPECIFIC_ACTION_INDICATION_OF_RELEASE_OF_BEARER)
@@ -157,29 +165,3 @@ class VoiceService():
 
         return aar
 
-
-    def process_voice_flow(self, gx_session: GxSession):
-        subscriber = gx_session.subscriber
-        try:
-            gx_session = self.gx_service.start_gx_session(gx_session)
-            #
-            if not gx_session.active:
-                raise Exception("GxSession is not active")
-            rx_session = self.rx_service.create_rx_session(subscriber, gx_session)
-            aar = self.create_aar_audio(rx_session)
-            aaa = self.rx_service.rx_app.send_request(aar, timeout=10)
-            self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
-            if aaa.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-                rx_session.active = True
-            #
-            if rx_session.active:
-                # Send STR to RxSession
-                str_ = self.rx_service.create_str(rx_session)
-                sta = self.rx_service.af.send_request(str_, timeout=5)
-                self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
-                if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-                    rx_session.active = False
-        except Exception as e:
-            self.logger.error(f"An error occurred: {str(e)}")
-        finally:
-            gx_session = self.stop_gx_session(gx_session)

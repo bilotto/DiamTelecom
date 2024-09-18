@@ -43,15 +43,15 @@ class RxService:
         response = self.af.send_request(message, timeout)
         rx_session.add_message(response)
 
-    def set_rx_hosts(self, rx_message):
+    def set_rx_hosts(self, rx_message: Message):
         origin_host = self.af.node.origin_host
         origin_realm = self.af.node.realm_name
         destination_host = self.rx_destination_host
         destination_realm = self.rx_destination_realm
         rx_message.origin_host = origin_host.encode()
         rx_message.origin_realm = origin_realm.encode()
-        rx_message.destination_host = destination_host.encode()
-        rx_message.destination_realm = destination_realm.encode()
+        # message.destination_host = destination_host.encode() if destination_host else None
+        rx_message.destination_realm = destination_realm.encode() if destination_realm else None
         return rx_message
 
     def create_aar(self) -> AaRequest:
