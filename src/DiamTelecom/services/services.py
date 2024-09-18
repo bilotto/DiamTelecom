@@ -264,16 +264,7 @@ class GxService:
                                       gx_session.rat_type,
                                       gx_session.apn,
                                       gx_session.msisdn,
-                                      gx_session.imsi)
-        # ccr_i = self.create_ccr_i(self.gx_destination_host,
-        #                           self.gx_destination_realm,
-        #                           gx_session.session_id,
-        #                           gx_session.framed_ip_address,
-        #                           gx_session.mcc_mnc,
-        #                           gx_session.rat_type,
-        #                           gx_session.apn,
-        #                           gx_session.msisdn,
-        #                           gx_session.imsi)
+                                      gx_session.imsi))
         try:
             cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
         except:
@@ -283,6 +274,7 @@ class GxService:
         if cca_i.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
             logger.info(f"CCA-I Result-Code is not 2001. RC: {cca_i.result_code}")
             return gx_session
+        gx_session.active = True
         logger.info("GX session started")
         #
         return gx_session
