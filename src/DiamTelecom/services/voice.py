@@ -10,9 +10,13 @@ from diameter.message.avp.grouped import *
 import time
 
 class VoiceService():
-    def __init__(self, gx_service: GxService, rx_service: RxService):
+    def __init__(self,
+                 gx_service: GxService,
+                 rx_service: RxService,
+                 ):
         self.gx_service = gx_service
         self.rx_service = rx_service
+        self.dest_realm = None
 
     def start(self):
         if self.rx_service:
@@ -30,43 +34,6 @@ class VoiceService():
         self.gx_service.stop()
 
 
-    # def send_rx_request(self, rx_session: RxSession, message, timeout=5):
-    #     rx_session.add_message(message)
-    #     response = self.rx_service.af.send_request(message, timeout)
-    #     rx_session.add_message(response)
-
-    @property
-    def rx_destination_host(self):
-        if self.rx_config.get('destination_host'):
-            return self.rx_config['destination_host']
-        return None
-    
-    @property
-    def rx_destination_realm(self):
-        if self.rx_config.get('destination_realm'):
-            return self.rx_config['destination_realm']
-        return None
-    
-    @property
-    def all_peers_ports(self):
-        ports = []
-        for peer in self.gx_config['peers']:
-            ports.append(peer['port'])
-        for peer in self.rx_config['peers']:
-            ports.append(peer['port'])
-        return ports
-
-    # def set_rx_hosts(self, rx_message):
-    #     origin_host = self.af.node.origin_host
-    #     origin_realm = self.af.node.realm_name
-    #     destination_host = self.rx_destination_host
-    #     destination_realm = self.rx_destination_realm
-    #     rx_message.origin_host = origin_host.encode()
-    #     rx_message.origin_realm = origin_realm.encode()
-    #     rx_message.destination_host = destination_host.encode()
-    #     rx_message.destination_realm = destination_realm.encode()
-    #     return rx_message
-
     def create_aar(self) -> AaRequest:
         aar = AaRequest()
         aar = self.rx_service.set_rx_hosts(aar)
@@ -79,52 +46,8 @@ class VoiceService():
         str_.auth_application_id = APP_3GPP_RX
         return str_
 
-    # def create_rx_session(self, subscriber: Subscriber, gx_session: GxSession):
-    #     rx_session_id = self.af.node.session_generator.next_id()
-    #     rx_session = RxSession(subscriber, rx_session_id, gx_session)
-    #     return rx_session
     
-    def create_ccr_i(self, gx_session: GxSession) -> CreditControlRequest:
-        ccr = self.gx_service.create_ccr()
-        ccr.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
-        ccr.cc_request_number = 0
-        #
-        ccr.session_id = gx_session.session_id
-        ccr.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
-        ccr.sgsn_mcc_mnc = str(gx_session.mcc_mnc)
-        #
-        ccr.rat_type = E_RAT_TYPE_EUTRAN
-        ccr.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
 
-        ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(gx_session.msisdn))
-        ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(gx_session.imsi))
-
-        ccr.supported_features.vendor_id = VENDOR_TGPP
-        ccr.supported_features.feature_list = 1032
-        ccr.supported_features.feature_list_id = 1
-
-        ccr.qos_information.apn_aggregate_max_bitrate_ul = 384000
-        ccr.qos_information.apn_aggregate_max_bitrate_dl = 384000
-
-        ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
-        ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
-        ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
-        ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
-
-        # ccr.user_location_info = b"Tset"
-        # ccr.ms_timezone = b"GMT+4"
-
-        ccr.called_station_id = "ims"
-
-        ccr.online = E_ONLINE_DISABLE_ONLINE
-        ccr.offline = E_OFFLINE_ENABLE_OFFLINE
-
-        ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
-        ccr.origin_state_id = 1448374171
-
-        ccr.bearer_usage = E_BEARER_USAGE_IMS_SIGNALLING
-
-        return ccr
     
     def start_rx_session(self, rx_session: RxSession):
         logger.info(f"Starting RX session: {rx_session}")

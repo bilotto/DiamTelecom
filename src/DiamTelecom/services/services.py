@@ -68,7 +68,6 @@ class RxService:
 
     def create_rx_session(self, subscriber: Subscriber, gx_session: GxSession):
         rx_session_id = self.af.node.session_generator.next_id()
-        # rx_session = RxSession(subscriber, rx_session_id, gx_session)
         rx_session = RxSession(subscriber, rx_session_id, gx_session.session_id)
         return rx_session
 
@@ -243,18 +242,38 @@ class GxService:
                 return False
         return True
     
-    def start_gx_session(self, gx_session: GxSession):
+    def start_gx_session(self,
+                         gx_session: GxSession,
+                         origin_host: str = None,
+                         origin_realm: str = None,
+                         destination_host: str = None,
+                         destination_realm: str = None
+                         ):
+        origin_host_ = origin_host if origin_host else self.pcef.node.origin_host
+        origin_realm_ = origin_realm if origin_realm else self.pcef.node.realm_name
+        destination_host_ = destination_host if destination_host else self.gx_destination_host
+        destination_realm_ = destination_realm if destination_realm else self.gx_destination_realm
         logger.info(f"Starting GX session: {gx_session}")
-        # ccr_i = self.create_ccr_i(gx_session)
-        ccr_i = self.create_ccr_i(self.gx_destination_host,
-                                  self.gx_destination_realm,
-                                  gx_session.session_id,
-                                  gx_session.framed_ip_address,
-                                  gx_session.mcc_mnc,
-                                  gx_session.rat_type,
-                                  gx_session.apn,
-                                  gx_session.msisdn,
-                                  gx_session.imsi)
+        ccr_i = self.create_ccr_i(origin_host_,
+                                      origin_realm_,
+                                      destination_host_,
+                                      destination_realm_,
+                                      gx_session.session_id,
+                                      gx_session.framed_ip_address,
+                                      gx_session.mcc_mnc,
+                                      gx_session.rat_type,
+                                      gx_session.apn,
+                                      gx_session.msisdn,
+                                      gx_session.imsi)
+        # ccr_i = self.create_ccr_i(self.gx_destination_host,
+        #                           self.gx_destination_realm,
+        #                           gx_session.session_id,
+        #                           gx_session.framed_ip_address,
+        #                           gx_session.mcc_mnc,
+        #                           gx_session.rat_type,
+        #                           gx_session.apn,
+        #                           gx_session.msisdn,
+        #                           gx_session.imsi)
         try:
             cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
         except:
@@ -269,6 +288,8 @@ class GxService:
         return gx_session
         
     def create_ccr_i(self,
+                     origin_host: str,
+                     origin_realm: str,
                      destination_host: str,
                      destination_realm: str,
                      session_id,
@@ -281,8 +302,8 @@ class GxService:
         from diameter.message.avp.grouped import SupportedFeatures, QosInformation, DefaultEpsBearerQos
 
         ccr = CreditControlRequest()
-        origin_host = self.pcef.node.origin_host
-        origin_realm = self.pcef.node.realm_name
+        # origin_host = self.pcef.node.origin_host
+        # origin_realm = self.pcef.node.realm_name
         ccr.origin_host = origin_host.encode()
         ccr.origin_realm = origin_realm.encode()
         #
