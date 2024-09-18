@@ -264,7 +264,7 @@ class GxService:
                                       gx_session.rat_type,
                                       gx_session.apn,
                                       gx_session.msisdn,
-                                      gx_session.imsi))
+                                      gx_session.imsi)
         try:
             cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
         except:
