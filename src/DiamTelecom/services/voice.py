@@ -5,6 +5,7 @@ from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
 from .services import GxService, RxService
+from diameter.message.avp.grouped import *
 
 import time
 
@@ -195,7 +196,6 @@ class VoiceService():
 
         # Get gx_session from rx_session.gx_session_id
         gx_session = self.gx_service.gx_app.sessions.get(rx_session.gx_session_id)
-        print(gx_session)
         #
         aar.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
         aar.origin_state_id = 1268028842
@@ -233,3 +233,30 @@ class VoiceService():
         mdc.media_sub_component.append(media_sub_component)
 
         return aar
+
+
+    def process_voice_flow(self, gx_session: GxSession):
+        subscriber = gx_session.subscriber
+        try:
+            gx_session = self.gx_service.start_gx_session(gx_session)
+            #
+            if not gx_session.active:
+                raise Exception("GxSession is not active")
+            rx_session = self.rx_service.create_rx_session(subscriber, gx_session)
+            aar = self.create_aar_audio(rx_session)
+            aaa = self.rx_service.rx_app.send_request(aar, timeout=10)
+            self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+            if aaa.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+                rx_session.active = True
+            #
+            if rx_session.active:
+                # Send STR to RxSession
+                str_ = self.rx_service.create_str(rx_session)
+                sta = self.rx_service.af.send_request(str_, timeout=5)
+                self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+                if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+                    rx_session.active = False
+        except Exception as e:
+            self.logger.error(f"An error occurred: {str(e)}")
+        finally:
+            gx_session = self.stop_gx_session(gx_session)
