@@ -109,8 +109,8 @@ class VoiceService():
 
         origin_host = self.rx_service.af.node.origin_host
         origin_realm = self.rx_service.af.node.realm_name
-        destination_host = self.rx_destination_host
-        destination_realm = self.rx_destination_realm
+        # destination_host = self.rx_destination_host
+        destination_realm = self.rx_service.af.node.realm_name
         aar.origin_host = origin_host.encode()
         aar.origin_realm = origin_realm.encode()
         aar.destination_realm = destination_realm.encode() if destination_realm else None
