@@ -21,6 +21,7 @@ class DataService():
         self.gx_service = gx_service
         self.sy_service = sy_service
         self.ip_queue = IpQueue(ip_start, ip_end)
+        self.realm = None
 
     def start(self):
         if self.sy_service:
@@ -46,6 +47,30 @@ class DataService():
 
     def start_gx_session(self, gx_session: GxSession):
         ccr_i = gx_session.create_ccr_i()
+        #
+        ccr_i.supported_features = SupportedFeatures()
+        ccr_i.supported_features.vendor_id = VENDOR_TGPP
+        ccr_i.supported_features.feature_list = 1032
+        ccr_i.supported_features.feature_list_id = 1
+
+        ccr_i.qos_information = QosInformation()
+        ccr_i.qos_information.apn_aggregate_max_bitrate_ul = 300000000
+        ccr_i.qos_information.apn_aggregate_max_bitrate_dl = 150000000
+
+        ccr_i.default_eps_bearer_qos = DefaultEpsBearerQos()
+        ccr_i.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+        ccr_i.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+        ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+        ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+
+        ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
+        ccr_i.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+        ccr_i.origin_state_id = 1448374171
+        #
+        ccr_i = self.gx_service.set_message_hosts(ccr_i)
+        if self.realm:
+            ccr_i.destination_realm = self.realm
+        #
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
