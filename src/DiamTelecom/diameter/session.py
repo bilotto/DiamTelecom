@@ -250,17 +250,10 @@ class GxSession(DiameterSession):
     
     def create_ccr_i(self):
         ccr_i = CreditControlRequest()
-        ccr_i.auth_application_id = APP_3GPP_GX
-        ccr_i.header.hop_by_hop_identifier = 2
-        ccr_i.header.end_to_end_identifier = 2
-        ccr_i.header.is_proxyable = True
         ccr_i.session_id = self.session_id
-        #
         ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
         ccr_i.cc_request_number = 0
         ccr_i.framed_ip_address = ip_to_bytes(self.framed_ip_address)
-        ccr_i.rat_type = E_RAT_TYPE_EUTRAN
-        ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
         return ccr_i
