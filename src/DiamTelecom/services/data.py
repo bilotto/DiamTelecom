@@ -72,7 +72,7 @@ class DataService():
 
     def start_gx_session(self, gx_session: GxSession):
         #
-        ccr_i = self.gx_service.create_ccr_i()
+        ccr_i = self.gx_service.create_ccr_i(gx_session)
         ccr_i.sgsn_mcc_mnc = self.mcc_mnc
         ccr_i.called_station_id = self.apn
         if self.realm:
@@ -85,7 +85,7 @@ class DataService():
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
             ts = time.time()
             gx_session.set_start_time(ts)
-            
+
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
     #     return self.sy_service.wait_for_sy_session(subscriber_msisdn, timeout)
     
