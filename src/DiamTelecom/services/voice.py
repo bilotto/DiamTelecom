@@ -65,14 +65,6 @@ class VoiceService():
                                                          gx_session_id,
                                                          framed_ip_address)
         return gx_session
-    
-    def create_rx_session(self, subscriber: Subscriber):
-        gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
-        if not gx_session:
-            return None
-        rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
-        rx_session = self.rx_service.rx_app.sessions.create_session(subscriber, rx_session_id, gx_session.session_id)
-        return rx_session
 
     def start_gx_session(self, gx_session: GxSession):
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
@@ -87,9 +79,16 @@ class VoiceService():
             gx_session.set_start_time(ts)
             gx_session.active = True
         return gx_session
+    
+    def create_rx_session(self, subscriber: Subscriber):
+        gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
+        if not gx_session:
+            return None
+        rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
+        rx_session = self.rx_service.rx_app.sessions.create_session(subscriber, rx_session_id, gx_session.session_id)
+        return rx_session
 
     def start_rx_session(self, rx_session: RxSession):
-        # aar = rx_session.create_aar()
         aar = self.rx_service.create_aar(rx_session)
         if self.realm:
             aar.destination_realm = self.realm.encode()
@@ -98,10 +97,6 @@ class VoiceService():
         rx_session.set_start_time(ts)
         return rx_session
     
-            
-
-
-
     def stop_gx_session(self, gx_session: GxSession):
         ccr_t = self.gx_service.create_ccr_t(gx_session)
         cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
