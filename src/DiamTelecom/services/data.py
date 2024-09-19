@@ -72,9 +72,7 @@ class DataService():
 
     def start_gx_session(self, gx_session: GxSession):
         #
-        ccr_i = self.gx_service.create_ccr_i(gx_session)
-        ccr_i.sgsn_mcc_mnc = self.mcc_mnc
-        ccr_i.called_station_id = self.apn
+        ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
             ccr_i.destination_realm = self.realm.encode()
         #

@@ -188,15 +188,18 @@ class GxService:
             logger.error(f"Error sending request: {e}")
             raise e
 
-    def create_ccr(self) -> CreditControlRequest:
-        ccr = CreditControlRequest()
-        ccr.auth_application_id = APP_3GPP_GX
-        ccr.header.hop_by_hop_identifier = 2
-        ccr.header.end_to_end_identifier = 2
-        ccr.header.is_proxyable = True
-        return ccr
+    # def create_ccr(self) -> CreditControlRequest:
+    #     ccr = CreditControlRequest()
+    #     ccr.auth_application_id = APP_3GPP_GX
+    #     ccr.header.hop_by_hop_identifier = 2
+    #     ccr.header.end_to_end_identifier = 2
+    #     ccr.header.is_proxyable = True
+    #     return ccr
     
-    def create_ccr_i(self, gx_session: GxSession, mcc_mnc='999', apn='internet') -> CreditControlRequest:
+    def create_ccr_i(self,
+                     gx_session: GxSession,
+                     mcc_mnc='999',
+                     apn='internet') -> CreditControlRequest:
         ccr_i = gx_session.create_ccr_i()
         #
         origin_host = self.gx_app.node.origin_host
@@ -375,92 +378,92 @@ class GxService:
 
     #     return ccr_i
 
-    def create_ccr_i(self,
-                     session_id,
-                     framed_ip_address,
-                     mcc_mnc,
-                     apn,
-                     msisdn,
-                     imsi) -> CreditControlRequest:
+    # def create_ccr_i(self,
+    #                  session_id,
+    #                  framed_ip_address,
+    #                  mcc_mnc,
+    #                  apn,
+    #                  msisdn,
+    #                  imsi) -> CreditControlRequest:
         
-        ccr = self.create_ccr()
-        ccr = self.set_message_hosts(ccr)
-        if not isinstance(ccr, CreditControlRequest):
-            raise ValueError("CCR is not instance of CreditControlRequest")
-        #
-        ccr.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
-        ccr.cc_request_number = 0
-        #
-        ccr.session_id = session_id
-        ccr.framed_ip_address = ip_to_bytes(framed_ip_address)
-        if not mcc_mnc:
-            raise ValueError("MCC-MNC is required")
-        ccr.sgsn_mcc_mnc = str(mcc_mnc)
-        #
-        ccr.rat_type = E_RAT_TYPE_EUTRAN
-        ccr.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
-        ccr.called_station_id = apn
+    #     ccr = self.create_ccr()
+    #     ccr = self.set_message_hosts(ccr)
+    #     if not isinstance(ccr, CreditControlRequest):
+    #         raise ValueError("CCR is not instance of CreditControlRequest")
+    #     #
+    #     ccr.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+    #     ccr.cc_request_number = 0
+    #     #
+    #     ccr.session_id = session_id
+    #     ccr.framed_ip_address = ip_to_bytes(framed_ip_address)
+    #     if not mcc_mnc:
+    #         raise ValueError("MCC-MNC is required")
+    #     ccr.sgsn_mcc_mnc = str(mcc_mnc)
+    #     #
+    #     ccr.rat_type = E_RAT_TYPE_EUTRAN
+    #     ccr.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+    #     ccr.called_station_id = apn
             
-        ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(msisdn))
-        ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(imsi))
+    #     ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(msisdn))
+    #     ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(imsi))
 
-        # ccr.user_equipment_info = UserEquipmentInfo()
-        # ccr.user_equipment_info.user_equipment_info_type = E_USER_EQUIPMENT_INFO_TYPE_IMEISV
-        # ccr.user_equipment_info.user_equipment_info_value = b"3576260906721501"
+    #     # ccr.user_equipment_info = UserEquipmentInfo()
+    #     # ccr.user_equipment_info.user_equipment_info_type = E_USER_EQUIPMENT_INFO_TYPE_IMEISV
+    #     # ccr.user_equipment_info.user_equipment_info_value = b"3576260906721501"
 
-        # ccr.supported_features = SupportedFeatures()
-        # ccr.supported_features.vendor_id = VENDOR_TGPP
-        # ccr.supported_features.feature_list = 1032
-        # ccr.supported_features.feature_list_id = 1
+    #     # ccr.supported_features = SupportedFeatures()
+    #     # ccr.supported_features.vendor_id = VENDOR_TGPP
+    #     # ccr.supported_features.feature_list = 1032
+    #     # ccr.supported_features.feature_list_id = 1
 
-        ccr.qos_information = QosInformation()
-        ccr.qos_information.apn_aggregate_max_bitrate_ul = 300000000
-        ccr.qos_information.apn_aggregate_max_bitrate_dl = 150000000
+    #     ccr.qos_information = QosInformation()
+    #     ccr.qos_information.apn_aggregate_max_bitrate_ul = 300000000
+    #     ccr.qos_information.apn_aggregate_max_bitrate_dl = 150000000
 
-        # ccr.default_eps_bearer_qos = DefaultEpsBearerQos()
-        # ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
-        # ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
-        # ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
-        # ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+    #     # ccr.default_eps_bearer_qos = DefaultEpsBearerQos()
+    #     # ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+    #     # ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+    #     # ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+    #     # ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
 
-        ccr.bearer_usage = E_BEARER_USAGE_GENERAL
-        # ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
-        # ccr.origin_state_id = 1448374171
-        return ccr
+    #     ccr.bearer_usage = E_BEARER_USAGE_GENERAL
+    #     # ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+    #     # ccr.origin_state_id = 1448374171
+    #     return ccr
     
-    def send_request_list(self, request_list):
-        print(f"Sending {len(request_list)} requests")
-        start_time = time.time()
+    # def send_request_list(self, request_list):
+    #     print(f"Sending {len(request_list)} requests")
+    #     start_time = time.time()
 
-        for index, ccr in enumerate(request_list, start=1):
-            # Enviar requisição
-            gx_session = ccr[0]
-            ccr_i = ccr[1]
-            cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
+    #     for index, ccr in enumerate(request_list, start=1):
+    #         # Enviar requisição
+    #         gx_session = ccr[0]
+    #         ccr_i = ccr[1]
+    #         cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
             
-            current_time = time.time()
-            elapsed_time = current_time - start_time
+    #         current_time = time.time()
+    #         elapsed_time = current_time - start_time
 
-            if elapsed_time > 0:
-                tps_partial = index / elapsed_time
-            else:
-                tps_partial = 0
+    #         if elapsed_time > 0:
+    #             tps_partial = index / elapsed_time
+    #         else:
+    #             tps_partial = 0
 
-            print(f"Requisição {index}/{len(request_list)} - TPS Parcial: {tps_partial:.2f}")
+    #         print(f"Requisição {index}/{len(request_list)} - TPS Parcial: {tps_partial:.2f}")
 
-        end_time = time.time()
+    #     end_time = time.time()
 
-        total_time = end_time - start_time
+    #     total_time = end_time - start_time
 
-        total_requests = len(request_list)
-        if total_time > 0:
-            tps_final = total_requests / total_time
-        else:
-            tps_final = 0
+    #     total_requests = len(request_list)
+    #     if total_time > 0:
+    #         tps_final = total_requests / total_time
+    #     else:
+    #         tps_final = 0
 
-        print(f"\nTotal de requisições: {total_requests}")
-        print(f"Tempo total: {total_time:.2f} segundos")
-        print(f"TPS Final: {tps_final:.2f}")
+    #     print(f"\nTotal de requisições: {total_requests}")
+    #     print(f"Tempo total: {total_time:.2f} segundos")
+    #     print(f"TPS Final: {tps_final:.2f}")
 
 
 # class Service:
