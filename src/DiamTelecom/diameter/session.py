@@ -206,7 +206,7 @@ class GxSession(DiameterSession):
                  framed_ip_address: str):
         super().__init__(subscriber, session_id)
         self.framed_ip_address = framed_ip_address
-        self.cc_request_number = None
+        self.cc_request_number = 0
         self.mcc_mnc = None
         self.rat_type = None
         self.ip_can_type = None
@@ -215,9 +215,6 @@ class GxSession(DiameterSession):
         self.qos_information = None
         self.pcc_rules = []
         self.rx_sessions = []
-
-    def set_cc_request_number(self, cc_request_number: int):
-        self.cc_request_number = cc_request_number
 
     def incr_cc_request_number(self):
         self.cc_request_number += 1
@@ -257,6 +254,16 @@ class GxSession(DiameterSession):
         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
         return ccr_i
+    
+    def create_ccr_t(self):
+        ccr_t = CreditControlRequest()
+        ccr_t.session_id = self.session_id
+        ccr_t.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
+        ccr_t.cc_request_number = self.cc_request_number + 1
+        ccr_t.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+        ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+        ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        return ccr_t
 
                     
 class GxSessions(DiameterSessions):
