@@ -36,6 +36,8 @@ class Subscriber:
         self.apn = None
         self.mcc_mnc = None
 
+import random
+
 class Subscribers(dict):
     """
     Represents a collection of subscribers.
@@ -66,7 +68,9 @@ class Subscribers(dict):
         return subscriber
     
     def get_random_subscriber(self) -> Subscriber:
-        return next(iter(self.values()))
+        # return next(iter(self.values()))
+        return random.choice(list(self.values()))
+        
     
     def get_subscriber_by_msisdn_imsi(self, msisdn: str, imsi: str) -> Subscriber:
         for subscriber in self.values():
