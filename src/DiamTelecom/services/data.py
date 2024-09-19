@@ -84,6 +84,17 @@ class DataService():
             ts = time.time()
             gx_session.set_start_time(ts)
 
+    def stop_gx_session(self, gx_session: GxSession):
+        ccr_t = self.gx_service.create_ccr_t(gx_session)
+        cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
+        if not isinstance(cca_t, CreditControlAnswer):
+            raise Exception("CCA is not received")
+        if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            self.ip_queue.put_ip(gx_session.framed_ip_address)
+            ts = time.time()
+            gx_session.set_end_time(ts)
+            gx_session.active = False
+
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
     #     return self.sy_service.wait_for_sy_session(subscriber_msisdn, timeout)
     

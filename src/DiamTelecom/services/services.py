@@ -240,6 +240,18 @@ class GxService:
         ccr_i.origin_state_id = 1448374171
         #
         return ccr_i
+    
+
+    def create_ccr_t(self, gx_session: GxSession) -> CreditControlRequest:
+        ccr_t = gx_session.create_ccr_t()
+        ccr_t.origin_host = self.gx_app.node.origin_host.encode()
+        ccr_t.origin_realm = self.gx_app.node.realm_name.encode()
+        ccr_t.destination_realm = self.destination_realm.encode()
+        ccr_t.header.hop_by_hop_identifier = 2
+        ccr_t.header.end_to_end_identifier = 2
+        ccr_t.header.is_proxyable = True
+        ccr_t.header.application_id = APP_3GPP_GX
+        return ccr_t
 
 
 
