@@ -55,6 +55,12 @@ class Subscribers(dict):
                 return subscriber
         return None
     
+    def get_subscriber_by_imsi(self, imsi: str) -> Subscriber:
+        for subscriber in self.values():
+            if subscriber.imsi == imsi:
+                return subscriber
+        return None
+    
     def get_subscriber(self, id: str) -> Subscriber:
         return self.get(id)
     
@@ -68,10 +74,8 @@ class Subscribers(dict):
         return subscriber
     
     def get_random_subscriber(self) -> Subscriber:
-        # return next(iter(self.values()))
         return random.choice(list(self.values()))
         
-    
     def get_subscriber_by_msisdn_imsi(self, msisdn: str, imsi: str) -> Subscriber:
         for subscriber in self.values():
             if subscriber.msisdn == msisdn and subscriber.imsi == imsi:
