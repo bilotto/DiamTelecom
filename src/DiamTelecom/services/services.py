@@ -201,6 +201,7 @@ class GxService:
                      mcc_mnc='999',
                      apn='internet') -> CreditControlRequest:
         ccr_i = gx_session.create_ccr_i()
+        ccr_i.auth_application_id = APP_3GPP_GX
         #
         origin_host = self.gx_app.node.origin_host
         origin_realm = self.gx_app.node.realm_name
@@ -244,6 +245,7 @@ class GxService:
 
     def create_ccr_t(self, gx_session: GxSession) -> CreditControlRequest:
         ccr_t = gx_session.create_ccr_t()
+        ccr_t.auth_application_id = APP_3GPP_GX
         ccr_t.origin_host = self.gx_app.node.origin_host.encode()
         ccr_t.origin_realm = self.gx_app.node.realm_name.encode()
         ccr_t.destination_realm = self.destination_realm.encode()
