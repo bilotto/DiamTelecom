@@ -186,6 +186,7 @@ class GxService:
         except Exception as e:
             self.request_count['failure'] += 1
             logger.error(f"Error sending request: {e}")
+            raise e
 
     
     def set_message_hosts(self,
