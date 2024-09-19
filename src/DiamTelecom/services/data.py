@@ -45,7 +45,7 @@ class DataService():
         return gx_session
 
     def start_gx_session(self, gx_session: GxSession):
-        ccr_i = gx_session.create_ccr_i(gx_session)
+        ccr_i = gx_session.create_ccr_i()
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
