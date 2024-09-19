@@ -69,7 +69,7 @@ class DataService():
         #
         ccr_i = self.gx_service.set_message_hosts(ccr_i)
         if self.realm:
-            ccr_i.destination_realm = self.realm
+            ccr_i.destination_realm = self.realm.encode()
         #
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
