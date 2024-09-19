@@ -14,12 +14,13 @@ logger = logging.getLogger(__name__)
 class DataService():
     def __init__(self,
                  gx_service: GxService,
+                 sy_service: SyService = None,
                  ip_start = "10.0.0.0",
                  ip_end = "10.0.0.100",
-                 sy_service: SyService = None,):
+                 ):
         self.gx_service = gx_service
-        self.ip_queue = IpQueue(ip_start, ip_end)
         self.sy_service = sy_service
+        self.ip_queue = IpQueue(ip_start, ip_end)
 
     def start(self):
         if self.sy_service:

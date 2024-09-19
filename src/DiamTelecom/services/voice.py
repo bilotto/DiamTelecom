@@ -12,13 +12,13 @@ import time
 class VoiceService():
     def __init__(self,
                  gx_service: GxService,
+                 rx_service: RxService = None,
                  ip_start: str = "10.0.0.0",
                  ip_end: str = "10.0.0.100",
-                 rx_service: RxService = None,
                  ):
         self.gx_service = gx_service
-        self.ip_queue = IpQueue(ip_start, ip_end)
         self.rx_service = rx_service
+        self.ip_queue = IpQueue(ip_start, ip_end)
 
     def start(self):
         if self.rx_service:
