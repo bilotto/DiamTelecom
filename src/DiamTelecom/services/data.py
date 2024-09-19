@@ -5,8 +5,8 @@ from diameter.message.constants import *
 from diameter.message.commands import *
 from diameter.message.avp.grouped import *
 import time
-# from .services import Service, GxService, SyService
-from .services import GxService, SyService
+from .gx import GxService
+from .sy import SyService
 
 import logging
 logger = logging.getLogger(__name__)

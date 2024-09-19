@@ -4,7 +4,9 @@ from DiamTelecom.diameter import *
 from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
-from .services import GxService, RxService
+# from .services import GxService, RxService
+from .gx import GxService
+from .rx import RxService
 from diameter.message.avp.grouped import *
 
 import time
@@ -63,13 +65,19 @@ class VoiceService():
                                                          gx_session_id,
                                                          framed_ip_address)
         return gx_session
+    
+    def create_rx_session(self, subscriber: Subscriber):
+        gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
+        if not gx_session:
+            return None
+        rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
+        rx_session = self.rx_service.rx_app.sessions.create_session(subscriber, rx_session_id, gx_session.session_id)
+        return rx_session
 
     def start_gx_session(self, gx_session: GxSession):
-        #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
             ccr_i.destination_realm = self.realm.encode()
-        #
         ccr_i.bearer_usage = E_BEARER_USAGE_IMS_SIGNALLING
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
@@ -77,6 +85,22 @@ class VoiceService():
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
             ts = time.time()
             gx_session.set_start_time(ts)
+            gx_session.active = True
+        return gx_session
+
+    def start_rx_session(self, rx_session: RxSession):
+        # aar = rx_session.create_aar()
+        aar = self.rx_service.create_aar(rx_session)
+        if self.realm:
+            aar.destination_realm = self.realm.encode()
+        aar = self.rx_service.send_rx_request(rx_session, aar, timeout=5)
+        ts = time.time()
+        rx_session.set_start_time(ts)
+        return rx_session
+    
+            
+
+
 
     def stop_gx_session(self, gx_session: GxSession):
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -88,6 +112,8 @@ class VoiceService():
             ts = time.time()
             gx_session.set_end_time(ts)
             gx_session.active = False
+
+
 
     # def create_aar(self) -> AaRequest:
     #     aar = AaRequest()
@@ -157,68 +183,68 @@ class VoiceService():
 
     #     return ccr
 
-    def create_aar_audio(self, rx_session: RxSession) -> AaRequest:
-        # aar = self.create_aar()
-        aar = AaRequest()
-        aar.auth_application_id = APP_3GPP_RX
+    # def create_aar_audio(self, rx_session: RxSession) -> AaRequest:
+    #     # aar = self.create_aar()
+    #     aar = AaRequest()
+    #     aar.auth_application_id = APP_3GPP_RX
 
-        origin_host = self.rx_service.af.node.origin_host
-        origin_realm = self.rx_service.af.node.realm_name
-        # destination_host = self.rx_destination_host
-        destination_realm = self.rx_service.af.node.realm_name
-        aar.origin_host = origin_host.encode()
-        aar.origin_realm = origin_realm.encode()
-        aar.destination_realm = destination_realm.encode() if destination_realm else None
+    #     origin_host = self.rx_service.af.node.origin_host
+    #     origin_realm = self.rx_service.af.node.realm_name
+    #     # destination_host = self.rx_destination_host
+    #     destination_realm = self.rx_service.af.node.realm_name
+    #     aar.origin_host = origin_host.encode()
+    #     aar.origin_realm = origin_realm.encode()
+    #     aar.destination_realm = destination_realm.encode() if destination_realm else None
 
-        aar.session_id = rx_session.session_id
+    #     aar.session_id = rx_session.session_id
 
-        aar.specific_action.append(E_SPECIFIC_ACTION_INDICATION_OF_RELEASE_OF_BEARER)
-        aar.specific_action.append(E_SPECIFIC_ACTION_ACCESS_NETWORK_INFO_REPORT)
-        aar.specific_action.append(E_SPECIFIC_ACTION_INDICATION_OF_FAILED_RESOURCES_ALLOCATION)
-        #
-        aar.supported_features = SupportedFeatures()
-        aar.supported_features.vendor_id = VENDOR_TGPP
-        aar.supported_features.feature_list = 35
-        aar.supported_features.feature_list_id = 1
+    #     aar.specific_action.append(E_SPECIFIC_ACTION_INDICATION_OF_RELEASE_OF_BEARER)
+    #     aar.specific_action.append(E_SPECIFIC_ACTION_ACCESS_NETWORK_INFO_REPORT)
+    #     aar.specific_action.append(E_SPECIFIC_ACTION_INDICATION_OF_FAILED_RESOURCES_ALLOCATION)
+    #     #
+    #     aar.supported_features = SupportedFeatures()
+    #     aar.supported_features.vendor_id = VENDOR_TGPP
+    #     aar.supported_features.feature_list = 35
+    #     aar.supported_features.feature_list_id = 1
 
-        # Get gx_session from rx_session.gx_session_id
-        gx_session = self.gx_service.gx_app.sessions.get(rx_session.gx_session_id)
-        #
-        aar.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
-        aar.origin_state_id = 1268028842
+    #     # Get gx_session from rx_session.gx_session_id
+    #     gx_session = self.gx_service.gx_app.sessions.get(rx_session.gx_session_id)
+    #     #
+    #     aar.framed_ip_address = ip_to_bytes(gx_session.framed_ip_address)
+    #     aar.origin_state_id = 1268028842
 
-        aar.header.hop_by_hop_identifier = 4
-        aar.header.end_to_end_identifier = 4
-        aar.header.is_proxyable = True
-        #
-        aar.media_component_description = MediaComponentDescription()
-        mdc = aar.media_component_description
-        mdc.media_component_number = 0
-        # mdc.af_application_identifier = "urn:3gpp:service.ims.icsi.mmtel".encode()
-        mdc.af_application_identifier = "urn:urn-7:3gpp-service.ims.icsi.mmtel-4G".encode()
-        mdc.media_type = E_MEDIA_TYPE_AUDIO
-        mdc.max_requested_bandwidth_ul = 41000
-        mdc.max_requested_bandwidth_dl = 41000
-        # 
-        media_sub_component = MediaSubComponent()
-        media_sub_component.flow_description.append("permit out 17 from 10.130.18.118 32380 to 10.4.25.194 1234".encode())
-        media_sub_component.flow_description.append("permit in 17 from 10.4.25.194 to 10.130.18.118 32380".encode())
-        #
-        media_sub_component.flow_usage = E_FLOW_USAGE_NO_INFORMATION
-        media_sub_component.flow_status = E_FLOW_STATUS_ENABLED
-        media_sub_component.flow_number = 1
-        #
-        mdc.media_sub_component.append(media_sub_component)
-        #
-        media_sub_component = MediaSubComponent()
-        media_sub_component.flow_description.append("flow3".encode())
-        media_sub_component.flow_description.append("flow4".encode())
-        #
-        media_sub_component.flow_usage = E_FLOW_USAGE_RTCP
-        media_sub_component.flow_status = E_FLOW_STATUS_ENABLED
-        media_sub_component.flow_number = 2
-        #
-        mdc.media_sub_component.append(media_sub_component)
+    #     aar.header.hop_by_hop_identifier = 4
+    #     aar.header.end_to_end_identifier = 4
+    #     aar.header.is_proxyable = True
+    #     #
+    #     aar.media_component_description = MediaComponentDescription()
+    #     mdc = aar.media_component_description
+    #     mdc.media_component_number = 0
+    #     # mdc.af_application_identifier = "urn:3gpp:service.ims.icsi.mmtel".encode()
+    #     mdc.af_application_identifier = "urn:urn-7:3gpp-service.ims.icsi.mmtel-4G".encode()
+    #     mdc.media_type = E_MEDIA_TYPE_AUDIO
+    #     mdc.max_requested_bandwidth_ul = 41000
+    #     mdc.max_requested_bandwidth_dl = 41000
+    #     # 
+    #     media_sub_component = MediaSubComponent()
+    #     media_sub_component.flow_description.append("permit out 17 from 10.130.18.118 32380 to 10.4.25.194 1234".encode())
+    #     media_sub_component.flow_description.append("permit in 17 from 10.4.25.194 to 10.130.18.118 32380".encode())
+    #     #
+    #     media_sub_component.flow_usage = E_FLOW_USAGE_NO_INFORMATION
+    #     media_sub_component.flow_status = E_FLOW_STATUS_ENABLED
+    #     media_sub_component.flow_number = 1
+    #     #
+    #     mdc.media_sub_component.append(media_sub_component)
+    #     #
+    #     media_sub_component = MediaSubComponent()
+    #     media_sub_component.flow_description.append("flow3".encode())
+    #     media_sub_component.flow_description.append("flow4".encode())
+    #     #
+    #     media_sub_component.flow_usage = E_FLOW_USAGE_RTCP
+    #     media_sub_component.flow_status = E_FLOW_STATUS_ENABLED
+    #     media_sub_component.flow_number = 2
+    #     #
+    #     mdc.media_sub_component.append(media_sub_component)
 
-        return aar
+    #     return aar
 

@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 from ..helpers import convert_timestamp
 from diameter.message.constants import *
-from diameter.message.commands import *
+from diameter.message.commands import AaRequest, CreditControlRequest
 from diameter.message.avp.grouped import *
 from ..services.ip_queue import ip_to_bytes
 
@@ -182,6 +182,14 @@ class RxSession(DiameterSession):
             if message.name == STA and self.is_voice_call:
                 logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} ended voice call. Duration: {self.duration} seconds,{self.framed_ip_address}")
 
+
+    def create_aar(self):
+        aar = AaRequest()
+        aar.auth_application_id = APP_3GPP_RX
+        aar.session_id = self.session_id
+        if self.framed_ip_address:
+            aar.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+        return aar
 
 class SySession(DiameterSession):
     session_id: str
