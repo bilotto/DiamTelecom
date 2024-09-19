@@ -86,6 +86,7 @@ class VoiceService():
             return None
         rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
         rx_session = self.rx_service.rx_app.sessions.create_session(subscriber, rx_session_id, gx_session.session_id)
+        rx_session.framed_ip_address = gx_session.framed_ip_address
         return rx_session
 
     def start_rx_session(self, rx_session: RxSession):
@@ -98,6 +99,8 @@ class VoiceService():
         return rx_session
     
     def stop_gx_session(self, gx_session: GxSession):
+        if not gx_session.active:
+            return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
         cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
         if not isinstance(cca_t, CreditControlAnswer):
