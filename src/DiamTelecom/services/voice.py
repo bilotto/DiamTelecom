@@ -19,6 +19,28 @@ class VoiceService():
         self.gx_service = gx_service
         self.rx_service = rx_service
         self.ip_queue = IpQueue(ip_start, ip_end)
+        self._realm = None
+        self._mcc_mnc = None
+        self._apn = None
+
+    @property
+    def realm(self) -> str:
+        if self._realm:
+            return self._realm
+        raise Exception("Realm is not set")
+    
+    @property
+    def mcc_mnc(self) -> str:
+        if self._mcc_mnc:
+            return self._mcc_mnc
+        raise Exception("MCC/MNC is not set")
+    
+    @property
+    def apn(self) -> str:
+        if self._apn:
+            return self._apn
+        raise Exception("APN is not set")
+
 
     def start(self):
         if self.rx_service:
