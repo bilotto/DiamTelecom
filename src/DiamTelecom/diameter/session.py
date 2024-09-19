@@ -5,6 +5,11 @@ from typing import List, Dict, Set
 import logging
 logger = logging.getLogger(__name__)
 from ..helpers import convert_timestamp
+from diameter.message.constants import *
+from diameter.message.commands import *
+from diameter.message.avp.grouped import *
+from ..services.ip_queue import ip_to_bytes
+
 
 class DiameterSession:
     subscriber: Subscriber
@@ -129,6 +134,15 @@ class DiameterSessions:
         # Retorna uma lista de todas as sessões
         return list(self.diameter_sessions.values())
     
+    def create_gx_session(self, subscriber: Subscriber, session_id: str, framed_ip_address: str):
+        return GxSession(subscriber, session_id, framed_ip_address)
+    
+    def create_rx_session(self, subscriber: Subscriber, session_id: str, gx_session_id: str):
+        return RxSession(subscriber, session_id, gx_session_id)
+    
+    def create_sy_session(self, subscriber: Subscriber, session_id: str):
+        return SySession(subscriber, session_id)
+    
     @property
     def all_msisdn(self):
         return list(self.msisdn_to_session_id.keys())
@@ -186,19 +200,33 @@ class GxSession(DiameterSession):
     framed_ip_address: str
     rx_sessions: List[RxSession]
 
-    def __init__(self, subscriber, session_id: str, framed_ip_address: str):
+    def __init__(self,
+                 subscriber,
+                 session_id: str,
+                 framed_ip_address: str):
         super().__init__(subscriber, session_id)
         self.framed_ip_address = framed_ip_address
-        self.cc_request_number = 0
+        self.cc_request_number = None
         self.mcc_mnc = None
         self.rat_type = None
+        self.ip_can_type = None
         self.apn = None
+        self.destination_realm = None
         self.qos_information = None
         self.pcc_rules = []
         self.rx_sessions = []
 
+    def set_cc_request_number(self, cc_request_number: int):
+        self.cc_request_number = cc_request_number
+
     def incr_cc_request_number(self):
         self.cc_request_number += 1
+
+    def set_mcc_mnc(self, mcc_mnc: str):
+        self.mcc_mnc = mcc_mnc
+
+    def set_apn(self, apn: str):
+        self.apn = apn
 
     def add_message(self, message):
         message = super().add_message(message)
@@ -220,6 +248,23 @@ class GxSession(DiameterSession):
             filter += f" || diameter.Session-Id == \"{rx_session.session_id}\""
         return filter
     
+    def create_ccr_i(self):
+        ccr_i = CreditControlRequest()
+        ccr_i.auth_application_id = APP_3GPP_GX
+        ccr_i.header.hop_by_hop_identifier = 2
+        ccr_i.header.end_to_end_identifier = 2
+        ccr_i.header.is_proxyable = True
+        ccr_i.session_id = self.session_id
+        #
+        ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+        ccr_i.cc_request_number = 0
+        ccr_i.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+        ccr_i.rat_type = E_RAT_TYPE_EUTRAN
+        ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+        ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+        ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        return ccr_i
+
                     
 class GxSessions(DiameterSessions):
     framed_ip_address_to_session_id: Dict[str, List[str]]

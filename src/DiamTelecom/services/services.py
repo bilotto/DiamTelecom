@@ -1,4 +1,4 @@
-from .ip_queue import IpQueue, ip_to_bytes
+from .ip_queue import ip_to_bytes
 from DiamTelecom.diameter import *
 from DiamTelecom.telecom.subscriber import Subscriber
 from diameter.message.constants import *
@@ -151,6 +151,9 @@ class SyService:
             return self.ocs.get_subscriber_active_session(subscriber_msisdn)
         return None
 
+from diameter.message.avp.grouped import SupportedFeatures, QosInformation, DefaultEpsBearerQos
+
+
 class GxService:
     gx_app: GxApplication
     gx_config: dict
@@ -163,36 +166,19 @@ class GxService:
         self.request_count = dict()
         self.request_count['success'] = 0
         self.request_count['failure'] = 0
-        if gx_config.get('ip_start') and gx_config.get('ip_end'):
-            self.ip_queue = IpQueue(gx_config['ip_start'], gx_config['ip_end'])
-        else:
-            ip_start = "10.0.0.0"
-            ip_end = "10.0.0.100"
-            self.ip_queue = IpQueue(ip_start, ip_end)
+
+    def set_gx_config(self, gx_config: dict):
+        self.gx_config = gx_config
 
     @property
-    def pcef(self):
-        return self.gx_app
-
-    @property
-    def gx_destination_host(self):
-        return self.gx_config.get('destination_host')
-
-    @property
-    def gx_destination_realm(self):
+    def destination_realm(self):
         if self.gx_config.get('destination_realm'):
             return self.gx_config['destination_realm']
-        return self.pcef.node.realm_name
-
-    def start(self):
-        self.pcef.custom_start()
-
-    def stop(self):
-        self.pcef.custom_stop()
-
+        return self.gx_app.node.realm_name
+    
     def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
         try:
-            answer = self.pcef.send_request(request, timeout)
+            answer = self.gx_app.send_request(request, timeout)
             gx_session.add_message(request)
             gx_session.add_message(answer)
             self.request_count['success'] += 1
@@ -201,31 +187,70 @@ class GxService:
             self.request_count['failure'] += 1
             logger.error(f"Error sending request: {e}")
 
-    def set_gx_hosts(self, message):
-        origin_host = self.pcef.node.origin_host
-        origin_realm = self.pcef.node.realm_name
-        destination_host = self.gx_destination_host
-        destination_realm = self.gx_destination_realm
+    
+    def set_message_hosts(self,
+                          message: Message):
+        origin_host = self.gx_app.node.origin_host
+        origin_realm = self.gx_app.node.realm_name
+        destination_realm = self.destination_realm
         message.origin_host = origin_host.encode()
         message.origin_realm = origin_realm.encode()
-        # message.destination_host = destination_host.encode() if destination_host else None
-        message.destination_realm = destination_realm.encode() if destination_realm else None
+        message.destination_realm = destination_realm.encode()
         return message
-   
+    
     def create_ccr(self) -> CreditControlRequest:
         ccr = CreditControlRequest()
-        ccr = self.set_gx_hosts(ccr)
         ccr.auth_application_id = APP_3GPP_GX
         ccr.header.hop_by_hop_identifier = 2
         ccr.header.end_to_end_identifier = 2
         ccr.header.is_proxyable = True
         return ccr
+
+    # @property
+    # def gx_destination_host(self):
+    #     return self.gx_config.get('destination_host')
+
+    # @property
+    # def gx_destination_realm(self):
+    #     if self.gx_config.get('destination_realm'):
+    #         return self.gx_config['destination_realm']
+    #     return self.gx_app.node.realm_name
+
+    def start(self):
+        self.gx_app.custom_start()
+
+    def stop(self):
+        self.gx_app.custom_stop()
+
+    # def create_gx_session(self, subscriber: Subscriber) -> GxSession:
+    #     gx_session_id = self.gx_app.node.session_generator.next_id()
+    #     framed_ip_address = self.ip_queue.get_ip()
+    #     gx_session = self.gx_app.sessions.create_session(subscriber,
+    #                                                      gx_session_id,
+    #                                                      framed_ip_address)
+    #     return gx_session
+
+
+    # def set_gx_hosts(self, message):
+    #     origin_host = self.gx_app.node.origin_host
+    #     origin_realm = self.gx_app.node.realm_name
+    #     destination_host = self.gx_destination_host
+    #     destination_realm = self.gx_destination_realm
+    #     message.origin_host = origin_host.encode()
+    #     message.origin_realm = origin_realm.encode()
+    #     # message.destination_host = destination_host.encode() if destination_host else None
+    #     message.destination_realm = destination_realm.encode() if destination_realm else None
+    #     return message
+   
+    # def create_ccr(self) -> CreditControlRequest:
+    #     ccr = CreditControlRequest()
+    #     ccr = self.set_gx_hosts(ccr)
+    #     ccr.auth_application_id = APP_3GPP_GX
+    #     ccr.header.hop_by_hop_identifier = 2
+    #     ccr.header.end_to_end_identifier = 2
+    #     ccr.header.is_proxyable = True
+    #     return ccr
     
-    def create_gx_session(self, subscriber: Subscriber) -> GxSession:
-        gx_session_id = self.pcef.node.session_generator.next_id()
-        framed_ip_address = self.ip_queue.get_ip()
-        gx_session = self.pcef.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
-        return gx_session
 
     def wait_for_gx_raa(self, gx_session: GxSession, current_message_count=None, timeout=3):
         logger.info("Waiting for Gx RAR/RAA")
@@ -242,73 +267,93 @@ class GxService:
                 return False
         return True
     
-    def start_gx_session(self,
-                         gx_session: GxSession,
-                         origin_host: str = None,
-                         origin_realm: str = None,
-                         destination_host: str = None,
-                         destination_realm: str = None
-                         ):
-        origin_host_ = origin_host if origin_host else self.pcef.node.origin_host
-        origin_realm_ = origin_realm if origin_realm else self.pcef.node.realm_name
-        destination_host_ = destination_host if destination_host else self.gx_destination_host
-        destination_realm_ = destination_realm if destination_realm else self.gx_destination_realm
-        logger.info(f"Starting GX session: {gx_session}")
-        ccr_i = self.create_ccr_i(origin_host_,
-                                      origin_realm_,
-                                      destination_host_,
-                                      destination_realm_,
-                                      gx_session.session_id,
-                                      gx_session.framed_ip_address,
-                                      gx_session.mcc_mnc,
-                                      gx_session.rat_type,
-                                      gx_session.apn,
-                                      gx_session.msisdn,
-                                      gx_session.imsi)
-        try:
-            cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
-        except:
-            # First one failed. Try again
-            logger.info("Sending CCR-I request again")
-            cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
-        if cca_i.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
-            logger.info(f"CCA-I Result-Code is not 2001. RC: {cca_i.result_code}")
-            return gx_session
-        gx_session.active = True
-        logger.info("GX session started")
-        #
-        return gx_session
-        
+    # def start_gx_session(self,
+    #                      gx_session: GxSession,
+    #                      origin_host: str = None,
+    #                      origin_realm: str = None,
+    #                      destination_host: str = None,
+    #                      destination_realm: str = None
+    #                      ):
+    #     origin_host_ = origin_host if origin_host else self.gx_app.node.origin_host
+    #     origin_realm_ = origin_realm if origin_realm else self.gx_app.node.realm_name
+    #     destination_host_ = destination_host if destination_host else self.gx_destination_host
+    #     destination_realm_ = destination_realm if destination_realm else self.gx_destination_realm
+    #     logger.info(f"Starting GX session: {gx_session}")
+    #     ccr_i = self.create_ccr_i(origin_host_,
+    #                                   origin_realm_,
+    #                                   destination_host_,
+    #                                   destination_realm_,
+    #                                   gx_session.session_id,
+    #                                   gx_session.framed_ip_address,
+    #                                   gx_session.mcc_mnc,
+    #                                   gx_session.rat_type,
+    #                                   gx_session.apn,
+    #                                   gx_session.msisdn,
+    #                                   gx_session.imsi)
+    #     try:
+    #         cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
+    #     except:
+    #         # First one failed. Try again
+    #         logger.info("Sending CCR-I request again")
+    #         cca_i = self.send_gx_request(gx_session, ccr_i, timeout=10)
+    #     if cca_i.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
+    #         logger.info(f"CCA-I Result-Code is not 2001. RC: {cca_i.result_code}")
+    #         return gx_session
+    #     gx_session.active = True
+    #     logger.info("GX session started")
+    #     #
+    #     return gx_session
+
+
+
+    # def create_ccr_i(self, gx_session: GxSession = None):
+    #     ccr_i = self.create_ccr()
+    #     ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+    #     ccr_i.cc_request_number = 0
+    #     if gx_session:
+    #         ccr_i.session_id = gx_session.session_id
+    #         ccr_i.framed_ip_address = gx_session.framed_ip_address
+    #         ccr_i.sgsn_mcc_mnc = gx_session.mcc_mnc
+    #         ccr_i.rat_type = gx_session.rat_type
+    #         ccr_i.ip_can_type = gx_session.ip_can_type
+    #         ccr_i.called_station_id = gx_session.apn
+    #         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, gx_session.msisdn)
+    #         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, gx_session.imsi)
+
+    #     ccr_i.supported_features = SupportedFeatures()
+    #     ccr_i.supported_features.vendor_id = VENDOR_TGPP
+    #     ccr_i.supported_features.feature_list = 1032
+    #     ccr_i.supported_features.feature_list_id = 1
+
+    #     ccr_i.qos_information = QosInformation()
+    #     ccr_i.qos_information.apn_aggregate_max_bitrate_ul = 300000000
+    #     ccr_i.qos_information.apn_aggregate_max_bitrate_dl = 150000000
+
+    #     ccr_i.default_eps_bearer_qos = DefaultEpsBearerQos()
+    #     ccr_i.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+    #     ccr_i.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+    #     ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+    #     ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+
+    #     ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
+    #     ccr_i.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+    #     ccr_i.origin_state_id = 1448374171
+
+    #     return ccr_i
+
     def create_ccr_i(self,
-                     origin_host: str,
-                     origin_realm: str,
-                     destination_host: str,
-                     destination_realm: str,
                      session_id,
                      framed_ip_address,
                      mcc_mnc,
-                     rat_type,
                      apn,
                      msisdn,
                      imsi) -> CreditControlRequest:
-        from diameter.message.avp.grouped import SupportedFeatures, QosInformation, DefaultEpsBearerQos
-
-        ccr = CreditControlRequest()
-        # origin_host = self.pcef.node.origin_host
-        # origin_realm = self.pcef.node.realm_name
-        ccr.origin_host = origin_host.encode()
-        ccr.origin_realm = origin_realm.encode()
+        
+        ccr = self.create_ccr()
+        ccr = self.set_message_hosts(ccr)
+        if not isinstance(ccr, CreditControlRequest):
+            raise ValueError("CCR is not instance of CreditControlRequest")
         #
-        if destination_host:
-            ccr.destination_host = destination_host.encode()
-        ccr.destination_realm = destination_realm.encode()
-        #
-
-        ccr.auth_application_id = APP_3GPP_GX
-        ccr.header.hop_by_hop_identifier = 2
-        ccr.header.end_to_end_identifier = 2
-        ccr.header.is_proxyable = True
-
         ccr.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
         ccr.cc_request_number = 0
         #
@@ -319,14 +364,8 @@ class GxService:
         ccr.sgsn_mcc_mnc = str(mcc_mnc)
         #
         ccr.rat_type = E_RAT_TYPE_EUTRAN
-        if rat_type:
-            ccr.rat_type = rat_type
-
         ccr.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
-        if not apn:
-            ccr.called_station_id = "apn"
-        else:
-            ccr.called_station_id = apn
+        ccr.called_station_id = apn
             
         ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(msisdn))
         ccr.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(imsi))
@@ -335,24 +374,24 @@ class GxService:
         # ccr.user_equipment_info.user_equipment_info_type = E_USER_EQUIPMENT_INFO_TYPE_IMEISV
         # ccr.user_equipment_info.user_equipment_info_value = b"3576260906721501"
 
-        ccr.supported_features = SupportedFeatures()
-        ccr.supported_features.vendor_id = VENDOR_TGPP
-        ccr.supported_features.feature_list = 1032
-        ccr.supported_features.feature_list_id = 1
+        # ccr.supported_features = SupportedFeatures()
+        # ccr.supported_features.vendor_id = VENDOR_TGPP
+        # ccr.supported_features.feature_list = 1032
+        # ccr.supported_features.feature_list_id = 1
 
         ccr.qos_information = QosInformation()
         ccr.qos_information.apn_aggregate_max_bitrate_ul = 300000000
         ccr.qos_information.apn_aggregate_max_bitrate_dl = 150000000
 
-        ccr.default_eps_bearer_qos = DefaultEpsBearerQos()
-        ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
-        ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
-        ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
-        ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+        # ccr.default_eps_bearer_qos = DefaultEpsBearerQos()
+        # ccr.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+        # ccr.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+        # ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+        # ccr.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
 
         ccr.bearer_usage = E_BEARER_USAGE_GENERAL
-        ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
-        ccr.origin_state_id = 1448374171
+        # ccr.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+        # ccr.origin_state_id = 1448374171
         return ccr
     
     def send_request_list(self, request_list):
@@ -430,7 +469,7 @@ class GxService:
 #             self.sy_service.ocs.wait_for_ready()
 #         if self.rx_service:
 #             self.rx_service.af.wait_for_ready()
-#         self.gx_service.pcef.wait_for_ready()
+#         self.gx_service.gx_app.wait_for_ready()
 
 #     def stop(self):
 #         logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)

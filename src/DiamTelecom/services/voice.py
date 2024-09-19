@@ -12,11 +12,13 @@ import time
 class VoiceService():
     def __init__(self,
                  gx_service: GxService,
-                 rx_service: RxService,
+                 ip_start: str = "10.0.0.0",
+                 ip_end: str = "10.0.0.100",
+                 rx_service: RxService = None,
                  ):
         self.gx_service = gx_service
+        self.ip_queue = IpQueue(ip_start, ip_end)
         self.rx_service = rx_service
-        self.dest_realm = None
 
     def start(self):
         if self.rx_service:
@@ -33,6 +35,28 @@ class VoiceService():
             self.rx_service.stop()
         self.gx_service.stop()
 
+    def create_gx_session(self, subscriber: Subscriber) -> GxSession:
+        gx_session_id = self.gx_service.gx_app.node.session_generator.next_id()
+        framed_ip_address = self.ip_queue.get_ip()
+        gx_session = self.gx_service.gx_app.sessions.create_session(subscriber,
+                                                         gx_session_id,
+                                                         framed_ip_address)
+        return gx_session
+
+    def start_gx_session(self, gx_session: GxSession):
+        ccr_i = self.gx_service.create_ccr_i(gx_session.session_id,
+                                             gx_session.framed_ip_address,
+                                             gx_session.mcc_mnc, gx_session.apn, gx_session.msisdn, gx_session.imsi)
+        cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
+        if not isinstance(cca_i, CreditControlAnswer):
+            raise Exception("CCA-I is not received")
+        if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            ts = time.time()
+            gx_session.set_start_time(ts)
+            gx_session.active = True
+        
+
+
 
     # def create_aar(self) -> AaRequest:
     #     aar = AaRequest()
@@ -40,20 +64,20 @@ class VoiceService():
     #     aar.auth_application_id = APP_3GPP_RX
     #     return aar
 
-    def create_str(self):
-        str_ = SessionTerminationRequest()
-        str_ = self.rx_service.set_rx_hosts(str_)
-        str_.auth_application_id = APP_3GPP_RX
-        return str_
+    # def create_str(self):
+    #     str_ = SessionTerminationRequest()
+    #     str_ = self.rx_service.set_rx_hosts(str_)
+    #     str_.auth_application_id = APP_3GPP_RX
+    #     return str_
 
-    def start_rx_session(self, rx_session: RxSession):
-        logger.info(f"Starting RX session: {rx_session}")
-        aar = self.create_aar_audio(rx_session)
-        self.rx_service.send_rx_request(rx_session, aar, timeout=5)
-        ts = time.time()
-        rx_session.set_start_time(ts)
-        logger.info("RX session started")
-        return rx_session
+    # def start_rx_session(self, rx_session: RxSession):
+    #     logger.info(f"Starting RX session: {rx_session}")
+    #     aar = self.create_aar_audio(rx_session)
+    #     self.rx_service.send_rx_request(rx_session, aar, timeout=5)
+    #     ts = time.time()
+    #     rx_session.set_start_time(ts)
+    #     logger.info("RX session started")
+    #     return rx_session
 
     # def start_gx_session(self, gx_session: GxSession):
     #     logger.info(f"Starting GX session: {gx_session}")

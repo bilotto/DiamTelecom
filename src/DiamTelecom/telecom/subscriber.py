@@ -33,6 +33,8 @@ class Subscriber:
         self.carrier_id = carrier_id
         self.use_case = None
         # self.messages = DiameterMessages()
+        self.apn = None
+        self.mcc_mnc = None
 
 class Subscribers(dict):
     """
