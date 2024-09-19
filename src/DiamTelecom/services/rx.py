@@ -24,6 +24,16 @@ class RxService:
     def stop(self):
         self.rx_app.custom_stop()
 
+    def send_rx_request(self, rx_session: RxSession, message, timeout=5):
+        rx_session.add_message(message)
+        try:
+            response = self.rx_app.send_request(message, timeout)
+            rx_session.add_message(response)
+            return response
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+
     def create_aar(self, rx_session: RxSession) -> AaRequest:
         aar = rx_session.create_aar()
         #
