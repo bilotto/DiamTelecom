@@ -35,19 +35,19 @@ class DataService():
     def realm(self) -> str:
         if self._realm:
             return self._realm
-        raise Exception("Realm is not set")
+        raise Exception(f"DataService: {self}. Realm is not set")
     
     @property
     def mcc_mnc(self) -> str:
         if self._mcc_mnc:
             return self._mcc_mnc
-        raise Exception("MCC/MNC is not set")
+        raise Exception(f"DataService: {self}. MCC/MNC is not set")
     
     @property
     def apn(self) -> str:
         if self._apn:
             return self._apn
-        raise Exception("APN is not set")
+        raise Exception(f"DataService: {self}. APN is not set")
 
     def start(self):
         if self.sy_service:

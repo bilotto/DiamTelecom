@@ -27,19 +27,19 @@ class VoiceService():
     def realm(self) -> str:
         if self._realm:
             return self._realm
-        raise Exception("Realm is not set")
+        raise Exception("VoiceService: Realm is not set")
     
     @property
     def mcc_mnc(self) -> str:
         if self._mcc_mnc:
             return self._mcc_mnc
-        raise Exception("MCC/MNC is not set")
+        raise Exception("VoiceService: MCC/MNC is not set")
     
     @property
     def apn(self) -> str:
         if self._apn:
             return self._apn
-        raise Exception("APN is not set")
+        raise Exception("VoiceService: APN is not set")
 
 
     def start(self):
