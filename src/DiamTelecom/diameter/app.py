@@ -21,16 +21,16 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
                 if session.active:
                     return session
         
-    def custom_start(self):
-        if not self.started:
-            self.node.start()
-            # self.wait_for_ready()
-            self.started = True
+    # def custom_start(self):
+    #     if not self.started:
+    #         self.node.start()
+    #         # self.wait_for_ready()
+    #         self.started = True
 
-    def custom_stop(self):
-        if self.started:
-            self.node.stop()
-            self.started = False
+    # def custom_stop(self):
+    #     if self.started:
+    #         self.node.stop()
+    #         self.started = False
 
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
@@ -85,8 +85,10 @@ class DiameterApplications:
     def start(self):
         for node in self.nodes:
             node.start()
+            print(f"Node {node} started")
 
     def wait_for_ready(self):
         for app in self.apps:
             app.wait_for_ready()
+            print(f"App {app} ready")
         
