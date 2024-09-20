@@ -32,8 +32,6 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             self.node.stop()
             self.started = False
 
-
-
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
@@ -61,3 +59,17 @@ class SyApplication(CustomSimpleThreadingApplication):
 
     def set_subscribers(self, subscribers):
         self.subscribers = subscribers
+
+
+class DiameterApplications:
+    def __init__(self):
+        self.apps_per_id = {}
+        self.apps_per_node = {}
+
+    def add_application(self, app: CustomSimpleThreadingApplication):
+        self.apps_per_id[app.application_id] = app
+        node = app.node
+        if self.apps_per_node.get(node) is None:
+            self.apps_per_node[node] = []
+        self.apps_per_node[node].append(app)
+        
