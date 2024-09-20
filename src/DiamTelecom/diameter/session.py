@@ -160,6 +160,9 @@ class RxSession(DiameterSession):
     def set_gx_session_id(self, gx_session_id: str):
         self.gx_session_id = gx_session_id
 
+    def __repr__(self):
+        return f"RxSession(n_messages={self.n_messages}, last_message={self.last_message})"
+
     @property
     def tshark_filter(self):
         return f"diameter.Framed-IP-Address.IPv4 == {self.framed_ip_address} || diameter.Session-Id == \"{self.gx_session_id}\" || diameter.Session-Id == \"{self.session_id}\""
@@ -202,6 +205,8 @@ class SySession(DiameterSession):
     def set_gx_session_id(self, gx_session_id: str):
         self.gx_session_id = gx_session_id
 
+    def __repr__(self):
+        return f"SySession(n_messages={self.n_messages}, last_message={self.last_message})"
 
 class GxSession(DiameterSession):
     session_id: str
@@ -223,6 +228,9 @@ class GxSession(DiameterSession):
         self.qos_information = None
         self.pcc_rules = []
         self.rx_sessions = []
+
+    def __repr__(self):
+        return f"GxSession(n_messages={self.n_messages}, last_message={self.last_message})"
 
     def incr_cc_request_number(self):
         self.cc_request_number += 1

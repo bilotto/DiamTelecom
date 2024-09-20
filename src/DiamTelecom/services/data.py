@@ -85,6 +85,8 @@ class DataService():
             gx_session.set_start_time(ts)
 
     def stop_gx_session(self, gx_session: GxSession):
+        if not gx_session.active:
+            return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
         cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
         if not isinstance(cca_t, CreditControlAnswer):
