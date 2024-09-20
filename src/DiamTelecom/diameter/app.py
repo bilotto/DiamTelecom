@@ -1,4 +1,4 @@
-from diameter.node.application import SimpleThreadingApplication
+from diameter.node.application import SimpleThreadingApplication, Node
 from .session import *
 
 class CustomSimpleThreadingApplication(SimpleThreadingApplication):
@@ -60,6 +60,7 @@ class SyApplication(CustomSimpleThreadingApplication):
     def set_subscribers(self, subscribers):
         self.subscribers = subscribers
 
+from typing import List
 
 class DiameterApplications:
     def __init__(self):
@@ -72,4 +73,20 @@ class DiameterApplications:
         if self.apps_per_node.get(node) is None:
             self.apps_per_node[node] = []
         self.apps_per_node[node].append(app)
+
+    @property
+    def nodes(self) -> List[Node]:
+        return list(self.apps_per_node.keys())
+    
+    @property
+    def apps(self) -> List[CustomSimpleThreadingApplication]:
+        return list(self.apps_per_id.values())
+    
+    def start(self):
+        for node in self.nodes:
+            node.start()
+
+    def wait_for_ready(self):
+        for app in self.apps:
+            app.wait_for_ready()
         
