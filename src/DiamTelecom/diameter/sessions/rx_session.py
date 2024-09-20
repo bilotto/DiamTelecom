@@ -4,6 +4,7 @@ from diameter.message.constants import *
 from diameter.message.commands import AaRequest
 from diameter.message.avp.grouped import *
 from ..constants import *
+from DiamTelecom.helpers import ip_to_bytes
 
 
 class RxSession(DiameterSession):

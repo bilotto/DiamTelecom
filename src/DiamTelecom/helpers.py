@@ -31,3 +31,7 @@ def decode_hex_string(hex_string: str) -> str:
     byte_data = bytes.fromhex(hex_string)
     # Decodificando os bytes para obter a string ASCII
     return byte_data.decode('ascii')
+
+import socket
+def ip_to_bytes(ip):
+    return socket.inet_aton(ip)
