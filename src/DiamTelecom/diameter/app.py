@@ -83,14 +83,8 @@ class DiameterApplications:
         return list(self.apps_per_id.values())
     
     def start(self):
-        try:
-            for app in self.apps:
-                app.custom_start()
-        except Exception as e:
-            print(e)
-            pass
-        # for node in self.nodes:
-        #     node.start()
+        for node in self.nodes:
+            node.start()
 
     def wait_for_ready(self):
         for app in self.apps:
