@@ -5,7 +5,7 @@ from diameter.message.avp.grouped import *
 from .rx_session import RxSession
 from typing import List, Dict
 from ..constants import *
-
+from DiamTelecom.helpers import ip_to_bytes
 
 class GxSession(DiameterSession):
     session_id: str
