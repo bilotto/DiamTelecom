@@ -104,8 +104,13 @@ class VoiceService():
         aar = self.rx_service.create_aar(rx_session)
         if self.realm:
             aar.destination_realm = self.realm.encode()
-        aar = self.rx_service.send_rx_request(rx_session, aar, timeout=5)
-        ts = time.time()
+        aaa = self.rx_service.send_rx_request(rx_session, aar, timeout=5)
+        if not isinstance(aaa, AaAnswer):
+            raise Exception("AAA is not received")
+        if aaa.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            ts = time.time()
+            rx_session.set_start_time(ts)
+            rx_session.active = True
         rx_session.set_start_time(ts)
         logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return rx_session
