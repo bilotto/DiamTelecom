@@ -97,19 +97,16 @@ class DataService():
             gx_session.set_end_time(ts)
             gx_session.active = False
 
-    # def create_sy_session(self, subscriber: Subscriber) -> SySession:
-    #     sy_session = self.sy_service.sy_app.get_subscriber_active_session(subscriber.msisdn)
-    #     if not sy_session:
-    #         return None
-    #     self.logger.info(f"SY Session found for subscriber {subscriber}: {sy_session}")
-    #     return sy_session
-
     def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
         self.logger.info(f"Sending SSN Request: {policy_counter_dict}")
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
         if self.realm:
             ssnr.destination_realm = self.realm.encode()
         ssna = self.sy_service.send_sy_request(sy_session, ssnr)
+        if not isinstance(ssna, SpendingStatusNotificationAnswer):
+            raise Exception("SSNA is not received")
+        if ssna.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
+            self.logger.error(f"SSNA Result-Code is not 2001. RC: {ssna.result_code}")
         #
         if wait_raa:
             pass
