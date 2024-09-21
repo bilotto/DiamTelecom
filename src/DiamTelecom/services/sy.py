@@ -59,7 +59,7 @@ class SyService:
                 message.policy_counter_status_report.append(pcsr)
         return message
     
-    def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
+    def wait_for_sy_session(self, subscriber_msisdn, timeout=3) -> SySession:
         self.logger.info(f"Waiting for Sy session for {subscriber_msisdn}")
         start_time = time.time()  # Get the current time
         while not self.sy_app.get_subscriber_active_session(subscriber_msisdn):
