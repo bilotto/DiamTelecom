@@ -2,7 +2,7 @@
 from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
 from diameter.message.commands import CreditControlRequest
 from diameter.message.avp.grouped import *
-from .rx_session import RxSession
+from .rx_session_ import RxSession
 from typing import List, Dict
 from ..constants import *
 from DiamTelecom.helpers import ip_to_bytes
