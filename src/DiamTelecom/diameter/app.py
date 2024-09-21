@@ -23,10 +23,10 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
                 
 
     def send_request_custom(self, request, timeout=5):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         try:
             answer = self.send_request(request, timeout)
-            logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
             return answer
         except Exception as e:
             raise e

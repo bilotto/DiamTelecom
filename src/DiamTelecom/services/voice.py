@@ -64,6 +64,8 @@ class VoiceService():
         return gx_session
 
     def start_gx_session(self, gx_session: GxSession):
+        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
             ccr_i.destination_realm = self.realm.encode()
@@ -75,6 +77,7 @@ class VoiceService():
             ts = time.time()
             gx_session.set_start_time(ts)
             gx_session.active = True
+        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return gx_session
     
     def create_rx_session(self, subscriber: Subscriber):
@@ -87,15 +90,18 @@ class VoiceService():
         return rx_session
 
     def start_rx_session(self, rx_session: RxSession):
+        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         aar = self.rx_service.create_aar(rx_session)
         if self.realm:
             aar.destination_realm = self.realm.encode()
         aar = self.rx_service.send_rx_request(rx_session, aar, timeout=5)
         ts = time.time()
         rx_session.set_start_time(ts)
+        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return rx_session
     
     def stop_gx_session(self, gx_session: GxSession):
+        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         if not gx_session.active:
             return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -107,8 +113,8 @@ class VoiceService():
             ts = time.time()
             gx_session.set_end_time(ts)
             gx_session.active = False
-
-
+        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+        return gx_session
 
     # def create_aar(self) -> AaRequest:
     #     aar = AaRequest()
