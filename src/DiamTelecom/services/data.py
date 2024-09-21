@@ -127,7 +127,8 @@ class DataService():
         gx_session = self.create_gx_session(subscriber)
         self.start_gx_session(gx_session)
         sy_session = self.sy_service.wait_for_sy_session(subscriber.msisdn, timeout=5)
-        sy_session.gx_session_id = gx_session.session_id
+        if sy_session:
+            sy_session.gx_session_id = gx_session.session_id
         return gx_session, sy_session
 
 
