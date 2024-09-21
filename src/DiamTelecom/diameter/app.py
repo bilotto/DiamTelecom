@@ -90,3 +90,8 @@ class DiameterApplications:
         for app in self.apps:
             app.wait_for_ready(timeout)
             print(f"App {app} ready")
+
+    def stop(self):
+        for node in self.nodes:
+            node.stop()
+            print(f"Node {node} stopped")

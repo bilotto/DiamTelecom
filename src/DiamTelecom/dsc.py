@@ -42,3 +42,6 @@ class DSC:
 
     def wait_for_ready(self, timeout=30):
         self.apps.wait_for_ready(timeout)
+
+    def stop(self):
+        self.node.stop()
