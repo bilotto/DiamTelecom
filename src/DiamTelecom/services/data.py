@@ -34,7 +34,7 @@ class DataService():
         self._realm = None
         self._mcc_mnc = None
         self._apn = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("DiamTelecom.services")
 
     @property
     def realm(self) -> str:
@@ -82,6 +82,7 @@ class DataService():
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
             ts = time.time()
             gx_session.set_start_time(ts)
+        return gx_session
 
     def stop_gx_session(self, gx_session: GxSession):
         if not gx_session.active:
@@ -96,15 +97,15 @@ class DataService():
             gx_session.set_end_time(ts)
             gx_session.active = False
 
-    def create_sy_session(self, subscriber: Subscriber) -> SySession:
-        sy_session = self.sy_service.sy_app.get_subscriber_active_session(subscriber.msisdn)
-        if not sy_session:
-            return None
-        self.logger.info(f"SY Session found for subscriber {subscriber}: {sy_session}")
-        return sy_session
+    # def create_sy_session(self, subscriber: Subscriber) -> SySession:
+    #     sy_session = self.sy_service.sy_app.get_subscriber_active_session(subscriber.msisdn)
+    #     if not sy_session:
+    #         return None
+    #     self.logger.info(f"SY Session found for subscriber {subscriber}: {sy_session}")
+    #     return sy_session
 
     def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
-        logger.info(f"Sending SSN Request: {policy_counter_dict}")
+        self.logger.info(f"Sending SSN Request: {policy_counter_dict}")
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
         if self.realm:
             ssnr.destination_realm = self.realm.encode()
@@ -112,6 +113,12 @@ class DataService():
         #
         if wait_raa:
             pass
+
+    def start_data_session(self, subscriber: Subscriber):
+        gx_session = self.create_gx_session(subscriber)
+        self.start_gx_session(gx_session)
+        sy_session = self.sy_service.wait_for_sy_session(subscriber.msisdn, timeout=5)
+        return gx_session, sy_session
 
 
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):

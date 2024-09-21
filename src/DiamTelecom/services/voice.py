@@ -28,46 +28,39 @@ class VoiceService():
         self._realm = None
         self._mcc_mnc = None
         self._apn = None
+        self.logger = logging.getLogger("DiamTelecom.services")
 
     @property
     def realm(self) -> str:
         if self._realm:
             return self._realm
-        raise Exception("VoiceService: Realm is not set")
+        raise Exception(f"DataService: {self}. Realm is not set")
     
     @property
     def mcc_mnc(self) -> str:
         if self._mcc_mnc:
             return self._mcc_mnc
-        raise Exception("VoiceService: MCC/MNC is not set")
+        raise Exception(f"DataService: {self}. MCC/MNC is not set")
     
     @property
     def apn(self) -> str:
         if self._apn:
             return self._apn
-        raise Exception("VoiceService: APN is not set")
+        raise Exception(f"DataService: {self}. APN is not set")
+    
+    def set_realm(self, realm: str):
+        self._realm = realm
 
-    def start(self):
-        if self.rx_service:
-            self.rx_service.start()
-        self.gx_service.start()
+    def set_mcc_mnc(self, mcc_mnc: str):
+        self._mcc_mnc = mcc_mnc
 
-    def wait_for_ready(self):
-        if self.rx_service:
-            self.rx_service.rx_app.wait_for_ready()
-        self.gx_service.pcef.wait_for_ready()
-
-    def stop(self):
-        if self.rx_service:
-            self.rx_service.stop()
-        self.gx_service.stop()
+    def set_apn(self, apn: str):
+        self._apn = apn
 
     def create_gx_session(self, subscriber: Subscriber) -> GxSession:
         gx_session_id = self.gx_service.gx_app.node.session_generator.next_id()
         framed_ip_address = self.ip_queue.get_ip()
-        gx_session = self.gx_service.gx_app.sessions.create_session(subscriber,
-                                                         gx_session_id,
-                                                         framed_ip_address)
+        gx_session = self.gx_service.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
         return gx_session
 
     def start_gx_session(self, gx_session: GxSession):

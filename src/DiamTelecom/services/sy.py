@@ -60,14 +60,15 @@ class SyService:
         return message
     
     def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
+        self.logger.info(f"Waiting for Sy session for {subscriber_msisdn}")
         start_time = time.time()  # Get the current time
         while not self.sy_app.get_subscriber_active_session(subscriber_msisdn):
             time.sleep(0.1)
-            logger.info(f"Waiting for Sy session for {subscriber_msisdn}")
+            self.logger.info(f"Waiting for Sy session for {subscriber_msisdn}")
             if time.time() - start_time > timeout:
                 break
 
         if self.sy_app.get_subscriber_active_session(subscriber_msisdn):
-            logger.info("Sy session found")
+            self.logger.info("Sy session found")
             return self.sy_app.get_subscriber_active_session(subscriber_msisdn)
         return None

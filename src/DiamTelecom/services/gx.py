@@ -17,7 +17,7 @@ class GxService:
         self.request_count = dict()
         self.request_count['success'] = 0
         self.request_count['failure'] = 0
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("DiamTelecom.services")
 
     # def start(self):
     #     self.gx_app.custom_start()
