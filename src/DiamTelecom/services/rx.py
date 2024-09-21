@@ -18,11 +18,11 @@ class RxService:
             return self.rx_config['destination_realm']
         return self.rx_app.node.realm_name
 
-    def start(self):
-        self.rx_app.custom_start()
+    # def start(self):
+    #     self.rx_app.custom_start()
 
-    def stop(self):
-        self.rx_app.custom_stop()
+    # def stop(self):
+    #     self.rx_app.custom_stop()
 
     def send_rx_request(self, rx_session: RxSession, message, timeout=5):
         rx_session.add_message(message)

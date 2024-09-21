@@ -3,6 +3,7 @@ from diameter.message.commands import *
 from diameter.message.avp.grouped import *
 from ..diameter.app import GxApplication
 from ..diameter.session import GxSession
+import time
 
 class GxService:
     gx_app: GxApplication
@@ -16,12 +17,13 @@ class GxService:
         self.request_count = dict()
         self.request_count['success'] = 0
         self.request_count['failure'] = 0
+        self.logger = logging.getLogger(__name__)
 
-    def start(self):
-        self.gx_app.custom_start()
+    # def start(self):
+    #     self.gx_app.custom_start()
 
-    def stop(self):
-        self.gx_app.custom_stop()
+    # def stop(self):
+    #     self.gx_app.custom_stop()
 
 
     def set_gx_config(self, gx_config: dict):
@@ -103,4 +105,17 @@ class GxService:
         ccr_t.header.application_id = APP_3GPP_GX
         return ccr_t
 
-
+    def wait_for_gx_raa(self, gx_session: GxSession, current_message_count=None, timeout=3):
+        self.logger.info("Waiting for Gx RAR/RAA")
+        if not current_message_count:
+            current_message_count = len(gx_session.messages)
+        start_time = time.time()
+        self.logger.info(f"Waiting for Gx RAR/RAA for {gx_session.session_id}")
+        # while not isinstance(gx_session.last_message, ReAuthAnswer) and len(gx_session.messages) <= current_message_count + 2:
+        while not isinstance(gx_session.last_message, ReAuthAnswer) and len(gx_session.messages) <= current_message_count:
+            time.sleep(0.1)
+            self.logger.debug(f"Waiting for Gx RAR/RAA for {gx_session.session_id}")
+            if time.time() - start_time > timeout:
+                self.logger.warn("Timeout")
+                return False
+        return True

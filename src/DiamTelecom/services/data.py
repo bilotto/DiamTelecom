@@ -50,20 +50,20 @@ class DataService():
             return self._apn
         raise Exception(f"DataService: {self}. APN is not set")
 
-    def start(self):
-        if self.sy_service:
-            self.sy_service.start()
-        self.gx_service.start()
+    # def start(self):
+    #     if self.sy_service:
+    #         self.sy_service.start()
+    #     self.gx_service.start()
 
-    def wait_for_ready(self):
-        if self.sy_service:
-            self.sy_service.sy_app.wait_for_ready()
-        self.gx_service.gx_app.wait_for_ready()
+    # def wait_for_ready(self):
+    #     if self.sy_service:
+    #         self.sy_service.sy_app.wait_for_ready()
+    #     self.gx_service.gx_app.wait_for_ready()
     
-    def stop(self):
-        if self.sy_service:
-            self.sy_service.stop()
-        self.gx_service.stop()
+    # def stop(self):
+    #     if self.sy_service:
+    #         self.sy_service.stop()
+    #     self.gx_service.stop()
 
     def create_gx_session(self, subscriber: Subscriber) -> GxSession:
         gx_session_id = self.gx_service.gx_app.node.session_generator.next_id()
