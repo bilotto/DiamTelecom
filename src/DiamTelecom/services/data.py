@@ -76,7 +76,6 @@ class DataService():
         return gx_session
 
     def start_gx_session(self, gx_session: GxSession):
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
@@ -86,14 +85,10 @@ class DataService():
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-            ts = time.time()
-            gx_session.set_start_time(ts)
-            gx_session.active = True
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            gx_session.start()
         return gx_session
-
+    
     def stop_gx_session(self, gx_session: GxSession):
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         if not gx_session.active:
             return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -102,14 +97,10 @@ class DataService():
             raise Exception("CCA is not received")
         if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
             self.ip_queue.put_ip(gx_session.framed_ip_address)
-            ts = time.time()
-            gx_session.set_end_time(ts)
-            gx_session.active = False
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            gx_session.end()
         return gx_session
     
     def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         self.logger.info(f"Sending SSN Request: {policy_counter_dict}")
         gx_session = self.gx_service.gx_app.sessions.get_session(sy_session.gx_session_id)
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
@@ -124,7 +115,6 @@ class DataService():
         if ssna.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
             self.logger.error(f"SSNA Result-Code is not 2001. RC: {ssna.result_code}")
         #
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
 
     def start_data_session(self, subscriber: Subscriber):
         gx_session = self.create_gx_session(subscriber)

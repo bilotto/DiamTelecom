@@ -74,7 +74,6 @@ class VoiceService():
         return gx_session
 
     def start_gx_session(self, gx_session: GxSession):
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
@@ -84,14 +83,10 @@ class VoiceService():
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-            ts = time.time()
-            gx_session.set_start_time(ts)
-            gx_session.active = True
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            gx_session.start()
         return gx_session
     
     def stop_gx_session(self, gx_session: GxSession):
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         if not gx_session.active:
             return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -100,10 +95,7 @@ class VoiceService():
             raise Exception("CCA is not received")
         if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
             self.ip_queue.put_ip(gx_session.framed_ip_address)
-            ts = time.time()
-            gx_session.set_end_time(ts)
-            gx_session.active = False
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            gx_session.end()
         return gx_session
     
     def create_rx_session(self, subscriber: Subscriber):
@@ -116,7 +108,6 @@ class VoiceService():
         return rx_session
 
     def start_rx_session(self, rx_session: RxSession):
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         aar = self.rx_service.create_aar(rx_session)
         if self.realm:
             aar.destination_realm = self.realm.encode()
@@ -124,11 +115,7 @@ class VoiceService():
         if not isinstance(aaa, AaAnswer):
             raise Exception("AAA is not received")
         if aaa.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-            ts = time.time()
-            rx_session.set_start_time(ts)
-            rx_session.active = True
-        rx_session.set_start_time(ts)
-        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            rx_session.start()
         return rx_session
     
 

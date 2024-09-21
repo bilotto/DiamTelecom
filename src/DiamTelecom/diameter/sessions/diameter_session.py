@@ -2,6 +2,7 @@
 from DiamTelecom.telecom import Subscriber
 from ..message import Message, DiameterMessage, DiameterMessages, create_diameter_message_from_message
 from typing import Dict, List, Set
+import time
 
 class DiameterSession:
     subscriber: Subscriber
@@ -34,6 +35,12 @@ class DiameterSession:
     def set_start_time(self, start_time: str):
         self.start_time = start_time
         self.active = True
+
+    def start(self):
+        self.set_start_time(str(time.time()))
+
+    def end(self):
+        self.set_end_time(str(time.time()))
 
     def set_end_time(self, end_time: str):
         self.end_time = end_time
