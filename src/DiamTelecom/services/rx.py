@@ -28,7 +28,7 @@ class RxService:
     def send_rx_request(self, rx_session: RxSession, message, timeout=5):
         rx_session.add_message(message)
         try:
-            response = self.rx_app.send_request(message, timeout)
+            response = self.rx_app.send_request_custom(message, timeout)
             rx_session.add_message(response)
             return response
         except Exception as e:

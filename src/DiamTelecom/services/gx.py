@@ -37,7 +37,7 @@ class GxService:
     
     def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
         try:
-            answer = self.gx_app.send_request(request, timeout)
+            answer = self.gx_app.send_request_custom(request, timeout)
             gx_session.add_message(request)
             gx_session.add_message(answer)
             self.request_count['success'] += 1

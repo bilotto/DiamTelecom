@@ -1,5 +1,6 @@
 from diameter.node.application import SimpleThreadingApplication, Node
 from .session import *
+import logging
 
 class CustomSimpleThreadingApplication(SimpleThreadingApplication):
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
@@ -19,6 +20,16 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             for session in self.sessions.get_msisdn_sessions(msisdn):
                 if session.active:
                     return session
+                
+
+    def send_request_custom(self, request, timeout=5):
+        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        try:
+            answer = self.send_request(request, timeout)
+            logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+            return answer
+        except Exception as e:
+            raise e
         
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions

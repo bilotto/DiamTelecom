@@ -44,7 +44,7 @@ class SyService:
     
     def send_sy_request(self, sy_session: SySession, message, timeout=5):
         sy_session.add_message(message)
-        response = self.sy_app.send_request(message, timeout)
+        response = self.sy_app.send_request_custom(message, timeout)
         sy_session.add_message(response)
         return response
 
