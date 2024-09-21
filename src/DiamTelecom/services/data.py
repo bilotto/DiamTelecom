@@ -106,21 +106,19 @@ class DataService():
     def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
         logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         self.logger.info(f"Sending SSN Request: {policy_counter_dict}")
+        gx_session = self.gx_service.gx_app.sessions.get_session(sy_session.gx_session_id)
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
         if self.realm:
             ssnr.destination_realm = self.realm.encode()
         ssna = self.sy_service.send_sy_request(sy_session, ssnr)
+        if wait_raa:
+            self.logger.info(f"Waiting for RAA for {gx_session}")
+            self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
         if not isinstance(ssna, SpendingStatusNotificationAnswer):
             raise Exception("SSNA is not received")
         if ssna.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
             self.logger.error(f"SSNA Result-Code is not 2001. RC: {ssna.result_code}")
         #
-        if wait_raa:
-            gx_session = self.gx_service.gx_app.sessions.get_session(sy_session.gx_session_id)
-            if gx_session:
-                self.logger.info(f"Waiting for RAA for {gx_session}")
-                self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
-            pass
         logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
 
     def start_data_session(self, subscriber: Subscriber):
