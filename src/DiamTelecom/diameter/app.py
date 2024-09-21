@@ -22,7 +22,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             for session in self.sessions.get_msisdn_sessions(msisdn):
                 if session.active:
                     return session
-                
+
     def send_request_custom(self, request, timeout=5):
         if not self.dsc_app:
             logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
@@ -46,7 +46,7 @@ class GxApplication(CustomSimpleThreadingApplication):
                     return session
 
 class GyApplication(CustomSimpleThreadingApplication):
-    sessions: GxSessions
+    sessions: GySessions
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app)
         self.sessions = GySessions()
@@ -99,7 +99,7 @@ class DiameterApplications:
             t.start()
             print(f"Node {node} started")
         for t in threads:
-            t.join()
+            t.join()                                                                                                                        
         print("Nodes started")
 
     def wait_for_ready(self, timeout=30):
