@@ -21,7 +21,7 @@ class RxSession(DiameterSession):
         self.gx_session_id = gx_session_id
 
     def __repr__(self):
-        return f"RxSession(n_messages={self.n_messages}, last_message={self.last_message})"
+        return f"RxSession(active={self.active}, gx_session_id={self.gx_session_id}, n_messages={self.n_messages}, last_message={self.last_message})"
 
     @property
     def tshark_filter(self):

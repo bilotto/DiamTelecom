@@ -21,9 +21,8 @@ class SySession(DiameterSession):
         message.policy_counter_status_report = []
         return message
 
-
     def __repr__(self):
-        return f"SySession(n_messages={self.n_messages}, last_message={self.last_message})"
+        return f"SySession(active={self.active}, gx_session_id={self.gx_session_id}, n_messages={self.n_messages}, last_message={self.last_message})"
 
 class SySessions(DiameterSessions):
     def __init__(self):

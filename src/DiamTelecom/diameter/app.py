@@ -1,4 +1,5 @@
 from diameter.node.application import SimpleThreadingApplication, Node
+from DiamTelecom.telecom import Subscribers
 from .session import *
 import logging
 
@@ -21,7 +22,6 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
                 if session.active:
                     return session
                 
-
     def send_request_custom(self, request, timeout=5):
         # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         try:
@@ -51,12 +51,13 @@ class RxApplication(CustomSimpleThreadingApplication):
 
 class SyApplication(CustomSimpleThreadingApplication):
     sessions: SySessions
+    subscribers: Subscribers
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = SySessions()
         self.subscribers = None 
 
-    def set_subscribers(self, subscribers):
+    def set_subscribers(self, subscribers: Subscribers):
         self.subscribers = subscribers
 
 from typing import List
@@ -82,9 +83,16 @@ class DiameterApplications:
         return list(self.apps_per_id.values())
     
     def start(self):
+        import threading
+        threads = []
         for node in self.nodes:
-            node.start()
+            t = threading.Thread(target=node.start)
+            threads.append(t)
+            t.start()
             print(f"Node {node} started")
+        for t in threads:
+            t.join()
+        print("Nodes started")
 
     def wait_for_ready(self, timeout=30):
         for app in self.apps:
@@ -98,7 +106,7 @@ class DiameterApplications:
             t = threading.Thread(target=node.stop)
             threads.append(t)
             t.start()
-            # node.stop()
+            print(f"Node {node} stopping")
         for t in threads:
             t.join()
         print("Nodes stopped")
