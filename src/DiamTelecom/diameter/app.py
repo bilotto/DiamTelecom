@@ -5,9 +5,8 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = DiameterSessions()
-        self.started = False
-        #
-        self.init_connection = False
+        # self.started = False
+        # self.init_connection = False
 
     def get_session_by_id(self, session_id: str) -> DiameterSession:
         return self.sessions.get_session(session_id)
@@ -21,17 +20,6 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
                 if session.active:
                     return session
         
-    # def custom_start(self):
-    #     if not self.started:
-    #         self.node.start()
-    #         # self.wait_for_ready()
-    #         self.started = True
-
-    # def custom_stop(self):
-    #     if self.started:
-    #         self.node.stop()
-    #         self.started = False
-
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
@@ -42,7 +30,7 @@ class GyApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
     def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
-        self.sessions = DiameterSessions()
+        self.sessions = GySessions()
 
 class RxApplication(CustomSimpleThreadingApplication):
     sessions: RxSessions
@@ -87,8 +75,7 @@ class DiameterApplications:
             node.start()
             print(f"Node {node} started")
 
-    def wait_for_ready(self):
+    def wait_for_ready(self, timeout=30):
         for app in self.apps:
-            app.wait_for_ready()
+            app.wait_for_ready(timeout)
             print(f"App {app} ready")
-        
