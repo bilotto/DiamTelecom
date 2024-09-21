@@ -97,6 +97,20 @@ class DataService():
             gx_session.set_end_time(ts)
             gx_session.active = False
 
+    def create_sy_session(self, subscriber: Subscriber) -> SySession:
+        sy_session = self.sy_service.sy_app.get_subscriber_active_session(subscriber.msisdn)
+        if not sy_session:
+            return None
+        return sy_session
+
+    def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
+        logger.info(f"Sending SSN Request: {policy_counter_dict}")
+        ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
+        ssna = self.sy_service.send_sy_request(sy_session, ssnr)
+        if wait_raa:
+            self.gx_service.wait_for_gx_raa(gx_session, len(gx_session.messages), timeout=5)
+
+
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
     #     return self.sy_service.wait_for_sy_session(subscriber_msisdn, timeout)
     
@@ -158,12 +172,6 @@ class DataService():
     #     logger.info("GX session stopped")
     #     return gx_session
 
-    # def send_policy_counter_status_report(self, gx_session: GxSession, sy_session: SySession, policy_counter_dict, wait_raa=True):
-    #     logger.info(f"Sending SSN Request: {policy_counter_dict}")
-    #     ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
-    #     ssna = self.sy_service.send_sy_request(sy_session, ssnr)
-    #     if wait_raa:
-    #         self.gx_service.wait_for_gx_raa(gx_session, len(gx_session.messages), timeout=5)
 
     # def create_ccr_i(self, gx_session: GxSession) -> CreditControlRequest:
     #     # Define CCR-I in the upper carrier Data class

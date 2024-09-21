@@ -1,4 +1,7 @@
 from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
+from diameter.message.commands import SpendingStatusNotificationRequest
+from diameter.message.constants import *
+from diameter.message.avp.grouped import PolicyCounterStatusReport
 
 class SySession(DiameterSession):
     session_id: str
@@ -10,6 +13,14 @@ class SySession(DiameterSession):
 
     def set_gx_session_id(self, gx_session_id: str):
         self.gx_session_id = gx_session_id
+
+    def create_ssnr(self) -> SpendingStatusNotificationRequest:
+        message = SpendingStatusNotificationRequest()
+        message.session_id = self.session_id
+        message.auth_application_id = APP_3GPP_SY
+        message.policy_counter_status_report = []
+        return message
+
 
     def __repr__(self):
         return f"SySession(n_messages={self.n_messages}, last_message={self.last_message})"
