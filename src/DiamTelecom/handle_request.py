@@ -41,6 +41,7 @@ def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
     return True
 
 def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
+    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     answer = message.to_answer()
     session_id = message.session_id
     session = app.get_session_by_id(session_id)
@@ -56,10 +57,12 @@ def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
         answer.destination_realm = message.origin_realm 
         answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
     session.add_message(answer)
+    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
 def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     logger.info("Need to handle SLR")
+    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     if message.auth_application_id == APP_3GPP_SY:
         session_id = message.session_id
         subscription_id = message.subscription_id
@@ -112,9 +115,11 @@ def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     session.add_message(answer)
     if answer.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
         session.active = True
+    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
 def handle_str(app: CustomSimpleThreadingApplication, message: SessionTerminationRequest):
+    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     answer = message.to_answer()
     session_id = message.session_id
     session = app.get_session_by_id(session_id)
@@ -128,9 +133,11 @@ def handle_str(app: CustomSimpleThreadingApplication, message: SessionTerminatio
         answer.destination_realm = message.origin_realm
         answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
     session.add_message(answer)
+    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
 def handle_ccr(app: CustomSimpleThreadingApplication, message: CreditControlRequest):
+    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     answer = message.to_answer()
     if not isinstance(answer, CreditControlAnswer):
         raise Exception("Not a Credit-Control-Answer message")
@@ -144,5 +151,12 @@ def handle_ccr(app: CustomSimpleThreadingApplication, message: CreditControlRequ
     answer.cc_request_number = message.cc_request_number
     answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
     answer.auth_application_id = message.auth_application_id
+    session = app.get_session_by_id(session_id)
+    if session:
+        session.add_message(message)
+        session.add_message(answer)
+    else:
+        logging.error(f"Session with id {session_id} not found. Found: {app.sessions}")
+    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
