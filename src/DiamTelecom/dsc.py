@@ -36,11 +36,14 @@ class DSC:
             self.apps = apps
         else:
             self.apps = DiameterApplications()
+        self.logger = logging.getLogger(__name__)
 
     def start(self):
+        self.logger.info("Starting DSC nodes")
         self.node.start()
 
     def wait_for_ready(self, timeout=30):
+        self.logger.info("Waiting for DSC applications to be ready")
         self.apps.wait_for_ready(timeout)
 
     def stop(self):
