@@ -19,12 +19,6 @@ class RxService:
             return self.rx_config['destination_realm']
         return self.rx_app.node.realm_name
 
-    # def start(self):
-    #     self.rx_app.custom_start()
-
-    # def stop(self):
-    #     self.rx_app.custom_stop()
-
     def send_rx_request(self, rx_session: RxSession, message, timeout=5):
         rx_session.add_message(message)
         try:
@@ -91,4 +85,20 @@ class RxService:
 
         return aar
     
-    
+    def create_str(self, rx_session: RxSession) -> SessionTerminationRequest:
+        str_ = rx_session.create_str()
+        #
+        str_.header.hop_by_hop_identifier = 4
+        str_.header.end_to_end_identifier = 4
+        str_.header.is_proxyable = True
+        #
+        origin_host = self.rx_app.node.origin_host
+        origin_realm = self.rx_app.node.realm_name
+        destination_realm = self.destination_realm
+        str_.origin_host = origin_host.encode()
+        str_.origin_realm = origin_realm.encode()
+        str_.destination_realm = destination_realm.encode()
+        #
+        str_.origin_state_id = 1268028842
+        str_.termination_cause = E_TERMINATION_CAUSE_DIAMETER_LOGOUT
+        return str_

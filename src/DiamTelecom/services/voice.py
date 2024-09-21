@@ -89,7 +89,23 @@ class VoiceService():
             gx_session.active = True
         logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return gx_session
-
+    
+    def stop_gx_session(self, gx_session: GxSession):
+        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        if not gx_session.active:
+            return
+        ccr_t = self.gx_service.create_ccr_t(gx_session)
+        cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
+        if not isinstance(cca_t, CreditControlAnswer):
+            raise Exception("CCA is not received")
+        if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            self.ip_queue.put_ip(gx_session.framed_ip_address)
+            ts = time.time()
+            gx_session.set_end_time(ts)
+            gx_session.active = False
+        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+        return gx_session
+    
     def create_rx_session(self, subscriber: Subscriber):
         gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:
@@ -115,21 +131,23 @@ class VoiceService():
         logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return rx_session
     
-    def stop_gx_session(self, gx_session: GxSession):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
-        if not gx_session.active:
-            return
-        ccr_t = self.gx_service.create_ccr_t(gx_session)
-        cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
-        if not isinstance(cca_t, CreditControlAnswer):
-            raise Exception("CCA is not received")
-        if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-            self.ip_queue.put_ip(gx_session.framed_ip_address)
-            ts = time.time()
-            gx_session.set_end_time(ts)
-            gx_session.active = False
-        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
-        return gx_session
+
+    def start_voice_session(self, subscriber: Subscriber):
+        gx_session = self.create_gx_session(subscriber)
+        gx_session = self.start_gx_session(gx_session)
+        rx_session = self.create_rx_session(subscriber)
+        rx_session = self.start_rx_session(rx_session)
+        self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+        if rx_session.active:
+            # Send STR to RxSession
+            str_ = self.rx_service.create_str(rx_session)
+            sta = self.rx_service.rx_app.send_request(str_, timeout=5)
+            self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+            if not isinstance(sta, SessionTerminationAnswer):
+                raise Exception("STA is not received")
+            if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+                rx_session.active = False
+        return gx_session, rx_session
 
     # def create_aar(self) -> AaRequest:
     #     aar = AaRequest()

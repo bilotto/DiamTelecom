@@ -1,7 +1,7 @@
 
 from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
 from diameter.message.constants import *
-from diameter.message.commands import AaRequest
+from diameter.message.commands import AaRequest, SessionTerminationRequest
 from diameter.message.avp.grouped import *
 from ..constants import *
 from DiamTelecom.helpers import ip_to_bytes
@@ -54,7 +54,11 @@ class RxSession(DiameterSession):
             aar.framed_ip_address = ip_to_bytes(self.framed_ip_address)
         return aar
 
-
+    def create_str(self):
+        str_ = SessionTerminationRequest()
+        str_.auth_application_id = APP_3GPP_RX
+        str_.session_id = self.session_id
+        return str_
 
 class RxSessions(DiameterSessions):
     def __init__(self):
