@@ -1,11 +1,10 @@
 from diameter.message.constants import *
-from .diameter.app import CustomSimpleThreadingApplication, GxApplication, RxApplication, SyApplication
+from .diameter.app import CustomSimpleThreadingApplication, Node, DiameterApplications
 from diameter.message.commands import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
 import logging
 from .diameter.session import *
 logger = logging.getLogger(__name__)
-
 
 
 def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
@@ -20,12 +19,26 @@ def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
         pass
     elif isinstance(message, SpendingLimitRequest):
         pass
-        # if message.destination_realm.decode() == "sy.guyana.com":
-        #     logger.info(f"Will replace realm {message.destination_realm} with dmg.guyana.com")
-        #     message.destination_realm = "dmg.guyana.com".encode()
     #
     answer = app.send_request(message)
     if answer:
         # answer.route_record.append(app.node.origin_host)
         app.send_answer(answer)
     return True
+
+class DSC:
+    node: Node
+    apps: DiameterApplications
+
+    def __init__(self, node: Node, apps: DiameterApplications = None):
+        self.node = node
+        if apps and isinstance(apps, DiameterApplications):
+            self.apps = apps
+        else:
+            self.apps = DiameterApplications()
+
+    def start(self):
+        self.node.start()
+
+    def wait_for_ready(self, timeout=30):
+        self.apps.wait_for_ready(timeout)
