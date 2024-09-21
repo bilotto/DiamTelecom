@@ -1,4 +1,3 @@
-from diameter.node import Node
 from diameter.message.constants import *
 from DiamTelecom.diameter.app import *
 from typing import List, Dict
@@ -11,9 +10,9 @@ logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s"
 logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
 
 from DiamTelecom.diameter.create_nodes import *
-
-def handle_request(app: CustomSimpleThreadingApplication, message: Message):
-    pass
+from DiamTelecom.handle_request import handle_request
+from DiamTelecom.services import *
+from DiamTelecom import GxService, DataService, Subscriber
 
 if __name__ == "__main__":
     pcef_node = create_node("pcef", "example.com", ["localhost"], 3869)
@@ -35,3 +34,14 @@ if __name__ == "__main__":
     pcef.node.product_name = "PCEF"
     pcef.node.start()
     pcef.wait_for_ready()
+
+    gx_config = dict()
+    gx_service = GxService(pcef, gx_config)
+    data_service = DataService(gx_service)
+    data_service._mcc_mnc = "999"
+    data_service._apn = "internet"
+    data_service._realm = "example.com"
+
+    subscriber = Subscriber(id="5920000075", msisdn="5920000075", imsi="738002000000075")
+    gx_session_ = data_service.create_gx_session(subscriber)
+    data_service.start_gx_session(gx_session_)

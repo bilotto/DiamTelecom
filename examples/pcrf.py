@@ -11,12 +11,12 @@ logging.basicConfig(format="%(asctime)s %(name)-22s %(levelname)-7s %(message)s"
 logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
 
 from DiamTelecom.diameter.create_nodes import *
+from DiamTelecom.handle_request import handle_request
 
-def handle_request(app: CustomSimpleThreadingApplication, message: Message):
-    pass
 
 if __name__ == "__main__":
     pcrf_node = create_node("pcrf", "example.com", ["127.0.0.1"], 3868)
+    pcrf_node.cer_timeout = 30
 
     pcrf_peers_list = [
         {
