@@ -1,22 +1,27 @@
-from DiamTelecom.diameter import *
+from ..diameter import *
 from .ip_queue import IpQueue, ip_to_bytes
-from DiamTelecom.diameter import *
 from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
-# from .services import GxService, RxService
 from .gx import GxService
 from .rx import RxService
 from diameter.message.avp.grouped import *
-
 import time
-
+import logging
+logger = logging.getLogger(__name__)
 class VoiceService():
+    gx_service: GxService
+    rx_service: RxService
+    ip_queue: IpQueue
+    _realm: str
+    _mcc_mnc: str
+    _apn: str
+
     def __init__(self,
                  gx_service: GxService,
                  rx_service: RxService = None,
-                 ip_start: str = "10.0.0.0",
-                 ip_end: str = "10.0.0.100",
+                #  ip_start: str = "10.0.0.0",
+                #  ip_end: str = "10.0.0.100",
                  ):
         if not isinstance(gx_service, GxService):
             raise Exception("DataService: gx_service must be an instance of GxService")
@@ -24,7 +29,7 @@ class VoiceService():
             raise Exception("DataService: rx_service must be an instance of RxService")
         self.gx_service = gx_service
         self.rx_service = rx_service
-        self.ip_queue = IpQueue(ip_start, ip_end)
+        self.ip_queue = None
         self._realm = None
         self._mcc_mnc = None
         self._apn = None
@@ -57,7 +62,12 @@ class VoiceService():
     def set_apn(self, apn: str):
         self._apn = apn
 
+    def set_ip_queue(self, ip_queue: IpQueue):
+        self.ip_queue = ip_queue
+
     def create_gx_session(self, subscriber: Subscriber) -> GxSession:
+        if not self.ip_queue:
+            raise Exception("VoiceService: IP Queue is not set")
         gx_session_id = self.gx_service.gx_app.node.session_generator.next_id()
         framed_ip_address = self.ip_queue.get_ip()
         gx_session = self.gx_service.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
@@ -79,7 +89,7 @@ class VoiceService():
             gx_session.active = True
         logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return gx_session
-    
+
     def create_rx_session(self, subscriber: Subscriber):
         gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:

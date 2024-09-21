@@ -3,10 +3,11 @@ from .ip_queue import IpQueue, ip_to_bytes
 from ..telecom.subscriber import Subscriber
 from diameter.message.constants import *
 from diameter.message.commands import *
-from diameter.message.avp.grouped import *
-import time
 from .gx import GxService
 from .sy import SyService
+from diameter.message.avp.grouped import *
+import time
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,8 +22,8 @@ class DataService():
     def __init__(self,
                  gx_service: GxService,
                  sy_service: SyService = None,
-                 ip_start = "10.0.0.0",
-                 ip_end = "10.0.0.100",
+                #  ip_start = "10.0.0.0",
+                #  ip_end = "10.0.0.100",
                  ):
         if not isinstance(gx_service, GxService):
             raise Exception("DataService: gx_service must be an instance of GxService")
@@ -30,7 +31,7 @@ class DataService():
             raise Exception("DataService: sy_service must be an instance of SyService")
         self.gx_service = gx_service
         self.sy_service = sy_service
-        self.ip_queue = IpQueue(ip_start, ip_end)
+        self.ip_queue = None
         self._realm = None
         self._mcc_mnc = None
         self._apn = None
@@ -63,7 +64,12 @@ class DataService():
     def set_apn(self, apn: str):
         self._apn = apn
 
+    def set_ip_queue(self, ip_queue: IpQueue):
+        self.ip_queue = ip_queue
+
     def create_gx_session(self, subscriber: Subscriber) -> GxSession:
+        if not self.ip_queue:
+            raise Exception("DataService: IP Queue is not set")
         gx_session_id = self.gx_service.gx_app.node.session_generator.next_id()
         framed_ip_address = self.ip_queue.get_ip()
         gx_session = self.gx_service.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
@@ -75,7 +81,6 @@ class DataService():
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
             ccr_i.destination_realm = self.realm.encode()
-        #
         ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
