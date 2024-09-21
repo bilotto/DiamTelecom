@@ -18,28 +18,6 @@ def handle_request(app: CustomSimpleThreadingApplication, message: Message):
         return handle_ccr(app, message)
     return None
 
-# def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
-#     origin_host = message.origin_host
-#     origin_realm = message.origin_realm
-#     destination_host = message.destination_host
-#     destination_realm = message.destination_realm
-#     #
-#     logger.info(f"Received message {message} from {origin_realm} to {destination_realm}")
-#     message.route_record.append(origin_host)
-#     if isinstance(message, CreditControlRequest):
-#         pass
-#     elif isinstance(message, SpendingLimitRequest):
-#         pass
-#         # if message.destination_realm.decode() == "sy.guyana.com":
-#         #     logger.info(f"Will replace realm {message.destination_realm} with dmg.guyana.com")
-#         #     message.destination_realm = "dmg.guyana.com".encode()
-#     #
-#     answer = app.send_request(message)
-#     if answer:
-#         # answer.route_record.append(app.node.origin_host)
-#         app.send_answer(answer)
-#     return True
-
 def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
     logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     answer = message.to_answer()
