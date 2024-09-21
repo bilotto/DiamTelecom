@@ -4,9 +4,10 @@ from .session import *
 import logging
 
 class CustomSimpleThreadingApplication(SimpleThreadingApplication):
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = DiameterSessions()
+        self.dsc_app = dsc_app
         # self.started = False
         # self.init_connection = False
 
@@ -23,7 +24,8 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
                     return session
                 
     def send_request_custom(self, request, timeout=5):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        if not self.dsc_app:
+            logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         try:
             answer = self.send_request(request, timeout)
             logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
@@ -33,8 +35,8 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
-        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
+        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app)
         self.sessions = GxSessions()
 
     def get_subscriber_active_session(self, msisdn: int) -> GxSession:
@@ -45,21 +47,21 @@ class GxApplication(CustomSimpleThreadingApplication):
 
 class GyApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
-        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
+        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app)
         self.sessions = GySessions()
 
 class RxApplication(CustomSimpleThreadingApplication):
     sessions: RxSessions
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
-        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
+        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app)
         self.sessions = RxSessions()
 
 class SyApplication(CustomSimpleThreadingApplication):
     sessions: SySessions
     subscribers: Subscribers
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
-        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
+        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app)
         self.sessions = SySessions()
         self.subscribers = None 
 
