@@ -14,6 +14,10 @@ class DiameterSession:
     end_time: str
 
     def __init__(self, subscriber: Subscriber, session_id: str):
+        if not isinstance(subscriber, Subscriber):
+            raise ValueError("Subscriber must be an instance of Subscriber")
+        if not isinstance(session_id, str):
+            raise ValueError("session_id must be a string")
         self.subscriber = subscriber
         self.session_id = session_id
         self.active = False

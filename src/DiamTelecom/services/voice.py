@@ -9,6 +9,8 @@ from diameter.message.avp.grouped import *
 import time
 import logging
 logger = logging.getLogger(__name__)
+from typing import List, Tuple
+
 class VoiceService():
     gx_service: GxService
     rx_service: RxService
@@ -20,8 +22,6 @@ class VoiceService():
     def __init__(self,
                  gx_service: GxService,
                  rx_service: RxService = None,
-                #  ip_start: str = "10.0.0.0",
-                #  ip_end: str = "10.0.0.100",
                  ):
         if not isinstance(gx_service, GxService):
             raise Exception("DataService: gx_service must be an instance of GxService")
@@ -73,7 +73,7 @@ class VoiceService():
         gx_session = self.gx_service.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
         return gx_session
 
-    def start_gx_session(self, gx_session: GxSession):
+    def start_gx_session(self, gx_session: GxSession) -> GxSession:
         #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
@@ -86,7 +86,7 @@ class VoiceService():
             gx_session.start()
         return gx_session
     
-    def stop_gx_session(self, gx_session: GxSession):
+    def stop_gx_session(self, gx_session: GxSession) -> GxSession:
         if not gx_session.active:
             return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -98,7 +98,7 @@ class VoiceService():
             gx_session.end()
         return gx_session
     
-    def create_rx_session(self, subscriber: Subscriber):
+    def create_rx_session(self, subscriber: Subscriber) -> RxSession:
         gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:
             return None
@@ -107,7 +107,7 @@ class VoiceService():
         rx_session.framed_ip_address = gx_session.framed_ip_address
         return rx_session
 
-    def start_rx_session(self, rx_session: RxSession):
+    def start_rx_session(self, rx_session: RxSession) -> RxSession:
         aar = self.rx_service.create_aar(rx_session)
         if self.realm:
             aar.destination_realm = self.realm.encode()
@@ -118,9 +118,11 @@ class VoiceService():
             rx_session.start()
         return rx_session
     
-
-    def start_voice_session(self, subscriber: Subscriber):
-        gx_session = self.start_gx_session(self.create_gx_session(subscriber))
+    def start_voice_session(self, subscriber: Subscriber) -> Tuple[GxSession, RxSession]:
+        # Check if subscriber has a GxSession active
+        gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
+        if not gx_session:
+            gx_session = self.start_gx_session(self.create_gx_session(subscriber))
         rx_session = self.create_rx_session(subscriber)
         rx_session = self.start_rx_session(rx_session)
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)

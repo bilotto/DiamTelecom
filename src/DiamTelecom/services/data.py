@@ -7,6 +7,7 @@ from .gx import GxService
 from .sy import SyService
 from diameter.message.avp.grouped import *
 import time
+from typing import List, Tuple
 
 
 import logging
@@ -22,8 +23,6 @@ class DataService():
     def __init__(self,
                  gx_service: GxService,
                  sy_service: SyService = None,
-                #  ip_start = "10.0.0.0",
-                #  ip_end = "10.0.0.100",
                  ):
         if not isinstance(gx_service, GxService):
             raise Exception("DataService: gx_service must be an instance of GxService")
@@ -75,7 +74,7 @@ class DataService():
         gx_session = self.gx_service.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
         return gx_session
 
-    def start_gx_session(self, gx_session: GxSession):
+    def start_gx_session(self, gx_session: GxSession) -> GxSession:
         #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
@@ -88,7 +87,7 @@ class DataService():
             gx_session.start()
         return gx_session
     
-    def stop_gx_session(self, gx_session: GxSession):
+    def stop_gx_session(self, gx_session: GxSession) -> GxSession:
         if not gx_session.active:
             return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -116,7 +115,7 @@ class DataService():
             self.logger.error(f"SSNA Result-Code is not 2001. RC: {ssna.result_code}")
         #
 
-    def start_data_session(self, subscriber: Subscriber):
+    def start_data_session(self, subscriber: Subscriber) -> Tuple[GxSession, SySession]:
         gx_session = self.create_gx_session(subscriber)
         self.start_gx_session(gx_session)
         sy_session = self.sy_service.wait_for_sy_session(subscriber.msisdn, timeout=5)
