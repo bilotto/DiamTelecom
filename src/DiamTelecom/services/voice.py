@@ -74,7 +74,7 @@ class VoiceService():
         return gx_session
 
     def start_gx_session(self, gx_session: GxSession):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         #
         ccr_i = self.gx_service.create_ccr_i(gx_session, self.mcc_mnc, self.apn)
         if self.realm:
@@ -87,11 +87,11 @@ class VoiceService():
             ts = time.time()
             gx_session.set_start_time(ts)
             gx_session.active = True
-        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return gx_session
     
     def stop_gx_session(self, gx_session: GxSession):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         if not gx_session.active:
             return
         ccr_t = self.gx_service.create_ccr_t(gx_session)
@@ -103,7 +103,7 @@ class VoiceService():
             ts = time.time()
             gx_session.set_end_time(ts)
             gx_session.active = False
-        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return gx_session
     
     def create_rx_session(self, subscriber: Subscriber):
@@ -116,7 +116,7 @@ class VoiceService():
         return rx_session
 
     def start_rx_session(self, rx_session: RxSession):
-        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         aar = self.rx_service.create_aar(rx_session)
         if self.realm:
             aar.destination_realm = self.realm.encode()
@@ -128,13 +128,12 @@ class VoiceService():
             rx_session.set_start_time(ts)
             rx_session.active = True
         rx_session.set_start_time(ts)
-        logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
+        # logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
         return rx_session
     
 
     def start_voice_session(self, subscriber: Subscriber):
-        gx_session = self.create_gx_session(subscriber)
-        gx_session = self.start_gx_session(gx_session)
+        gx_session = self.start_gx_session(self.create_gx_session(subscriber))
         rx_session = self.create_rx_session(subscriber)
         rx_session = self.start_rx_session(rx_session)
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
