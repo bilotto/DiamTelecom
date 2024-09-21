@@ -24,6 +24,10 @@ class DataService():
                  ip_start = "10.0.0.0",
                  ip_end = "10.0.0.100",
                  ):
+        if not isinstance(gx_service, GxService):
+            raise Exception("DataService: gx_service must be an instance of GxService")
+        if sy_service and not isinstance(sy_service, SyService):
+            raise Exception("DataService: sy_service must be an instance of SyService")
         self.gx_service = gx_service
         self.sy_service = sy_service
         self.ip_queue = IpQueue(ip_start, ip_end)
@@ -49,21 +53,15 @@ class DataService():
         if self._apn:
             return self._apn
         raise Exception(f"DataService: {self}. APN is not set")
-
-    # def start(self):
-    #     if self.sy_service:
-    #         self.sy_service.start()
-    #     self.gx_service.start()
-
-    # def wait_for_ready(self):
-    #     if self.sy_service:
-    #         self.sy_service.sy_app.wait_for_ready()
-    #     self.gx_service.gx_app.wait_for_ready()
     
-    # def stop(self):
-    #     if self.sy_service:
-    #         self.sy_service.stop()
-    #     self.gx_service.stop()
+    def set_realm(self, realm: str):
+        self._realm = realm
+
+    def set_mcc_mnc(self, mcc_mnc: str):
+        self._mcc_mnc = mcc_mnc
+
+    def set_apn(self, apn: str):
+        self._apn = apn
 
     def create_gx_session(self, subscriber: Subscriber) -> GxSession:
         gx_session_id = self.gx_service.gx_app.node.session_generator.next_id()
@@ -77,7 +75,7 @@ class DataService():
         if self.realm:
             ccr_i.destination_realm = self.realm.encode()
         #
-        ccr_i.bearer_usage = E_BEARER_USAGE_IMS_SIGNALLING
+        ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
@@ -108,12 +106,12 @@ class DataService():
     def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
         logger.info(f"Sending SSN Request: {policy_counter_dict}")
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
-        ssna = self.sy_service.send_sy_request(sy_session, ssnr)
         if self.realm:
-            ssna.destination_realm = self.realm.encode()
+            ssnr.destination_realm = self.realm.encode()
+        ssna = self.sy_service.send_sy_request(sy_session, ssnr)
         #
         if wait_raa:
-            self.gx_service.wait_for_gx_raa(gx_session, len(gx_session.messages), timeout=5)
+            pass
 
 
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):

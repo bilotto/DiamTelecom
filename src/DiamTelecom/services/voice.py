@@ -18,6 +18,10 @@ class VoiceService():
                  ip_start: str = "10.0.0.0",
                  ip_end: str = "10.0.0.100",
                  ):
+        if not isinstance(gx_service, GxService):
+            raise Exception("DataService: gx_service must be an instance of GxService")
+        if rx_service and not isinstance(rx_service, RxService):
+            raise Exception("DataService: rx_service must be an instance of RxService")
         self.gx_service = gx_service
         self.rx_service = rx_service
         self.ip_queue = IpQueue(ip_start, ip_end)
