@@ -92,6 +92,13 @@ class DiameterApplications:
             print(f"App {app} ready")
 
     def stop(self):
+        import threading
+        threads = []
         for node in self.nodes:
-            node.stop()
-            print(f"Node {node} stopped")
+            t = threading.Thread(target=node.stop)
+            threads.append(t)
+            t.start()
+            # node.stop()
+        for t in threads:
+            t.join()
+        print("Nodes stopped")
