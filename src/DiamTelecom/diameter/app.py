@@ -24,8 +24,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
                     return session
 
     def send_request_custom(self, request, timeout=5):
-        if not self.dsc_app:
-            logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+        logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
         try:
             answer = self.send_request(request, timeout)
             logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
