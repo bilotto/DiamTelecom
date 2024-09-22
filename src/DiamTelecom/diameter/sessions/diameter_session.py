@@ -54,7 +54,7 @@ class DiameterSession:
         self.active = False
 
     def add_message(self, message):
-        self.logger.info(dump(message))
+        self.logger.info("\n" + dump(message))
         if isinstance(message, DiameterMessage):
             diameter_message = message
         elif isinstance(message, Message):
