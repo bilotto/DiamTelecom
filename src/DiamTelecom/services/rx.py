@@ -8,7 +8,9 @@ class RxService:
     rx_app: RxApplication
     rx_config: dict
 
-    def __init__(self, rx_app: RxApplication, rx_config: dict):
+    def __init__(self, rx_app: RxApplication, rx_config: dict = None):
+        if not isinstance(rx_app, RxApplication):
+            raise ValueError("rx_app must be an instance of RxApplication")
         self.rx_app = rx_app
         self.rx_config = rx_config
         self.logger = logging.getLogger("DiamTelecom.services")

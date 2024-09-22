@@ -10,7 +10,9 @@ class SyService:
     sy_app: SyApplication
     sy_config: dict
 
-    def __init__(self, sy_app: SyApplication, sy_config: dict):
+    def __init__(self, sy_app: SyApplication, sy_config: dict = None):
+        if not isinstance(sy_app, SyApplication):
+            raise ValueError("sy_app must be an instance of SyApplication")
         self.sy_app = sy_app
         self.sy_config = sy_config
         self.logger = logging.getLogger(__name__)

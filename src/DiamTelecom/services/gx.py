@@ -10,13 +10,15 @@ class GxService:
     gx_config: dict
     def __init__(self,
                  gx_app: GxApplication,
-                 gx_config: dict
+                 gx_config: dict = None
                  ):
+        if not isinstance(gx_app, GxApplication):
+            raise ValueError("gx_app must be an instance of GxApplication")
         self.gx_app = gx_app
         self.gx_config = gx_config
-        self.request_count = dict()
-        self.request_count['success'] = 0
-        self.request_count['failure'] = 0
+        # self.request_count = dict()
+        # self.request_count['success'] = 0
+        # self.request_count['failure'] = 0
         self.logger = logging.getLogger("DiamTelecom.services")
 
     def set_gx_config(self, gx_config: dict):
