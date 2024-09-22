@@ -69,8 +69,8 @@ class GxService:
         ccr_i.rat_type = E_RAT_TYPE_EUTRAN
         ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
         #
-        ccr_i.sgsn_mcc_mnc = mcc_mnc
-        ccr_i.called_station_id = apn
+        ccr_i.sgsn_mcc_mnc = str(mcc_mnc)
+        ccr_i.called_station_id = str(apn)
         #
         ccr_i.supported_features = SupportedFeatures()
         ccr_i.supported_features.vendor_id = VENDOR_TGPP
