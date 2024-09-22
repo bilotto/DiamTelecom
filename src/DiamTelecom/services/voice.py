@@ -89,6 +89,9 @@ class VoiceService():
     def stop_gx_session(self, gx_session: GxSession) -> GxSession:
         if not gx_session.active:
             return
+        if gx_session.rx_sessions:
+            for rx_session in gx_session.rx_sessions:
+                self.stop_rx_session(rx_session)
         ccr_t = self.gx_service.create_ccr_t(gx_session)
         cca_t = self.gx_service.send_gx_request(gx_session, ccr_t, timeout=5)
         if not isinstance(cca_t, CreditControlAnswer):
@@ -118,6 +121,17 @@ class VoiceService():
             rx_session.start()
         return rx_session
     
+    def stop_rx_session(self, rx_session: RxSession) -> RxSession:
+        if not rx_session.active:
+            return
+        str_ = self.rx_service.create_str(rx_session)
+        sta = self.rx_service.send_rx_request(rx_session, str_, timeout=5)
+        if not isinstance(sta, SessionTerminationAnswer):
+            raise Exception("STA is not received")
+        if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            rx_session.end()
+        return rx_session
+    
     def start_voice_session(self, subscriber: Subscriber) -> Tuple[GxSession, RxSession]:
         # Check if subscriber has a GxSession active
         gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
@@ -126,15 +140,20 @@ class VoiceService():
         rx_session = self.create_rx_session(subscriber)
         rx_session = self.start_rx_session(rx_session)
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+        gx_session.add_rx_session(rx_session)
         if rx_session.active:
-            # Send STR to RxSession
-            str_ = self.rx_service.create_str(rx_session)
-            sta = self.rx_service.rx_app.send_request(str_, timeout=5)
-            self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
-            if not isinstance(sta, SessionTerminationAnswer):
-                raise Exception("STA is not received")
-            if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
-                rx_session.active = False
+            return gx_session, rx_session
+            # # Send STR to RxSession
+            # str_ = self.rx_service.create_str(rx_session)
+            # sta = self.rx_service.send_rx_request(rx_session, str_, timeout=5)
+            # self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+            # if not isinstance(sta, SessionTerminationAnswer):
+            #     raise Exception("STA is not received")
+            # if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            #     rx_session.active = False
+            #     rx_session.end()
+            #     logger.info("Rx session stopped")
+            
         return gx_session, rx_session
 
     # def create_aar(self) -> AaRequest:
