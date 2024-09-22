@@ -65,15 +65,22 @@ class SyApplication(CustomSimpleThreadingApplication):
     def set_subscribers(self, subscribers: Subscribers):
         self.subscribers = subscribers
 
-from typing import List
+from typing import List, Dict
 
 class DiameterApplications:
+    apps_per_id: Dict[int, List[CustomSimpleThreadingApplication]]
+    apps_per_node: Dict[Node, List[CustomSimpleThreadingApplication]]
     def __init__(self):
         self.apps_per_id = {}
         self.apps_per_node = {}
 
     def add_application(self, app: CustomSimpleThreadingApplication):
-        self.apps_per_id[app.application_id] = app
+        if not isinstance(app, CustomSimpleThreadingApplication):
+            raise Exception("Application is not CustomSimpleThreadingApplication")
+        if not self.apps_per_id.get(app.application_id):
+            self.apps_per_id[app.application_id] = []
+        self.apps_per_id[app.application_id].append(app)
+        #
         node = app.node
         if self.apps_per_node.get(node) is None:
             self.apps_per_node[node] = []
@@ -85,7 +92,10 @@ class DiameterApplications:
     
     @property
     def apps(self) -> List[CustomSimpleThreadingApplication]:
-        return list(self.apps_per_id.values())
+        apps = []
+        for app_list in self.apps_per_id.values():
+            apps.extend(app_list)
+        return apps
     
     @property
     def ports(self) -> List[int]:
