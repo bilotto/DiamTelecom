@@ -8,8 +8,6 @@ from .sy import SyService
 from diameter.message.avp.grouped import *
 import time
 from typing import List, Tuple
-
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -131,6 +129,13 @@ class DataService():
             self.logger.error("SY Service is not set")
             return []
         return self.sy_service.sy_app.sessions.get_all()
+    
+    def stop_all_gx_sessions(self):
+        gx_sessions = self.get_gx_sessions()
+        for gx_session in gx_sessions:
+            if not gx_session.active:
+                continue
+            self.stop_gx_session(gx_session)
 
 
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):

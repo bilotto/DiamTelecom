@@ -148,6 +148,13 @@ class VoiceService():
     def get_rx_sessions(self) -> List[RxSession]:
         return self.rx_service.rx_app.sessions.get_all()
 
+    def stop_all_gx_sessions(self):
+        gx_sessions = self.get_gx_sessions()
+        for gx_session in gx_sessions:
+            if not gx_session.active:
+                continue
+            self.stop_gx_session(gx_session)
+
 
     # def create_aar(self) -> AaRequest:
     #     aar = AaRequest()
