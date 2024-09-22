@@ -6,7 +6,6 @@ import logging
 from .diameter.session import *
 logger = logging.getLogger(__name__)
 
-
 def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
     origin_host = message.origin_host
     origin_realm = message.origin_realm
@@ -39,7 +38,7 @@ class DSC:
         self.logger = logging.getLogger(__name__)
 
     def start(self):
-        self.logger.info("Starting DSC nodes")
+        self.logger.info(f"Starting DSC node: {self.node}")
         self.node.start()
 
     def wait_for_ready(self, timeout=30):
