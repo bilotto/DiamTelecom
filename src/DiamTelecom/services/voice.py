@@ -136,6 +136,10 @@ class VoiceService():
         gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:
             gx_session = self.start_gx_session(self.create_gx_session(subscriber))
+        if not gx_session:
+            raise Exception("GX session is not created")
+        if not gx_session.active:
+            self.logger.error(f"Cannot start voice session. GX session is not active: {gx_session}")
         rx_session = self.create_rx_session(subscriber)
         rx_session = self.start_rx_session(rx_session)
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
