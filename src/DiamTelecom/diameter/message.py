@@ -110,6 +110,7 @@ class DiameterMessages:
 
     def __init__(self):
         self.messages = []
+        self.logger = logging.getLogger(__name__)
 
     def add_message(self, message: DiameterMessage):
         if not isinstance(message, DiameterMessage):

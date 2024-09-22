@@ -3,6 +3,8 @@ from DiamTelecom.telecom import Subscriber
 from ..message import Message, DiameterMessage, DiameterMessages, create_diameter_message_from_message
 from typing import Dict, List, Set
 import time
+import logging
+from diameter.message import dump
 
 class DiameterSession:
     subscriber: Subscriber
@@ -26,6 +28,7 @@ class DiameterSession:
         #
         self.start_time = None
         self.end_time = None
+        self.logger = logging.getLogger(__name__)
 
     def __hash__(self) -> int:
         return hash(self.session_id)
@@ -51,6 +54,7 @@ class DiameterSession:
         self.active = False
 
     def add_message(self, message):
+        self.logger.info(dump(message))
         if isinstance(message, DiameterMessage):
             diameter_message = message
         elif isinstance(message, Message):
