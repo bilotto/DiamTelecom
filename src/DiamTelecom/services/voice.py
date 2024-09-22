@@ -140,6 +140,7 @@ class VoiceService():
             raise Exception("GX session is not created")
         if not gx_session.active:
             self.logger.error(f"Cannot start voice session. GX session is not active: {gx_session}")
+            return None, None
         rx_session = self.create_rx_session(subscriber)
         rx_session = self.start_rx_session(rx_session)
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
