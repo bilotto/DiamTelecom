@@ -34,7 +34,7 @@ class Carrier:
         else:
             self.subscribers = Subscribers()
             # self.subscribers = generate_subscribers(self.subscribers, self.mcc_mnc, self.country_code, 1000)
-            self.subscribers = generate_subscribers(self.subscribers, self.msisdn_template, self.imsi_template, self.carrier_id, 1000)
+            self.subscribers = generate_subscribers(self.subscribers, self.msisdn_template, self.imsi_template, self.carrier_id, 100)
         #
         self.voice_service = None
 
