@@ -97,6 +97,9 @@ class DiameterApplications:
             apps.extend(app_list)
         return apps
     
+    def get_app_per_id(self, app_id: int) -> List[CustomSimpleThreadingApplication]:
+        return self.apps_per_id.get(app_id, [])
+    
     @property
     def ports(self) -> List[int]:
         ports = set()
