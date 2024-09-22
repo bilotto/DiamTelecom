@@ -1,9 +1,12 @@
 from diameter.message.constants import *
-from .diameter.app import CustomSimpleThreadingApplication, Node, DiameterApplications
 from diameter.message.commands import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
-import logging
+from diameter.node import Node
+#
+from .diameter.apps import CustomSimpleThreadingApplication, DiameterApplications
 from .diameter.session import *
+#
+import logging
 logger = logging.getLogger(__name__)
 
 def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
