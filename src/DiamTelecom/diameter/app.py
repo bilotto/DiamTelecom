@@ -87,6 +87,15 @@ class DiameterApplications:
     def apps(self) -> List[CustomSimpleThreadingApplication]:
         return list(self.apps_per_id.values())
     
+    @property
+    def ports(self) -> List[int]:
+        ports = set()
+        for node in self.nodes:
+            ports.add(node.tcp_port)
+            for peer in node.peers.values():
+                ports.add(peer.port)
+        return list(ports)
+    
     def start(self):
         import threading
         threads = []
