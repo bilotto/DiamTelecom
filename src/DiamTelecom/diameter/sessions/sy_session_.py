@@ -1,7 +1,8 @@
-from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
-from diameter.message.commands import SpendingStatusNotificationRequest
+from .diameter_session import DiameterSession, DiameterSessions
+from diameter.message.commands import SpendingStatusNotificationRequest, SessionTerminationRequest, SessionTerminationAnswer
 from diameter.message.constants import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
+from diameter.message import Message
 
 class SySession(DiameterSession):
     session_id: str
@@ -20,6 +21,10 @@ class SySession(DiameterSession):
         message.auth_application_id = APP_3GPP_SY
         message.policy_counter_status_report = []
         return message
+    
+    def add_message(self, message: Message):
+        if isinstance(message, SessionTerminationAnswer):
+            self.end()
 
     def __repr__(self):
         return f"SySession(active={self.active}, gx_session_id={self.gx_session_id}, n_messages={self.n_messages}, last_message={self.last_message})"

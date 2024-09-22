@@ -40,14 +40,14 @@ class GxSession(DiameterSession):
     def set_apn(self, apn: str):
         self.apn = apn
 
-    def add_message(self, message):
-        message = super().add_message(message)
-        if self.start_time and self.messages.n_messages == 1:
-            logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} started Gx session,{self.framed_ip_address}")
+    # def add_message(self, message):
+    #     message = super().add_message(message)
+    #     if self.start_time and self.messages.n_messages == 1:
+    #         logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} started Gx session,{self.framed_ip_address}")
         
-        elif self.end_time:
-            if message.name == CCR_T:
-                logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} ended Gx session,{self.framed_ip_address}")
+    #     elif self.end_time:
+    #         if message.name == CCR_T:
+    #             logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} ended Gx session,{self.framed_ip_address}")
 
 
     def add_rx_session(self, rx_session):
