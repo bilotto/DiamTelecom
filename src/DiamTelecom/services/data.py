@@ -122,6 +122,15 @@ class DataService():
         if sy_session:
             sy_session.gx_session_id = gx_session.session_id
         return gx_session, sy_session
+    
+    def get_gx_sessions(self) -> List[GxSession]:
+        return self.gx_service.gx_app.sessions.get_all()
+    
+    def get_sy_sessions(self) -> List[SySession]:
+        if not self.sy_service:
+            self.logger.error("SY Service is not set")
+            return []
+        return self.sy_service.sy_app.sessions.get_all()
 
 
     # def wait_for_sy_session(self, subscriber_msisdn, timeout=3):
