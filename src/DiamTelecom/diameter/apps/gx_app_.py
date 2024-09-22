@@ -3,8 +3,8 @@ from ..sessions import GxSessions, GxSession
 
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
-        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app)
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
+        super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = GxSessions()
 
     def get_subscriber_active_session(self, msisdn: int) -> GxSession:

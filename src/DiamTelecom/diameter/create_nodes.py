@@ -20,36 +20,36 @@ def add_peers(node: Node, peers_list: List[Dict]) -> List[Peer]:
             for peer in peers_list]
 
 
-def create_gx_app(max_threads, request_handler, dsc_app=False) -> GxApplication:
+def create_gx_app(max_threads, request_handler) -> GxApplication:
     return GxApplication(APP_3GPP_GX,
                          is_acct_application=False,
                          is_auth_application=True,
                          max_threads=max_threads,
                          request_handler=request_handler,
-                         dsc_app=dsc_app)
+                         )
 
-def create_gy_app(max_threads, request_handler, dsc_app=False) -> GyApplication:
+def create_gy_app(max_threads, request_handler) -> GyApplication:
     return GyApplication(APP_DIAMETER_CREDIT_CONTROL_APPLICATION,
                          is_acct_application=False,
                          is_auth_application=True,
                          max_threads=max_threads,
                          request_handler=request_handler,
-                         dsc_app=dsc_app)
+                         )
 
-def create_rx_app(max_threads, request_handler, dsc_app=False) -> RxApplication:
+def create_rx_app(max_threads, request_handler) -> RxApplication:
     return RxApplication(APP_3GPP_RX,
                          is_acct_application=False,
                          is_auth_application=True,
                          max_threads=max_threads,
                          request_handler=request_handler,
-                         dsc_app=dsc_app)
+                         )
 
-def create_sy_app(max_threads, request_handler, dsc_app=False) -> SyApplication:
+def create_sy_app(max_threads, request_handler) -> SyApplication:
     return SyApplication(APP_3GPP_SY,
                          is_acct_application=False,
                          is_auth_application=True,
                          max_threads=max_threads,
                          request_handler=request_handler,
-                         dsc_app=dsc_app)
+                         )
 
 

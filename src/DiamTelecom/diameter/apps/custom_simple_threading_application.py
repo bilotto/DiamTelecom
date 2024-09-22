@@ -2,10 +2,14 @@ from diameter.node.application import SimpleThreadingApplication, Node
 from ..sessions import DiameterSessions, DiameterSession
 
 class CustomSimpleThreadingApplication(SimpleThreadingApplication):
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, dsc_app):
+    def __init__(self, application_id,
+                 is_acct_application,
+                 is_auth_application,
+                 max_threads,
+                 request_handler,
+                 ):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = DiameterSessions()
-        self.dsc_app = dsc_app
 
     def get_session_by_id(self, session_id: str) -> DiameterSession:
         return self.sessions.get_session(session_id)
