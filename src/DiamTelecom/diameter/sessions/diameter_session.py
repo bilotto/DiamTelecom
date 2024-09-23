@@ -28,7 +28,7 @@ class DiameterSession:
         #
         self.start_time = None
         self.end_time = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("DiamTelecom.diameter.session")
 
     def __hash__(self) -> int:
         return hash(self.session_id)
@@ -56,7 +56,7 @@ class DiameterSession:
         self.active = False
 
     def add_message(self, message):
-        self.logger.info("\n" + dump(message))
+        self.logger.debug("\n" + dump(message))
         if isinstance(message, DiameterMessage):
             diameter_message = message
         elif isinstance(message, Message):

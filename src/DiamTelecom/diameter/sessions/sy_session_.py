@@ -23,6 +23,7 @@ class SySession(DiameterSession):
         return message
     
     def add_message(self, message: Message):
+        super().add_message(message)
         if isinstance(message, SessionTerminationAnswer):
             self.end()
 
