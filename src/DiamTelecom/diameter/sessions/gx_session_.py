@@ -79,6 +79,16 @@ class GxSession(DiameterSession):
         ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
         ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
         return ccr_t
+    
+    def create_ccr_u(self):
+        ccr_u = CreditControlRequest()
+        ccr_u.session_id = self.session_id
+        ccr_u.cc_request_type = E_CC_REQUEST_TYPE_UPDATE_REQUEST
+        ccr_u.cc_request_number = self.cc_request_number + 1
+        ccr_u.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+        ccr_u.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+        ccr_u.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        return ccr_u
 
 
 class GxSessions(DiameterSessions):

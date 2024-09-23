@@ -121,6 +121,14 @@ class DataService():
             sy_session.gx_session_id = gx_session.session_id
         return gx_session, sy_session
     
+    def update_gx_session(self, gx_session: GxSession):
+        ccr_u = self.gx_service.create_ccr_u(gx_session)
+        ccr_u.rat_type = E_RAT_TYPE_UTRAN
+        cca_u = self.gx_service.send_gx_request(gx_session, ccr_u, timeout=5)
+        if not isinstance(cca_u, CreditControlAnswer):
+            raise Exception("CCA is not received")
+        return gx_session
+    
     def get_gx_sessions(self) -> List[GxSession]:
         return self.gx_service.gx_app.sessions.get_all()
     

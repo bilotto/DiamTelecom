@@ -99,6 +99,18 @@ class GxService:
         ccr_t.header.is_proxyable = True
         ccr_t.header.application_id = APP_3GPP_GX
         return ccr_t
+    
+    def create_ccr_u(self, gx_session: GxSession) -> CreditControlRequest:
+        ccr_u = gx_session.create_ccr_u()
+        ccr_u.auth_application_id = APP_3GPP_GX
+        ccr_u.origin_host = self.gx_app.node.origin_host.encode()
+        ccr_u.origin_realm = self.gx_app.node.realm_name.encode()
+        ccr_u.destination_realm = self.destination_realm.encode()
+        ccr_u.header.hop_by_hop_identifier = 2
+        ccr_u.header.end_to_end_identifier = 2
+        ccr_u.header.is_proxyable = True
+        ccr_u.header.application_id = APP_3GPP_GX
+        return ccr_u
 
     def wait_for_gx_raa(self, gx_session: GxSession, current_message_count=None, timeout=3):
         self.logger.info("Waiting for Gx RAR/RAA")
