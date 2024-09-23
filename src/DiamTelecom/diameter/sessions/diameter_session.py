@@ -88,6 +88,10 @@ class DiameterSession:
         if self.start_time and self.end_time:
             return int(float(self.end_time) - float(self.start_time))
         return None
+    
+    def dump(self):
+        for message in self.messages.messages:
+            print(dump(message))
 
 class DiameterSessions:
     diameter_sessions: Dict[str, DiameterSession]
