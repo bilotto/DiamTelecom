@@ -123,6 +123,10 @@ class DataService():
     
     def update_gx_session(self, gx_session: GxSession):
         ccr_u = self.gx_service.create_ccr_u(gx_session)
+        ccr_u.event_trigger.append(E_EVENT_TRIGGER_RAT_CHANGE)
+        # ccr_u.event_trigger.append(E_EVENT_TRIGGER_USER_LOCATION_CHANGE)
+        # ccr_u.user_location_info = b"Tset"
+        ccr_u.origin_state_id = 19
         ccr_u.rat_type = E_RAT_TYPE_UTRAN
         cca_u = self.gx_service.send_gx_request(gx_session, ccr_u, timeout=5)
         if not isinstance(cca_u, CreditControlAnswer):
