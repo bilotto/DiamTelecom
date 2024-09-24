@@ -29,7 +29,7 @@ class GxSession(DiameterSession):
         self.rx_sessions = []
 
     def __repr__(self):
-        return f"GxSession(active={self.active}, n_messages={self.n_messages}, last_message={self.last_message})"
+        return f"GxSession(msisdn={self.msisdn},session_id={self.session_id},\nactive={self.active},\nn_messages={self.n_messages},\nlast_message={self.last_message})"
 
     def incr_cc_request_number(self):
         self.cc_request_number += 1
