@@ -34,6 +34,9 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
 
     def __repr__(self):
         return f"{self.node.origin_host}: <{self.name} ({self.application_id})>"
+    
+    def __str__(self):
+        return f"{self.node.origin_host}: <{self.name} ({self.application_id})>"
 
     def get_session_by_id(self, session_id: str) -> DiameterSession:
         return self.sessions.get_session(session_id)
