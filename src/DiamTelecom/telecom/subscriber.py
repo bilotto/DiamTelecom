@@ -17,7 +17,6 @@ class Subscriber:
                  msisdn: str,
                  imsi: str,
                  carrier_id: int = None):
-        logger.debug("Inicializando Subscriber com MSISDN: %s e IMSI: %s", msisdn, imsi)
         # Convert
         id = str(id)
         msisdn = str(msisdn)
