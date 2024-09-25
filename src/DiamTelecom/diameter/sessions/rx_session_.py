@@ -21,11 +21,11 @@ class RxSession(DiameterSession):
         self.gx_session_id = gx_session_id
 
     def __repr__(self):
-        return f"""RxSession(msisdn={self.msisdn},
-          session_id={self.session_id},
-          gx_session_id={self.gx_session_id},
-          active={self.active},
-          n_messages={self.n_messages},
+        return f"""RxSession(msisdn={self.msisdn}
+          session_id={self.session_id}
+          gx_session_id={self.gx_session_id}
+          active={self.active}
+          n_messages={self.n_messages}
           last_message={self.last_message})"""
 
     @property
