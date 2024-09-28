@@ -14,7 +14,7 @@ from typing import List, Tuple
 class VoiceService():
     gx_service: GxService
     rx_service: RxService
-    
+
     def __init__(self,
                  gx_service: GxService,
                  rx_service: RxService = None,
@@ -82,18 +82,18 @@ class VoiceService():
         gx_session.add_rx_session(rx_session)
         return gx_session, rx_session
     
-    # def get_gx_sessions(self) -> List[GxSession]:
-    #     return self.gx_service.gx_app.sessions.get_all()
+    def get_gx_sessions(self) -> List[GxSession]:
+        return self.gx_service.gx_app.sessions.get_all()
     
-    # def get_rx_sessions(self) -> List[RxSession]:
-    #     return self.rx_service.rx_app.sessions.get_all()
+    def get_rx_sessions(self) -> List[RxSession]:
+        return self.rx_service.rx_app.sessions.get_all()
 
-    # def stop_all_gx_sessions(self):
-    #     gx_sessions = self.get_gx_sessions()
-    #     for gx_session in gx_sessions:
-    #         if not gx_session.active:
-    #             continue
-    #         self.gx_service.stop_gx_session(gx_session)
+    def stop_all_gx_sessions(self):
+        gx_sessions = self.get_gx_sessions()
+        for gx_session in gx_sessions:
+            if not gx_session.active:
+                continue
+            self.gx_service.stop_gx_session(gx_session)
 
 
     # def create_aar_audio(self, rx_session: RxSession) -> AaRequest:

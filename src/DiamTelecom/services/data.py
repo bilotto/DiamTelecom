@@ -86,5 +86,5 @@ class DataService():
         for gx_session in gx_sessions:
             if not gx_session.active:
                 continue
-            self.stop_gx_session(gx_session)
+            self.gx_service.stop_gx_session(gx_session)
 
