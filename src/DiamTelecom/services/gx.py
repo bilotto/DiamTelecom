@@ -4,25 +4,33 @@ from diameter.message.avp.grouped import *
 from ..diameter.app import GxApplication
 from ..diameter.session import GxSession
 import time
+from .ip_queue import APN
+from ..telecom.subscriber import Subscriber
 
 class GxService:
     gx_app: GxApplication
+    apn: APN
     gx_config: dict
     def __init__(self,
                  gx_app: GxApplication,
-                 gx_config: dict = None
+                 apn: APN,
+                 gx_config: dict = None,
                  ):
         if not isinstance(gx_app, GxApplication):
             raise ValueError("gx_app must be an instance of GxApplication")
+        if not isinstance(apn, APN):
+            raise ValueError("apn must be an instance of APN")
         self.gx_app = gx_app
+        self.apn = apn
         self.gx_config = gx_config
-        # self.request_count = dict()
-        # self.request_count['success'] = 0
-        # self.request_count['failure'] = 0
+        #
         self.logger = logging.getLogger("DiamTelecom.services")
 
     def set_gx_config(self, gx_config: dict):
         self.gx_config = gx_config
+
+    def set_apn(self, apn: APN):
+        self.apn = apn
 
     @property
     def destination_realm(self):
@@ -30,22 +38,42 @@ class GxService:
             return self.gx_config['destination_realm']
         return self.gx_app.node.realm_name
     
+    @property
+    def sgsn_mcc_mnc(self):
+        if self.gx_config.get('sgsn_mcc_mnc'):
+            return self.gx_config['sgsn_mcc_mnc']
+        if self.apn.mcc_mnc:
+            return self.apn.mcc_mnc
+        return '999'
+    
+    @property
+    def called_station_id(self):
+        if self.gx_config.get('apn'):
+            return self.gx_config['apn']
+        return self.apn.value
+    
     def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
         try:
             gx_session.add_message(request)
             answer = self.gx_app.send_request_custom(request, timeout)
             gx_session.add_message(answer)
-            # self.request_count['success'] += 1
             return answer
         except Exception as e:
-            # self.request_count['failure'] += 1
-            # logger.error(f"Error sending request: {e}")
             raise e
+        
+    def create_gx_session(self, subscriber: Subscriber, session_id=None) -> GxSession:
+        if not session_id:
+            gx_session_id = self.gx_app.node.session_generator.next_id()
+        else:
+            gx_session_id = session_id
+        framed_ip_address = self.apn.ip_queue.get_ip()
+        gx_session = self.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
+        return gx_session
 
     def create_ccr_i(self,
                      gx_session: GxSession,
-                     mcc_mnc='999',
-                     apn='internet') -> CreditControlRequest:
+                     sgsn_mcc_mnc=None,
+                     called_station_id=None) -> CreditControlRequest:
         ccr_i = gx_session.create_ccr_i()
         ccr_i.auth_application_id = APP_3GPP_GX
         #
@@ -64,8 +92,14 @@ class GxService:
         ccr_i.rat_type = E_RAT_TYPE_EUTRAN
         ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
         #
-        ccr_i.sgsn_mcc_mnc = str(mcc_mnc)
-        ccr_i.called_station_id = str(apn)
+        if sgsn_mcc_mnc:
+            ccr_i.sgsn_mcc_mnc = sgsn_mcc_mnc
+        else:
+            ccr_i.sgsn_mcc_mnc = self.sgsn_mcc_mnc
+        if called_station_id:
+            ccr_i.called_station_id = called_station_id
+        else:
+            ccr_i.called_station_id = self.called_station_id
         #
         ccr_i.supported_features = SupportedFeatures()
         ccr_i.supported_features.vendor_id = VENDOR_TGPP
@@ -126,3 +160,13 @@ class GxService:
                 self.logger.warn("Timeout")
                 return False
         return True
+
+    def stop_gx_session(self, gx_session: GxSession) -> GxSession:
+        ccr_t = self.create_ccr_t(gx_session)
+        cca_t = self.send_gx_request(gx_session, ccr_t, timeout=5)
+        if not isinstance(cca_t, CreditControlAnswer):
+            raise Exception("CCA is not received")
+        if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+            self.apn.ip_queue.put_ip(gx_session.framed_ip_address)
+            gx_session.end()
+        return gx_session

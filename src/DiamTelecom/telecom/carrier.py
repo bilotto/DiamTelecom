@@ -1,5 +1,5 @@
 from .subscriber import Subscribers
-from ..services import VoiceService, DataService
+from ..services import VoiceService, DataService, APN
 import logging
 logger = logging.getLogger(__name__)
 from .helpers import generate_subscribers
@@ -12,6 +12,7 @@ class Carrier:
     voice_service: VoiceService
     data_service: DataService
     subscribers: Subscribers
+    apn_list: list[APN]
     
     def __init__(self,
                  name,
