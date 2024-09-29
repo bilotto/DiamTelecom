@@ -18,41 +18,30 @@ class SyService:
         self.logger = logging.getLogger(__name__)
 
     @property
-    def sy_destination_host(self) -> str:
-        if self.sy_config.get('destination_host'):
-            return self.sy_config['destination_host']
-        return None
-    
-    @property
-    def sy_destination_realm(self) -> str:
+    def destination_realm(self):
         if self.sy_config.get('destination_realm'):
             return self.sy_config['destination_realm']
         return self.sy_app.node.realm_name
     
-    def set_sy_hosts(self, message):
-        origin_host = self.sy_app.node.origin_host
-        origin_realm = self.sy_app.node.realm_name
-        if self.sy_destination_host:
-            destination_host = self.sy_destination_host
-            message.destination_host = destination_host.encode()
-        
-        destination_realm = self.sy_destination_realm
-        message.origin_host = origin_host.encode()
-        message.origin_realm = origin_realm.encode()
-        
-        message.destination_realm = destination_realm.encode()
-        # message.route_record = origin_host.encode()
-        return message
+    @property
+    def destination_host(self) -> str:
+        if self.sy_config.get('destination_host'):
+            return self.sy_config['destination_host']
+        return None
     
     def send_sy_request(self, sy_session: SySession, message, timeout=5):
-        sy_session.add_message(message)
-        response = self.sy_app.send_request_custom(message, timeout)
-        sy_session.add_message(response)
-        return response
+        return self.sy_app.send_request_custom(message, timeout)
 
     def create_ssnr(self, sy_session: SySession, policy_counter_dict: dict = None) -> SpendingStatusNotificationRequest:
         message = sy_session.create_ssnr()
-        message = self.set_sy_hosts(message)
+        # message = self.set_sy_hosts(message)
+        origin_host = self.sy_app.node.origin_host
+        origin_realm = self.sy_app.node.realm_name
+        destination_realm = self.destination_realm
+        message.origin_host = origin_host.encode()
+        message.origin_realm = origin_realm.encode()
+        message.destination_realm = destination_realm.encode()
+        #
         if policy_counter_dict:
             for pc_id, pc_status in policy_counter_dict.items():
                 pcsr = PolicyCounterStatusReport()

@@ -10,22 +10,25 @@ from DiamTelecom.helpers import ip_to_bytes
 class GxSession(DiameterSession):
     session_id: str
     framed_ip_address: str
+    apn: str
     rx_sessions: List[RxSession]
 
     def __init__(self,
                  subscriber,
                  session_id: str,
-                 framed_ip_address: str):
+                 framed_ip_address: str,
+                 apn: str = None,):
         super().__init__(subscriber, session_id)
         self.framed_ip_address = framed_ip_address
+        self.apn = apn
+        #
         self.cc_request_number = 0
-        self.mcc_mnc = None
-        self.rat_type = None
-        self.ip_can_type = None
-        self.apn = None
-        self.destination_realm = None
-        self.qos_information = None
-        self.pcc_rules = []
+        # self.mcc_mnc = None
+        # self.rat_type = None
+        # self.ip_can_type = None
+        # self.destination_realm = None
+        # self.qos_information = None
+        # self.pcc_rules = []
         self.rx_sessions = []
         
     def __repr__(self):
@@ -38,14 +41,18 @@ class GxSession(DiameterSession):
     def incr_cc_request_number(self):
         self.cc_request_number += 1
 
-    def set_mcc_mnc(self, mcc_mnc: str):
-        self.mcc_mnc = mcc_mnc
+    # def set_mcc_mnc(self, mcc_mnc: str):
+    #     self.mcc_mnc = mcc_mnc
 
-    def set_apn(self, apn: str):
-        self.apn = apn
+    # def set_apn(self, apn: str):
+    #     if not isinstance(apn, str):
+    #         raise ValueError("APN must be a string")
+    #     self.apn = apn
 
     # def add_message(self, message):
     #     message = super().add_message(message)
+    #     if message.name == CCR_I:
+    #         self.set_apn(message._message.called_station_id)
     #     if self.start_time and self.messages.n_messages == 1:
     #         logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} started Gx session,{self.framed_ip_address}")
         
@@ -97,18 +104,30 @@ class GxSession(DiameterSession):
 
 class GxSessions(DiameterSessions):
     framed_ip_address_to_session_id: Dict[str, List[str]]
-    # msisdn_to_session_id: Dict[str, List[str]]
+    apn_to_session_id: Dict[str, List[str]]
 
     def __init__(self):
         super().__init__()
         self.framed_ip_address_to_session_id = {}
-        # self.msisdn_to_session_id = {}
+        self.apn_to_session_id = {}
 
     def add_gx_session(self, gx_session: GxSession):
         self.add_session(gx_session)
+        #
+        # Here we want to fill two maps based on the session attributes framed_ip_address and apn
+        framed_ip_address = gx_session.framed_ip_address
+        apn = gx_session.apn
+        if not framed_ip_address:
+            raise ValueError("Framed IP Address is required")
+        if not apn:
+            raise ValueError("APN is required")
+        #
         if self.framed_ip_address_to_session_id.get(gx_session.framed_ip_address) is None:
             self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = []
+        if self.apn_to_session_id.get(gx_session.apn) is None:
+            self.apn_to_session_id[gx_session.apn] = []
         self.framed_ip_address_to_session_id[gx_session.framed_ip_address].append(gx_session.session_id)
+        self.apn_to_session_id[gx_session.apn].append(gx_session.session_id)
 
     def get(self, session_id: str) -> GxSession:
         return self.diameter_sessions.get(session_id, None)
@@ -126,16 +145,18 @@ class GxSessions(DiameterSessions):
             #     return gx_session
             return gx_session
 
-    def create_session(self, subscriber, session_id: str, framed_ip_address: str) -> GxSession:
-        gx_session = GxSession(subscriber, session_id, framed_ip_address)
+    def create_session(self, subscriber, session_id: str, framed_ip_address: str, apn: str) -> GxSession:
+        gx_session = GxSession(subscriber, session_id, framed_ip_address, apn)
         self.add_gx_session(gx_session)
         return gx_session
     
     def add_message(self, session_id: str, message):
         self.get_session(session_id).add_message(message)
 
+    def get_sessions_by_apn(self, apn: str) -> List[GxSession]:
+        return [self.diameter_sessions[session_id] for session_id in self.apn_to_session_id.get(apn, [])]
 
-    def get_msisdn_sessions(self, msisdn: str) -> List[GxSession]:
-        # Retorna uma lista de sessões associadas a um MSISDN específico
-        if msisdn in self.msisdn_to_session_id:
-            return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]
+    # def get_msisdn_sessions(self, msisdn: str) -> List[GxSession]:
+    #     # Retorna uma lista de sessões associadas a um MSISDN específico
+    #     if msisdn in self.msisdn_to_session_id:
+    #         return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]

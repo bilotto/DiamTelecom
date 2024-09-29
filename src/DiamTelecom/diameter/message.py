@@ -35,7 +35,7 @@ class AVPs():
 
 class DiameterMessage:
     name: str
-    message: Message
+    _message: Message
     timestamp: float
     session_id: str
     framed_ip_address: str

@@ -2,10 +2,11 @@ from diameter.message.constants import *
 from diameter.message.commands import *
 from diameter.message.avp.grouped import *
 from ..diameter.app import GxApplication
-from ..diameter.session import GxSession
+from ..diameter.session import GxSession, GxSessions
 import time
 from .ip_queue import APN
 from ..telecom.subscriber import Subscriber
+from typing import List
 
 class GxService:
     gx_app: GxApplication
@@ -52,14 +53,12 @@ class GxService:
             return self.gx_config['apn']
         return self.apn.value
     
+    @property
+    def sessions(self) -> List[GxSession]:
+        return self.gx_app.sessions.get_sessions_by_apn(self.apn.value)
+    
     def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
-        try:
-            gx_session.add_message(request)
-            answer = self.gx_app.send_request_custom(request, timeout)
-            gx_session.add_message(answer)
-            return answer
-        except Exception as e:
-            raise e
+        return self.gx_app.send_request_custom(request, timeout)
         
     def create_gx_session(self, subscriber: Subscriber, session_id=None) -> GxSession:
         if not session_id:
@@ -67,7 +66,8 @@ class GxService:
         else:
             gx_session_id = session_id
         framed_ip_address = self.apn.ip_queue.get_ip()
-        gx_session = self.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address)
+        apn = self.apn.value
+        gx_session = self.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address, apn)
         return gx_session
 
     def create_ccr_i(self,
@@ -170,3 +170,9 @@ class GxService:
             self.apn.ip_queue.put_ip(gx_session.framed_ip_address)
             gx_session.end()
         return gx_session
+
+    def stop_all_sessions(self):
+        if self.sessions:
+            for gx_session in self.sessions:
+                self.stop_gx_session(gx_session)
+

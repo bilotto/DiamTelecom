@@ -61,6 +61,9 @@ class DiameterSession:
             diameter_message = message
         elif isinstance(message, Message):
             diameter_message = create_diameter_message_from_message(message)
+        else:
+            raise ValueError("message must be an instance of Message or DiameterMessage")
+        #
         diameter_message.msisdn = self.subscriber.msisdn
         return self.messages.add_message(diameter_message)
 
@@ -100,6 +103,14 @@ class DiameterSessions:
     def __init__(self):
         self.diameter_sessions = {}  # Dicionário para armazenar as sessões
         self.msisdn_to_session_id = {}  # Dicionário para mapear MSISDNs para session_ids
+
+    @property
+    def sessions(self):
+        return self.diameter_sessions
+    
+    @property
+    def values(self):
+        return self.diameter_sessions.values()
 
     def get(self, session_id: str) -> DiameterSession:
         return self.diameter_sessions.get(session_id, None)

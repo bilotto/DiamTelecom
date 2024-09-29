@@ -2,7 +2,7 @@ from diameter.message.constants import *
 from diameter.message.commands import *
 from diameter.message.avp.grouped import *
 from ..diameter.app import RxApplication
-from ..diameter.session import RxSession
+from ..diameter.session import GxSession, RxSession
 
 class RxService:
     rx_app: RxApplication
@@ -20,16 +20,19 @@ class RxService:
         if self.rx_config.get('destination_realm'):
             return self.rx_config['destination_realm']
         return self.rx_app.node.realm_name
+    
+    @property
+    def sessions(self):
+        return self.rx_app.sessions.values()
+    
+    def create_rx_session(self, gx_session: GxSession) -> RxSession:
+        rx_session_id = self.rx_app.node.session_generator.next_id()
+        rx_session = self.rx_app.sessions.create_session(gx_session.subscriber, rx_session_id, gx_session.session_id)
+        rx_session.framed_ip_address = gx_session.framed_ip_address
+        return rx_session
 
     def send_rx_request(self, rx_session: RxSession, message, timeout=5):
-        rx_session.add_message(message)
-        try:
-            response = self.rx_app.send_request_custom(message, timeout)
-            rx_session.add_message(response)
-            return response
-        except Exception as e:
-            print(f"Error: {e}")
-            raise e
+        return self.rx_app.send_request_custom(message, timeout)
 
     def create_aar(self, rx_session: RxSession) -> AaRequest:
         aar = rx_session.create_aar()
