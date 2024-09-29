@@ -27,6 +27,16 @@ class VoiceService():
         self.rx_service = rx_service
         self.logger = logging.getLogger("DiamTelecom.services")
 
+    @property
+    def gx_sessions(self):
+        return self.gx_service.sessions
+    
+    @property
+    def rx_sessions(self):
+        if self.rx_service:
+            return self.rx_service.sessions
+        return []
+
     def start_gx_session(self, gx_session: GxSession) -> GxSession:
         ccr_i = self.gx_service.create_ccr_i(gx_session)
         # Add specific voice parameters
@@ -81,20 +91,6 @@ class VoiceService():
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
         gx_session.add_rx_session(rx_session)
         return gx_session, rx_session
-    
-    def get_gx_sessions(self) -> List[GxSession]:
-        return self.gx_service.gx_app.sessions.get_all()
-    
-    def get_rx_sessions(self) -> List[RxSession]:
-        return self.rx_service.rx_app.sessions.get_all()
-
-    def stop_all_gx_sessions(self):
-        gx_sessions = self.get_gx_sessions()
-        for gx_session in gx_sessions:
-            if not gx_session.active:
-                continue
-            self.gx_service.stop_gx_session(gx_session)
-
 
     # def create_aar_audio(self, rx_session: RxSession) -> AaRequest:
     #     # aar = self.create_aar()

@@ -36,12 +36,9 @@ class Carrier:
         self.voice_service = None
 
     def set_voice_service(self, voice_service: VoiceService):
-        # voice_service.set_mcc_mnc(self.mcc_mnc)
-        # voice_service.set_apn("ims")
         self.voice_service = voice_service
 
     def set_data_service(self, data_service: DataService):
-        # data_service.set_mcc_mnc(self.mcc_mnc)
         self.data_service = data_service
 
     def generate_subscribers(self, count: int):

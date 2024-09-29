@@ -19,7 +19,6 @@ def handle_request(app: CustomSimpleThreadingApplication, message: Message):
     return None
 
 def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
-    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     answer = message.to_answer()
     session_id = message.session_id
     session = app.get_session_by_id(session_id)
@@ -35,12 +34,10 @@ def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
         answer.destination_realm = message.origin_realm 
         answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
     session.add_message(answer)
-    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
 def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     logger.info("Need to handle SLR")
-    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     if message.auth_application_id == APP_3GPP_SY:
         session_id = message.session_id
         subscription_id = message.subscription_id
@@ -93,11 +90,9 @@ def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     session.add_message(answer)
     if answer.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
         session.active = True
-    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
 def handle_str(app: CustomSimpleThreadingApplication, message: SessionTerminationRequest):
-    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
     answer = message.to_answer()
     session_id = message.session_id
     session = app.get_session_by_id(session_id)
@@ -111,16 +106,26 @@ def handle_str(app: CustomSimpleThreadingApplication, message: SessionTerminatio
         answer.destination_realm = message.origin_realm
         answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
     session.add_message(answer)
-    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 
-def handle_ccr(app: CustomSimpleThreadingApplication, message: CreditControlRequest):
-    logging.getLogger("diameter.peer.msg").setLevel(logging.DEBUG)
+def handle_ccr(app: GxApplication, message: CreditControlRequest):
+    session_id = message.session_id
     answer = message.to_answer()
     if not isinstance(answer, CreditControlAnswer):
         raise Exception("Not a Credit-Control-Answer message")
-    session_id = message.session_id
-    print(f"Received message {message} with session_id {session_id}")
+    #
+    if message.cc_request_type == E_CC_REQUEST_TYPE_INITIAL_REQUEST:
+        subscription_id = message.subscription_id
+        for i in subscription_id:
+            if i.subscription_id_type == 0:
+                subscriber_msisdn = i.subscription_id_data
+            elif i.subscription_id_type == 1:
+                subscriber_imsi = i.subscription_id_data
+        if app.subscribers:
+            subscriber = app.subscribers.get_subscriber_by_msisdn_imsi(subscriber_msisdn, subscriber_imsi)
+            gx_session = app.sessions.create_session(subscriber, session_id, message.framed_ip_address, message.called_station_id)
+            app.sessions.add_gx_session(gx_session)
+    #
     answer.session_id = message.session_id
     answer.origin_host = app.node.origin_host.encode()
     answer.origin_realm = app.node.realm_name.encode()
@@ -135,6 +140,5 @@ def handle_ccr(app: CustomSimpleThreadingApplication, message: CreditControlRequ
         session.add_message(answer)
     else:
         logging.error(f"Session with id {session_id} not found. Found: {app.sessions}")
-    logging.getLogger("diameter.peer.msg").setLevel(logging.ERROR)
     return answer
 

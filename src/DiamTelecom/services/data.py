@@ -27,6 +27,16 @@ class DataService():
         self.sy_service = sy_service
         self.logger = logging.getLogger("DiamTelecom.services")
 
+    @property
+    def gx_sessions(self):
+        return self.gx_service.sessions
+    
+    @property
+    def sy_sessions(self):
+        if self.sy_service:
+            return self.sy_service.sessions
+        return []
+
     def start_gx_session(self, gx_session: GxSession) -> GxSession:
         ccr_i = self.gx_service.create_ccr_i(gx_session)
         # Add specific data flow AVPs
@@ -53,11 +63,14 @@ class DataService():
         #
 
     def start_data_session(self, subscriber: Subscriber) -> Tuple[GxSession, SySession]:
+        gx_session = None
+        sy_session = None
         gx_session = self.gx_service.create_gx_session(subscriber)
         self.start_gx_session(gx_session)
-        sy_session = self.sy_service.wait_for_sy_session(subscriber.msisdn, timeout=5)
-        if sy_session:
-            sy_session.gx_session_id = gx_session.session_id
+        if self.sy_service:
+            sy_session = self.sy_service.wait_for_sy_session(subscriber.msisdn, timeout=5)
+            if sy_session:
+                sy_session.gx_session_id = gx_session.session_id
         return gx_session, sy_session
     
     def update_gx_session(self, gx_session: GxSession):
@@ -71,20 +84,3 @@ class DataService():
         if not isinstance(cca_u, CreditControlAnswer):
             raise Exception("CCA is not received")
         return gx_session
-    
-    def get_gx_sessions(self) -> List[GxSession]:
-        return self.gx_service.gx_app.sessions.get_all()
-    
-    def get_sy_sessions(self) -> List[SySession]:
-        if not self.sy_service:
-            self.logger.error("SY Service is not set")
-            return []
-        return self.sy_service.sy_app.sessions.get_all()
-    
-    def stop_all_gx_sessions(self):
-        gx_sessions = self.get_gx_sessions()
-        for gx_session in gx_sessions:
-            if not gx_session.active:
-                continue
-            self.gx_service.stop_gx_session(gx_session)
-
