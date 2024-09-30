@@ -62,7 +62,9 @@ class GxService:
         
     def create_gx_session(self, subscriber: Subscriber, session_id=None) -> GxSession:
         if not session_id:
-            gx_session_id = self.gx_app.node.session_generator.next_id()
+            # gx_session_id = self.gx_app.node.session_generator.next_id()
+            timestamp = int(time.time())
+            gx_session_id = f"GxSession_{timestamp}_{subscriber.msisdn}_{subscriber.imsi}"
         else:
             gx_session_id = session_id
         framed_ip_address = self.apn.ip_queue.get_ip()
