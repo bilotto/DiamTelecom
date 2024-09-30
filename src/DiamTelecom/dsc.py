@@ -26,6 +26,7 @@ def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
     if answer:
         # answer.route_record.append(app.node.origin_host)
         app.send_answer(answer)
+    app.stats.increment_based_on_answer(answer)
     return True
 
 class DSC:

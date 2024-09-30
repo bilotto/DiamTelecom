@@ -34,9 +34,10 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             raise e
         #
         session.add_message(answer)
-        result_code = answer.result_code
-        self.stats.increment_rc_count(result_code)
-        self.stats.increment_request_count(success=True)
+        self.stats.increment_based_on_answer(answer)
+        # result_code = answer.result_code
+        # self.stats.increment_rc_count(result_code)
+        # self.stats.increment_request_count(success=True)
         return answer
 
         
