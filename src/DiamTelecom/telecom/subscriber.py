@@ -41,6 +41,12 @@ class Subscribers(dict):
     """
     Represents a collection of subscribers.
     """
+    def __str__(self):
+        return f"Subscribers({len(self)})"
+    
+    def __repr__(self):
+        return self.__str__()
+
     def create_subscriber(self, id: str, msisdn: str, imsi: str):
         if id in self:
             raise ValueError("Subscriber ID already exists")
