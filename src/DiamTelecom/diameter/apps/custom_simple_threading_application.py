@@ -30,7 +30,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         try:
             answer = self.send_request(request, timeout)
         except Exception as e:
-            self.stats.increment_request_count(success=False)
+            self.stats.increment_transaction_count(success=False)
             raise e
         #
         session.add_message(answer)

@@ -5,36 +5,43 @@ from diameter.message.avp.grouped import PolicyCounterStatusReport
 import logging
 from .diameter.session import *
 logger = logging.getLogger(__name__)
+from diameter.message import dump
+import time
 
 def handle_request(app: CustomSimpleThreadingApplication, message: Message):
     logger.info(f"Received message {message}")
+    logger.debug("\n" + dump(message))
+    answer = None
     if isinstance(message, ReAuthRequest):
-        return handle_rar(app, message)
+        answer = handle_rar(app, message)
     elif isinstance(message, SpendingLimitRequest):
-        return handle_slr(app, message)
+        answer = handle_slr(app, message)
     elif isinstance(message, SessionTerminationRequest):
-        return handle_str(app, message)
+        answer = handle_str(app, message)
     elif isinstance(message, CreditControlRequest):
-        return handle_ccr(app, message)
-    return None
+        answer = handle_ccr(app, message)
+    if answer:
+        logger.debug("\n" + dump(answer))
+    app.stats.increment_based_on_answer(answer)
+    return answer
 
 def handle_rar(app: CustomSimpleThreadingApplication, message: ReAuthRequest):
     answer = message.to_answer()
-    session_id = message.session_id
-    session = app.get_session_by_id(session_id)
-    if not session:
-        logging.error(f"Session with id {session_id} not found. Found: {app.sessions}")
-        return None
-    session.add_message(message)
     if isinstance(answer, ReAuthAnswer):
         answer.session_id = message.session_id
         answer.origin_host = message.destination_host
         answer.origin_realm = message.destination_realm
         answer.destination_host = message.origin_host
-        answer.destination_realm = message.origin_realm 
+        answer.destination_realm = message.origin_realm
+    session_id = message.session_id
+    session = app.get_session_by_id(session_id)
+    if session:
+        session.add_message(message)
         answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
-    session.add_message(answer)
-    return answer
+        session.add_message(answer)
+    else:
+        logger.error(f"Session with id {session_id} not found. App is: {app}, Sessions are: {app.sessions.get_all()}")
+        answer.result_code = E_RESULT_CODE_DIAMETER_UNKNOWN_SESSION_ID
 
 def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     logger.info("Need to handle SLR")
@@ -125,6 +132,7 @@ def handle_ccr(app: GxApplication, message: CreditControlRequest):
             subscriber = app.subscribers.get_subscriber_by_msisdn_imsi(subscriber_msisdn, subscriber_imsi)
             gx_session = app.sessions.create_session(subscriber, session_id, message.framed_ip_address, message.called_station_id)
             app.sessions.add_gx_session(gx_session)
+        # time.sleep(1)
     #
     answer.session_id = message.session_id
     answer.origin_host = app.node.origin_host.encode()
