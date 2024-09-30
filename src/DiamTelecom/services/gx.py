@@ -174,5 +174,7 @@ class GxService:
     def stop_all_sessions(self):
         if self.sessions:
             for gx_session in self.sessions:
+                if not gx_session.active:
+                    continue
                 self.stop_gx_session(gx_session)
 
