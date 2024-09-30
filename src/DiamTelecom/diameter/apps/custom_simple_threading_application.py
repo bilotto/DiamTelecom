@@ -22,21 +22,23 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         return f"{self.node.origin_host}: <{self.name} ({self.application_id})>"
 
     def send_request_custom(self, request, timeout=5):
+        session_id = request.session_id
+        session = self.get_session_by_id(session_id)
+        if not session:
+            raise Exception(f"Session {session_id} not found")
+        session.add_message(request)
         try:
-            session_id = request.session_id
-            session = self.get_session_by_id(session_id)
-            if not session:
-                raise Exception(f"Session {session_id} not found")
-            session.add_message(request)
             answer = self.send_request(request, timeout)
-            session.add_message(answer)
-            result_code = answer.result_code
-            self.stats.increment_rc_count(result_code)
-            self.stats.increment_request_count(success=True)
-            return answer
         except Exception as e:
             self.stats.increment_request_count(success=False)
             raise e
+        #
+        session.add_message(answer)
+        result_code = answer.result_code
+        self.stats.increment_rc_count(result_code)
+        self.stats.increment_request_count(success=True)
+        return answer
+
         
     def set_subscribers(self, subscribers: Subscribers):
         self.subscribers = subscribers
