@@ -92,6 +92,8 @@ class DiameterSession:
     def duration(self):
         if self.start_time and self.end_time:
             return int(float(self.end_time) - float(self.start_time))
+        elif self.start_time:
+            return int(time.time() - float(self.start_time))
         return None
     
     def dump(self):
