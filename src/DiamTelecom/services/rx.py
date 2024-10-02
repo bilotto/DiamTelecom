@@ -14,6 +14,10 @@ class RxService:
         self.rx_app = rx_app
         self.rx_config = rx_config
         self.logger = logging.getLogger("DiamTelecom.services")
+        
+    @property
+    def app(self):
+        return self.rx_app
 
     @property
     def destination_realm(self) -> str:

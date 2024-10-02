@@ -56,6 +56,8 @@ class DiameterSession:
         self.active = False
 
     def add_message(self, message):
+        if not isinstance(message, Message) and not isinstance(message, DiameterMessage):
+            raise ValueError("message must be an instance of Message or DiameterMessage")
         self.logger.debug("\n" + dump(message))
         if isinstance(message, DiameterMessage):
             diameter_message = message

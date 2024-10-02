@@ -36,7 +36,9 @@ class GxSession(DiameterSession):
           session_id={self.session_id}
           active={self.active}
           n_messages={self.n_messages}
-          last_message={self.last_message})"""
+          last_message={self.last_message})
+
+"""
 
     def incr_cc_request_number(self):
         self.cc_request_number += 1

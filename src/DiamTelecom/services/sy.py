@@ -18,6 +18,11 @@ class SyService:
         self.logger = logging.getLogger(__name__)
 
     @property
+    def app(self):
+        return self.sy_app
+
+
+    @property
     def destination_realm(self):
         if self.sy_config.get('destination_realm'):
             return self.sy_config['destination_realm']

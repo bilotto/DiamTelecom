@@ -34,6 +34,10 @@ class GxService:
         self.apn = apn
 
     @property
+    def app(self):
+        return self.gx_app
+
+    @property
     def destination_realm(self):
         if self.gx_config.get('destination_realm'):
             return self.gx_config['destination_realm']

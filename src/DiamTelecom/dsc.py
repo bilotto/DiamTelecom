@@ -9,6 +9,31 @@ from .diameter.session import *
 import logging
 logger = logging.getLogger(__name__)
 
+# def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
+#     origin_host = message.origin_host
+#     origin_realm = message.origin_realm
+#     destination_host = message.destination_host
+#     destination_realm = message.destination_realm
+#     #
+#     logger.info(f"Received message {message} from {origin_realm} to {destination_realm}")
+#     message.route_record.append(origin_host)
+#     peer_list = []
+#     for peer in app.node.peers.values():
+#         if peer.realm_name == destination_realm:
+#                 if peer.connection and peer.connection.state in PEER_READY_STATES:
+#                     peer_list.append(peer)
+#     peer = min(peer_list, key=lambda c: c.counters.requests)
+#     answer = app.node.send_message(peer.connection, message)
+#     #
+#     #
+#     # answer = app.send_request(message)
+#     if answer:
+#         # answer.route_record.append(app.node.origin_host)
+#         app.send_answer(answer)
+#     app.stats.increment_based_on_answer(answer)
+#     return True
+
+
 def handle_request_dsc(app: CustomSimpleThreadingApplication, message: Message):
     origin_host = message.origin_host
     origin_realm = message.origin_realm

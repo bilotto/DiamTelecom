@@ -26,7 +26,8 @@ class RxSession(DiameterSession):
           gx_session_id={self.gx_session_id}
           active={self.active}
           n_messages={self.n_messages}
-          last_message={self.last_message})"""
+          last_message={self.last_message})
+          """
 
     @property
     def tshark_filter(self):
