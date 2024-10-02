@@ -36,6 +36,14 @@ class DataService():
         if self.sy_service:
             return self.sy_service.sessions
         return []
+    
+    @property
+    def gx(self):
+        return self.gx_service
+    
+    @property
+    def sy(self):
+        return self.sy_service
 
     def start_gx_session(self, gx_session: GxSession) -> GxSession:
         ccr_i = self.gx_service.create_ccr_i(gx_session)

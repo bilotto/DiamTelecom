@@ -9,6 +9,7 @@ class Subscriber:
     msisdn: str
     imsi: str
     carrier_id: int
+    apn: str
     """
     Represents a telecommunications subscriber with an MSISDN and an IMSI.
     """
@@ -21,11 +22,6 @@ class Subscriber:
         id = str(id)
         msisdn = str(msisdn)
         imsi = str(imsi)
-        if not is_valid_msisdn(msisdn):
-            raise ValueError(f"Invalid MSISDN: {msisdn}")
-        if not is_valid_imsi(imsi):
-            raise ValueError(f"Invalid IMSI: {imsi}")
-        #
         self.id = id
         self.msisdn = msisdn
         self.imsi = imsi
@@ -34,6 +30,16 @@ class Subscriber:
         # self.messages = DiameterMessages()
         self.apn = None
         self.mcc_mnc = None
+
+    # Method to represent then the subscriber manually sets the APN in the phone
+    def set_apn(self, apn: str):
+        self.apn = apn
+
+    def __str__(self):
+        return f"Subscriber({self.msisdn},{self.imsi})"
+    
+    def __repr__(self):
+        return self.__str__()
 
 import random
 

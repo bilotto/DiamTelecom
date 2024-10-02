@@ -28,6 +28,14 @@ class VoiceService():
         self.logger = logging.getLogger("DiamTelecom.services")
 
     @property
+    def gx(self):
+        return self.gx_service
+    
+    @property
+    def rx(self):
+        return self.rx_service
+
+    @property
     def gx_sessions(self):
         return self.gx_service.sessions
     

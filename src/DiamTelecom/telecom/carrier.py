@@ -1,8 +1,29 @@
-from .subscriber import Subscribers
+import re
+from itertools import product
+from .subscriber import Subscribers, Subscriber
 from ..services import VoiceService, DataService, APN
+from typing import Dict
 import logging
+
 logger = logging.getLogger(__name__)
-from .helpers import generate_subscribers
+
+def generate_subscribers(subscribers: Subscribers,
+                         msisdn_template,
+                         imsi_template,
+                         carrier_id,
+                         n_subscribers):
+    msisdn_min = int(msisdn_template)
+    imsi_min = int(imsi_template)
+    imsi = imsi_min
+    msisdn_max = msisdn_min + n_subscribers
+    imsi_max = imsi_min + n_subscribers
+    for msisdn in range(msisdn_min, msisdn_max):
+        subscriber = Subscriber(str(msisdn), str(msisdn), str(imsi), carrier_id)
+        subscribers.add_subscriber(subscriber)
+        imsi += 1
+        if imsi > imsi_max:
+            imsi = imsi_min
+    return subscribers
 
 class Carrier:
     name: str
@@ -12,28 +33,20 @@ class Carrier:
     voice_service: VoiceService
     data_service: DataService
     subscribers: Subscribers
-    apn_list: list[APN]
-    
-    def __init__(self,
-                 name,
-                 carrier_id,
-                 mcc_mnc: int,
-                 country_code: int,
-                 subscribers: Subscribers = None
-                 ):
+    apns: Dict[str, APN]
+
+    def __init__(self, name, carrier_id, mcc_mnc: int, country_code: int, subscribers: Subscribers = None):
         self.name = name
         self.carrier_id = carrier_id
         self.mcc_mnc = mcc_mnc
         self.country_code = country_code
-        self.msisdn_template = f"{str(country_code)}0000000"
-        self.imsi_template = f"{str(mcc_mnc)}000000000"[:15]
         if subscribers:
             self.subscribers = subscribers
         else:
             self.subscribers = Subscribers()
-        #
         self.data_service = None
         self.voice_service = None
+        self.apns = {}
 
     def set_voice_service(self, voice_service: VoiceService):
         self.voice_service = voice_service
@@ -42,8 +55,17 @@ class Carrier:
         self.data_service = data_service
 
     def generate_subscribers(self, count: int):
-            self.subscribers = generate_subscribers(self.subscribers,
-                                                    self.msisdn_template,
-                                                    self.imsi_template,
-                                                    self.carrier_id,
-                                                    count)
+        msisdn_template = f"{str(self.country_code)}0000000"
+        imsi_template = f"{str(self.mcc_mnc)}000000000"[:15]
+
+        self.subscribers = generate_subscribers(self.subscribers,
+                                                msisdn_template,
+                                                imsi_template,
+                                                self.carrier_id,
+                                                count)
+            
+
+    def add_apn(self, apn_name, ip_pool_cidr, mcc_mnc):
+        apn = APN(apn_name, ip_pool_cidr, mcc_mnc)
+        self.apns[apn_name] = apn
+        return apn
