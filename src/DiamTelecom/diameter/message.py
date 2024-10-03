@@ -122,10 +122,10 @@ class DiameterMessages:
         self.messages.append(message)
         return message
 
-    def get_messages(self):
-        # return self.messages
-        messages_sorted = sorted(self.messages, key=lambda x: x.timestamp)
-        return messages_sorted
+    def get_messages(self) -> List[DiameterMessage]:
+        return self.messages
+        # messages_sorted = sorted(self.messages, key=lambda x: x.timestamp)
+        # return messages_sorted
 
     @property
     def last_message(self) -> DiameterMessage:

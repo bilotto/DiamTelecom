@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 from diameter.message import Avp, AvpGrouped, Message
+from diameter.message.constants import *
 
 def _create_avp_element(avp: Avp) -> ET.Element:
     """
@@ -42,8 +43,14 @@ def prettify_xml(xml_string: str) -> str:
     parsed = minidom.parseString(xml_string)
     return parsed.toprettyxml(indent="    ")  # Using 4 spaces for indentation
 
-def generate_xml(msg: Message, application_name: str, file_path: str = None) -> str:
+def generate_xml(msg: Message, file_path: str = None) -> str:
     application_id = msg.header.application_id
+    if application_id == APP_3GPP_GX:
+        application_name = "Gx"
+    elif application_id == APP_3GPP_SY:
+        application_name = "Sy"
+    elif application_id == APP_3GPP_RX:
+        application_name = "Rx"
     
     # Create the root element (application)
     root = ET.Element("application", name=application_name, id=str(application_id))
