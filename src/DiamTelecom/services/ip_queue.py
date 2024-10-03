@@ -41,16 +41,26 @@ class IpQueue(Queue):
 class APN:
     apn: str
     ip_queue: IpQueue
-    mcc_mnc: str
+    mcc_mnc_list: list
 
     def __init__(self, apn, ip_pool_cidr, mcc_mnc=None):
         self.apn = apn
         self.ip_queue = IpQueue(ip_pool_cidr)
-        self.mcc_mnc = mcc_mnc
+        if mcc_mnc:
+            self.mcc_mnc_list = [mcc_mnc]
+        else:
+            self.mcc_mnc_list = []
+
+    @property
+    def mcc_mnc(self):
+        return self.mcc_mnc_list[0]
 
     @property
     def value(self):
         return self.apn
+    
+    def add_mcc_mnc(self, mcc_mnc):
+        self.mcc_mnc_list.append(mcc_mnc)
 
 
 if __name__ == '__main__':

@@ -2,3 +2,4 @@
 from .sessions import *
 from .message import *
 from .app import GxApplication, RxApplication, SyApplication, GyApplication, CustomSimpleThreadingApplication
+from .helpers import generate_xml

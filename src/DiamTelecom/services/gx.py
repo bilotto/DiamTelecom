@@ -62,6 +62,8 @@ class GxService:
         return self.gx_app.sessions.get_sessions_by_apn(self.apn.value)
     
     def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
+        if not isinstance(request, Message):
+            raise ValueError("request must be an instance of Message")
         return self.gx_app.send_request_custom(request, timeout)
         
     def create_gx_session(self, subscriber: Subscriber, session_id=None) -> GxSession:
@@ -99,13 +101,13 @@ class GxService:
         ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
         #
         if sgsn_mcc_mnc:
-            ccr_i.sgsn_mcc_mnc = sgsn_mcc_mnc
+            ccr_i.sgsn_mcc_mnc = str(sgsn_mcc_mnc)
         else:
-            ccr_i.sgsn_mcc_mnc = self.sgsn_mcc_mnc
+            ccr_i.sgsn_mcc_mnc = str(self.sgsn_mcc_mnc)
         if called_station_id:
-            ccr_i.called_station_id = called_station_id
+            ccr_i.called_station_id = str(called_station_id)
         else:
-            ccr_i.called_station_id = self.called_station_id
+            ccr_i.called_station_id = str(self.called_station_id)
         #
         ccr_i.supported_features = SupportedFeatures()
         ccr_i.supported_features.vendor_id = VENDOR_TGPP
