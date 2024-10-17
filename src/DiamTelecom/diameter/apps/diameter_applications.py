@@ -1,6 +1,9 @@
 from typing import List, Dict
 from .custom_simple_threading_application import CustomSimpleThreadingApplication
 from diameter.node import Node
+from diameter.message.constants import *
+from .gx_app_ import GxApplication
+from .sy_app_ import SyApplication
 
 class DiameterApplications:
     apps_per_id: Dict[int, List[CustomSimpleThreadingApplication]]
@@ -34,6 +37,12 @@ class DiameterApplications:
     
     def get_app_per_id(self, app_id: int) -> List[CustomSimpleThreadingApplication]:
         return self.apps_per_id.get(app_id, [])
+    
+    def get_gx_apps(self) -> List[GxApplication]:
+        return self.get_app_per_id(APP_3GPP_GX)
+    
+    def get_sy_apps(self) -> List[SyApplication]:
+        return self.get_app_per_id(APP_3GPP_SY)
     
     @property
     def ports(self) -> List[int]:
@@ -72,3 +81,4 @@ class DiameterApplications:
         for t in threads:
             t.join()
         print("Nodes stopped")
+
