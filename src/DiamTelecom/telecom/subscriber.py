@@ -18,11 +18,9 @@ class Subscriber:
                  msisdn: str,
                  imsi: str,
                  carrier_id: int = None):
-        # Convert
-        id = str(id)
+        self.id = id
         msisdn = str(msisdn)
         imsi = str(imsi)
-        self.id = id
         self.msisdn = msisdn
         self.imsi = imsi
         self.carrier_id = carrier_id

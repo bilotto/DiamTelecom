@@ -14,7 +14,6 @@ def is_valid_imsi(imsi: str) -> bool:
     pattern = r"^\d{15}$"  # Assuming IMSI is a 15-digit number
     return re.match(pattern, imsi) is not None
 
-
 def convert_timestamp(timestamp: float) -> str:
     # Convert timestamp to datetime
     return datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
@@ -35,3 +34,22 @@ def decode_hex_string(hex_string: str) -> str:
 import socket
 def ip_to_bytes(ip):
     return socket.inet_aton(ip)
+
+import uuid
+import threading
+
+class UUIDGenerator:
+    """A thread-safe UUID Version 4 generator."""
+
+    def __init__(self):
+        """Initialize the generator with a threading lock."""
+        self._lock = threading.Lock()
+
+    def next_id(self) -> str:
+        """Generate the next UUID Version 4.
+
+        Returns:
+            A string representation of the UUID Version 4.
+        """
+        with self._lock:
+            return str(uuid.uuid4())

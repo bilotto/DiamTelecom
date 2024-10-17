@@ -8,6 +8,7 @@ class DiameterApplications:
     def __init__(self):
         self.apps_per_id = {}
         self.apps_per_node = {}
+        self.apps_per_host = {}
 
     def add_application(self, app: CustomSimpleThreadingApplication):
         if not isinstance(app, CustomSimpleThreadingApplication):
@@ -20,6 +21,10 @@ class DiameterApplications:
         if self.apps_per_node.get(node) is None:
             self.apps_per_node[node] = []
         self.apps_per_node[node].append(app)
+        host = node.origin_host
+        if self.apps_per_host.get(host) is None:
+            self.apps_per_host[host] = []
+        self.apps_per_host[host].append(app)
 
     @property
     def nodes(self) -> List[Node]:
@@ -34,6 +39,9 @@ class DiameterApplications:
     
     def get_app_per_id(self, app_id: int) -> List[CustomSimpleThreadingApplication]:
         return self.apps_per_id.get(app_id, [])
+    
+    def get_app_per_host(self, host: str) -> List[CustomSimpleThreadingApplication]:
+        return self.apps_per_host.get(host, [])
     
     @property
     def ports(self) -> List[int]:
