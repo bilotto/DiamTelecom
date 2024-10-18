@@ -4,7 +4,7 @@ from .subscriber import Subscribers, Subscriber
 from ..services import VoiceService, DataService, APN
 from typing import Dict
 import logging
-from .helpers import UUIDGenerator
+from ..helpers import UUIDGenerator
 
 uuid = UUIDGenerator()
 
