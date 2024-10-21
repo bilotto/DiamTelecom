@@ -4,6 +4,7 @@ from diameter.message.commands import *
 from diameter.message.avp.grouped import *
 from ..diameter.app import SyApplication
 from ..diameter.session import SySession
+from ..telecom import Subscriber
 import time
 
 class SyService:
@@ -68,3 +69,24 @@ class SyService:
             self.logger.info("Sy session found")
             return self.sy_app.get_subscriber_active_session(subscriber_msisdn)
         return None
+    
+    def create_sy_session(self, subscriber: Subscriber, session_id: str) -> SySession:
+        return self.sy_app.create_session(subscriber, session_id)
+    
+    def create_slr(self, sy_session: SySession) -> SpendingLimitRequest:
+        message = sy_session.create_slr()
+        origin_host = self.sy_app.node.origin_host
+        origin_realm = self.sy_app.node.realm_name
+        destination_realm = self.destination_realm
+        message.origin_host = origin_host.encode()
+        message.origin_realm = origin_realm.encode()
+        message.destination_realm = destination_realm.encode()
+        subscription_id_imsi = SubscriptionId()
+        subscription_id_imsi.subscription_id_type = E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI
+        subscription_id_imsi.subscription_id_data = sy_session.subscriber.imsi
+        message.subscription_id.append(subscription_id_imsi)
+        subscription_id_msisdn = SubscriptionId()
+        subscription_id_msisdn.subscription_id_type = E_SUBSCRIPTION_ID_TYPE_END_USER_E164
+        subscription_id_msisdn.subscription_id_data = sy_session.subscriber.msisdn
+        message.subscription_id.append(subscription_id_msisdn)
+        return message

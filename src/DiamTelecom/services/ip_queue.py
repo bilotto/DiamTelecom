@@ -7,6 +7,9 @@ import ipaddress
 def ip_to_bytes(ip):
     return socket.inet_aton(ip)
 
+def bytes_to_ip(ip_bytes):  
+    return socket.inet_ntoa(ip_bytes)
+
 class IpQueue(Queue):
     def __init__(self, ip_range):
         """

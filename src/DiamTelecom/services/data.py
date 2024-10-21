@@ -92,3 +92,6 @@ class DataService():
         if not isinstance(cca_u, CreditControlAnswer):
             raise Exception("CCA is not received")
         return gx_session
+
+    def stop_gx_session(self, gx_session: GxSession):
+        return self.gx_service.stop_gx_session(gx_session)

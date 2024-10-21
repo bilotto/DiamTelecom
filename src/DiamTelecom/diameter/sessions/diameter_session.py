@@ -122,6 +122,10 @@ class DiameterSessions:
     @property
     def values(self):
         return self.diameter_sessions.values()
+    
+    @property
+    def n_active_sessions(self):
+        return len([session for session in self.diameter_sessions.values() if session.active])
 
     def get(self, session_id: str) -> DiameterSession:
         return self.diameter_sessions.get(session_id, None)

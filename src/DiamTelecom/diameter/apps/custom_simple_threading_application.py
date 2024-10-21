@@ -1,6 +1,6 @@
 from diameter.node.application import SimpleThreadingApplication, Node
 from ..sessions import DiameterSessions, DiameterSession
-from DiamTelecom.telecom.subscriber import Subscribers
+from DiamTelecom.telecom.subscriber import Subscriber, Subscribers
 from .stats import DiameterStatistics
 
 class CustomSimpleThreadingApplication(SimpleThreadingApplication):
@@ -25,7 +25,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         session_id = request.session_id
         session = self.get_session_by_id(session_id)
         if not session:
-            raise Exception(f"Session {session_id} not found")
+            raise Exception(f"Session {session_id} not found. Add to the session store before sending request")
         session.add_message(request)
         try:
             answer = self.send_request(request, timeout)
@@ -55,3 +55,6 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             for session in self.sessions.get_msisdn_sessions(msisdn):
                 if session.active:
                     return session
+
+    def create_session(self, session_id: str, subscriber: Subscriber):
+        return self.sessions.create_diameter_session(session_id, subscriber)

@@ -33,6 +33,7 @@ class GxSession(DiameterSession):
         
     def __repr__(self):
         return f"""GxSession(msisdn={self.msisdn}
+          framed_ip_address={self.framed_ip_address}
           session_id={self.session_id}
           active={self.active}
           n_messages={self.n_messages}
@@ -112,6 +113,9 @@ class GxSessions(DiameterSessions):
         super().__init__()
         self.framed_ip_address_to_session_id = {}
         self.apn_to_session_id = {}
+
+    def __repr__(self):
+        return f"GxSessions({len(self.diameter_sessions)},{self.n_active_sessions})"
 
     def add_gx_session(self, gx_session: GxSession):
         self.add_session(gx_session)

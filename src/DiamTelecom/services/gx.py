@@ -36,6 +36,18 @@ class GxService:
     @property
     def app(self):
         return self.gx_app
+    
+    @property
+    def origin_host(self):
+        if self.gx_config.get('origin_host'):
+            return self.gx_config['origin_host']
+        return self.gx_app.node.origin_host
+    
+    @property
+    def origin_realm(self):
+        if self.gx_config.get('origin_realm'):
+            return self.gx_config['origin_realm']
+        return self.gx_app.node.realm_name
 
     @property
     def destination_realm(self):
@@ -85,8 +97,8 @@ class GxService:
         ccr_i = gx_session.create_ccr_i()
         ccr_i.auth_application_id = APP_3GPP_GX
         #
-        origin_host = self.gx_app.node.origin_host
-        origin_realm = self.gx_app.node.realm_name
+        origin_host = self.origin_host
+        origin_realm = self.origin_realm
         destination_realm = self.destination_realm
         ccr_i.origin_host = origin_host.encode()
         ccr_i.origin_realm = origin_realm.encode()

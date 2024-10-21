@@ -1,5 +1,5 @@
 from .diameter_session import DiameterSession, DiameterSessions
-from diameter.message.commands import SpendingStatusNotificationRequest, SessionTerminationRequest, SessionTerminationAnswer
+from diameter.message.commands import SpendingStatusNotificationRequest, SessionTerminationRequest, SessionTerminationAnswer, SpendingLimitRequest
 from diameter.message.constants import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
 from diameter.message import Message
@@ -7,10 +7,12 @@ from diameter.message import Message
 class SySession(DiameterSession):
     session_id: str
     gx_session_id: str
+    destination_realm: str
 
     def __init__(self, subscriber, session_id: str):
         super().__init__(subscriber, session_id)
         self.gx_session_id = None
+        self.destination_realm = None
 
     def set_gx_session_id(self, gx_session_id: str):
         self.gx_session_id = gx_session_id
@@ -21,6 +23,13 @@ class SySession(DiameterSession):
         message.auth_application_id = APP_3GPP_SY
         message.policy_counter_status_report = []
         return message
+    
+    def create_slr(self) -> SpendingLimitRequest:
+        message = SpendingLimitRequest()
+        message.session_id = self.session_id
+        message.auth_application_id = APP_3GPP_SY
+        return message
+        
     
     def add_message(self, message: Message):
         super().add_message(message)
