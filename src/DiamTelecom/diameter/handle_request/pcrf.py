@@ -31,22 +31,6 @@ def handle_request_pcrf(app: GxApplication, message: CreditControlRequest):
         if not subscriber:
             raise ValueError(f"Subscriber {msisdn} not found")
             # subscriber = app.subscribers.create_subscriber(id=msisdn, msisdn=msisdn, imsi=imsi)
-        if app.sy_app:
-            sy_app = app.sy_app
-            # Need to create Sy session
-            sy_session_id = sy_app.node.session_generator.next_id()
-            sy_session = SySession(subscriber, sy_session_id)
-            sy_session.set_gx_session_id(message.session_id)
-            sy_session.destination_realm = "sy.gy.c1.atni.local"
-            sy_app.sessions.add_session(sy_session)
-            # Need to send SLR
-            slr = sy_app.create_slr(sy_session)
-            try:
-                sla = sy_app.send_request_custom(slr)
-            except Exception as e:
-                logger.error(f"SLR failed: {e}")
-                raise ValueError("SLR failed")
-            # Need to wait for SLA
         # For now create the session manually
         # todo: create session through the app object
         framed_ip_address = message.framed_ip_address

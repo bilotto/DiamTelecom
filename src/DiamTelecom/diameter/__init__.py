@@ -3,3 +3,5 @@ from .sessions import *
 from .message import *
 from .app import GxApplication, RxApplication, SyApplication, GyApplication, CustomSimpleThreadingApplication
 from .helpers import generate_xml
+from .node import *
+from .create_nodes import add_peers
