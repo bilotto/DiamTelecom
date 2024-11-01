@@ -77,6 +77,11 @@ class Carrier:
                                                 self.carrier_id,
                                                 count)
         return self.subscribers
+    
+    def create_subscriber(self, msisdn, imsi, type=None):
+        subscriber = Subscriber(id=uuid.next_id(), msisdn=msisdn, imsi=imsi, carrier_id=self.carrier_id, type=type)
+        self.subscribers.add_subscriber(subscriber)
+        return subscriber
             
 
     def add_apn(self, apn_name, ip_pool_cidr, mcc_mnc):

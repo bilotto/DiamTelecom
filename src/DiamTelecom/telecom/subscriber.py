@@ -2,10 +2,7 @@ from ..helpers import is_valid_msisdn, is_valid_imsi
 from typing import List, Dict
 
 import logging
-logger = logging.getLogger(__name__)
-
-SUBSCRIBER_TYPES = ["prepaid", "postpaid", "corporate"]
-    
+logger = logging.getLogger(__name__) 
 class Subscriber:
     id: str
     msisdn: str
@@ -27,15 +24,12 @@ class Subscriber:
         self.msisdn = msisdn
         self.imsi = imsi
         self.carrier_id = carrier_id
+        if not type:
+            type = "prepaid"
         self.type = type
-        self.use_case = None
-        # self.messages = DiameterMessages()
         self.apn = None
-        self.mcc_mnc = None
 
     def set_type(self, type: str):
-        if type not in SUBSCRIBER_TYPES:
-            raise ValueError(f"Invalid subscriber type: {type}. Options are: {SUBSCRIBER_TYPES}")
         self.type = type
 
     # Method to represent then the subscriber manually sets the APN in the phone
