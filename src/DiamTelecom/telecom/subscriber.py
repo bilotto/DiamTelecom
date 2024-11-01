@@ -3,6 +3,8 @@ from typing import List, Dict
 
 import logging
 logger = logging.getLogger(__name__)
+
+SUBSCRIBER_TYPES = ["prepaid", "postpaid", "corporate"]
     
 class Subscriber:
     id: str
@@ -17,17 +19,24 @@ class Subscriber:
                  id: str,
                  msisdn: str,
                  imsi: str,
-                 carrier_id: int = None):
+                 carrier_id: int = None,
+                 type: str = None,):
         self.id = id
         msisdn = str(msisdn)
         imsi = str(imsi)
         self.msisdn = msisdn
         self.imsi = imsi
         self.carrier_id = carrier_id
+        self.type = type
         self.use_case = None
         # self.messages = DiameterMessages()
         self.apn = None
         self.mcc_mnc = None
+
+    def set_type(self, type: str):
+        if type not in SUBSCRIBER_TYPES:
+            raise ValueError(f"Invalid subscriber type: {type}. Options are: {SUBSCRIBER_TYPES}")
+        self.type = type
 
     # Method to represent then the subscriber manually sets the APN in the phone
     def set_apn(self, apn: str):
