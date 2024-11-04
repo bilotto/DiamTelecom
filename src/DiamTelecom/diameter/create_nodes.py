@@ -1,7 +1,7 @@
 from diameter.node import Node
 from diameter.message.constants import *
 from diameter.node.node import Peer
-from DiamTelecom.diameter.app import *
+from .app import *
 from typing import List, Dict
 from diameter.message.commands import *
 from diameter.message.avp.grouped import *
