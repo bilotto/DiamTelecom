@@ -51,6 +51,8 @@ def generate_xml(msg: Message, file_path: str = None) -> str:
         application_name = "Sy"
     elif application_id == APP_3GPP_RX:
         application_name = "Rx"
+    else:
+        application_name = "Unknown"
     
     # Create the root element (application)
     root = ET.Element("application", name=application_name, id=str(application_id))
