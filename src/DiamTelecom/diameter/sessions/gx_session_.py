@@ -23,7 +23,7 @@ class GxSession(DiameterSession):
         self.apn = apn
         #
         self.cc_request_number = 0
-        # self.mcc_mnc = None
+        self.mcc_mnc = None
         # self.rat_type = None
         # self.ip_can_type = None
         # self.destination_realm = None
@@ -44,8 +44,8 @@ class GxSession(DiameterSession):
     def incr_cc_request_number(self):
         self.cc_request_number += 1
 
-    # def set_mcc_mnc(self, mcc_mnc: str):
-    #     self.mcc_mnc = mcc_mnc
+    def set_mcc_mnc(self, mcc_mnc: str):
+        self.mcc_mnc = mcc_mnc
 
     # def set_apn(self, apn: str):
     #     if not isinstance(apn, str):

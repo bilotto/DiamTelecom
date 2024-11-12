@@ -111,6 +111,8 @@ class GxService:
         #
         ccr_i.rat_type = E_RAT_TYPE_EUTRAN
         ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+        if not sgsn_mcc_mnc and gx_session.mcc_mnc:
+            sgsn_mcc_mnc = gx_session.mcc_mnc
         #
         if sgsn_mcc_mnc:
             ccr_i.sgsn_mcc_mnc = str(sgsn_mcc_mnc)
