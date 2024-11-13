@@ -44,11 +44,18 @@ class DataService():
     @property
     def sy(self):
         return self.sy_service
+    
+    def create_ccr_i(self, gx_session: GxSession):
+        ccr_i = self.gx_service.create_ccr_i(gx_session)
+        ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
+        return ccr_i
+    
+    def create_ccr_u(self, gx_session: GxSession):
+        ccr_u = self.gx_service.create_ccr_u(gx_session)
+        return ccr_u
 
     def start_gx_session(self, gx_session: GxSession) -> GxSession:
-        ccr_i = self.gx_service.create_ccr_i(gx_session)
-        # Add specific data flow AVPs
-        ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
+        ccr_i = self.create_ccr_i(gx_session)
         cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
@@ -56,7 +63,7 @@ class DataService():
             gx_session.start()
         return gx_session
 
-    def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=True):
+    def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=False):
         self.logger.info(f"Sending SSN Request: {policy_counter_dict}")
         gx_session = self.gx_service.gx_app.sessions.get_session(sy_session.gx_session_id)
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)

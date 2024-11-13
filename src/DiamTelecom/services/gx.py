@@ -169,6 +169,9 @@ class GxService:
         return ccr_u
 
     def wait_for_gx_raa(self, gx_session: GxSession, current_message_count=None, timeout=3):
+        if not isinstance(gx_session, GxSession):
+            self.logger.error("Invalid GxSession")
+            return False
         self.logger.info("Waiting for Gx RAR/RAA")
         if not current_message_count:
             current_message_count = len(gx_session.messages)
