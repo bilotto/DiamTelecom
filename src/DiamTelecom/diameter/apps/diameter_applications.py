@@ -82,7 +82,7 @@ class DiameterApplications:
             t = threading.Thread(target=node.start)
             threads.append(t)
             t.start()
-            print(f"Node {node} started")
+            print(f"Node origin_host: {node.origin_host}, realm: {node.realm_name} started")
         for t in threads:
             t.join()                                                                                                                        
         print("Nodes started")
