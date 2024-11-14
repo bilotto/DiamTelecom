@@ -55,7 +55,7 @@ class DiameterApplications:
     def get_app_per_realm(self, realm: str) -> List[CustomSimpleThreadingApplication]:
         apps = []
         for app in self.apps:
-            if app.node.origin_realm == realm:
+            if app.node.realm_name == realm:
                 apps.append(app)
         return apps
     
