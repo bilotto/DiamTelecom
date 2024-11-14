@@ -48,8 +48,23 @@ class DiameterApplications:
     
     def get_sy_apps(self) -> List[SyApplication]:
         return self.get_app_per_id(APP_3GPP_SY)
+    
     def get_app_per_host(self, host: str) -> List[CustomSimpleThreadingApplication]:
         return self.apps_per_host.get(host, [])
+    
+    def get_app_per_realm(self, realm: str) -> List[CustomSimpleThreadingApplication]:
+        apps = []
+        for app in self.apps:
+            if app.node.origin_realm == realm:
+                apps.append(app)
+        return apps
+    
+    def get_app_per_realm_id(self, realm: str, app_id: int) -> List[CustomSimpleThreadingApplication]:
+        apps = []
+        for app in self.get_app_per_realm(realm):
+            if app.application_id == app_id:
+                apps.append(app)
+        return apps
     
     @property
     def ports(self) -> List[int]:
