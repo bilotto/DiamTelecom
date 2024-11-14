@@ -111,6 +111,8 @@ class GxService:
         #
         ccr_i.rat_type = E_RAT_TYPE_EUTRAN
         ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+        if not sgsn_mcc_mnc and gx_session.mcc_mnc:
+            sgsn_mcc_mnc = gx_session.mcc_mnc
         #
         if sgsn_mcc_mnc:
             ccr_i.sgsn_mcc_mnc = str(sgsn_mcc_mnc)
@@ -167,6 +169,9 @@ class GxService:
         return ccr_u
 
     def wait_for_gx_raa(self, gx_session: GxSession, current_message_count=None, timeout=3):
+        if not isinstance(gx_session, GxSession):
+            self.logger.error("Invalid GxSession")
+            return False
         self.logger.info("Waiting for Gx RAR/RAA")
         if not current_message_count:
             current_message_count = len(gx_session.messages)
