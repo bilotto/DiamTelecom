@@ -99,7 +99,7 @@ class DiameterApplications:
             t = threading.Thread(target=node.stop)
             threads.append(t)
             t.start()
-            print(f"Node {node} stopping")
+            print(f"Node origin_host: {node.origin_host}, realm: {node.realm_name} stopping")
         for t in threads:
             t.join()
         print("Nodes stopped")
