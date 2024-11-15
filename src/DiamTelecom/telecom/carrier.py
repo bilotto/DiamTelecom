@@ -21,8 +21,11 @@ def generate_subscribers(subscribers: Subscribers,
     msisdn_max = msisdn_min + n_subscribers
     imsi_max = imsi_min + n_subscribers
     for msisdn in range(msisdn_min, msisdn_max):
-        subscriber = Subscriber(id=uuid.next_id(), msisdn=str(msisdn), imsi=str(imsi), carrier_id=carrier_id)
-        # subscriber = Subscriber(str(msisdn), str(imsi), carrier_id)
+        # Check if MSISDN is even or odd, if even make it prepaid and odd make it postpaid
+        if msisdn % 2 == 0:
+            subscriber = Subscriber(id=uuid.next_id(), msisdn=str(msisdn), imsi=str(imsi), carrier_id=carrier_id, type="prepaid")
+        else:
+            subscriber = Subscriber(id=uuid.next_id(), msisdn=str(msisdn), imsi=str(imsi), carrier_id=carrier_id, type="postpaid")
         subscribers.add_subscriber(subscriber)
         imsi += 1
         if imsi > imsi_max:
@@ -59,7 +62,7 @@ class Carrier:
         self.voice_service = None
         self.apns = {}
         if generate_subscribers and n_subscribers:
-            self.generate_subscribers(n_subscribers)
+            self.generate_subscribers(int(n_subscribers))
 
     def set_voice_service(self, voice_service: VoiceService):
         self.voice_service = voice_service
