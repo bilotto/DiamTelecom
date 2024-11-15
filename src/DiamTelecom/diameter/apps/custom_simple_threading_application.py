@@ -13,7 +13,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
         self.sessions = DiameterSessions()
         self.stats = DiameterStatistics()
-        self.subscribers = None
+        self.subscribers = Subscribers()
 
     def __repr__(self):
         return self.__str__()
@@ -42,7 +42,11 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
 
         
     def set_subscribers(self, subscribers: Subscribers):
-        self.subscribers = subscribers
+        for i in subscribers.values():
+            self.subscribers.add_subscriber(i)
+
+    def add_subscriber(self, subscriber: Subscriber):
+        self.subscribers.add_subscriber(subscriber)
 
     def get_session_by_id(self, session_id: str) -> DiameterSession:
         return self.sessions.get_session(session_id)
