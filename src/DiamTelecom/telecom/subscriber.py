@@ -29,6 +29,10 @@ class Subscriber:
         self.type = type
         self.apn = None
 
+    @property
+    def subscriber_type(self):
+        return self.type
+
     def set_type(self, type: str):
         self.type = type
 
