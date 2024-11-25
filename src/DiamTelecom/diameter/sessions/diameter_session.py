@@ -56,6 +56,7 @@ class DiameterSession:
     def set_end_time(self, end_time: str):
         self.end_time = end_time
         self.active = False
+        self.logger.info(f"Session {self.session_id} ended at {self.end_time}")
 
     def add_message(self, message):
         if not isinstance(message, Message) and not isinstance(message, DiameterMessage):
@@ -134,6 +135,10 @@ class DiameterSessions:
         return self.diameter_sessions.get(session_id, None)
 
     def add_session(self, diameter_session: DiameterSession):
+        # Check if the session_id is already in the dictionary
+        if diameter_session.session_id in self.diameter_sessions:
+            if diameter_session.active:
+                raise ValueError("DiameterSession already exists and is active")
         # Adiciona a sessão usando o session_id como chave
         self.diameter_sessions[diameter_session.session_id] = diameter_session
         # Mapeia o MSISDN para o session_id

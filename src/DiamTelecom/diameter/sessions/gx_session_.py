@@ -138,10 +138,13 @@ class GxSessions(DiameterSessions):
     def get(self, session_id: str) -> GxSession:
         return self.diameter_sessions.get(session_id, None)
     
+    def get_session_by_id(self, session_id: str) -> GxSession:
+        return self.get(session_id)
+    
     def get_gx_session_by_framed_ip_address(self, framed_ip_address: str) -> GxSession:
         session_id_list = self.framed_ip_address_to_session_id.get(framed_ip_address)
-        if session_id_list is None:
-            raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
+        # if session_id_list is None:
+        #     raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
         # Return the first active session
         for session_id in session_id_list:
             gx_session = self.get_session(session_id)

@@ -40,6 +40,8 @@ class SyService:
 
     def create_ssnr(self, sy_session: SySession, policy_counter_dict: dict = None) -> SpendingStatusNotificationRequest:
         message = sy_session.create_ssnr()
+        if not isinstance(message, SpendingStatusNotificationRequest):
+            raise ValueError("Invalid message type")
         # message = self.set_sy_hosts(message)
         origin_host = self.sy_app.node.origin_host
         origin_realm = self.sy_app.node.realm_name

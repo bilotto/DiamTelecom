@@ -14,6 +14,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         self.sessions = DiameterSessions()
         self.stats = DiameterStatistics()
         self.subscribers = Subscribers()
+        self.id = None
 
     def __repr__(self):
         return self.__str__()
