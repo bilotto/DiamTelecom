@@ -1,6 +1,6 @@
 from diameter.message import *
 from DiamTelecom import *
-from DiamTelecom.diameter.subscriber import *
+from DiamTelecom.telecom.subscriber import *
 from DiamTelecom.pcap import *
 from DiamTelecom.diameter.constants import *
 from DiamTelecom.helpers import decode_hex_string
@@ -175,9 +175,7 @@ def process_pkt(pkt, session_manager: SessionManager):
 
 
 BASE_FILTER = "diameter && !(diameter.cmd.code == 280) && !(diameter.cmd.code == 257)"
-# DIAMETER_PORTS = [30101, 30001, 31501, 31601, 30003, 31009, 31115]
-DIAMETER_PORTS = [31009, 31115]
-# DIAMETER_PORTS = [3868, 3870]
+DIAMETER_PORTS = [3009, 3019, 3029, 3039]
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -190,11 +188,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     custom_subscribers = Subscribers()
-    custom_subscribers.create_subscriber("56946117399", "56946117399", "730030540816245")
-    custom_subscribers.create_subscriber("56950018795", "56950018795", "730030540816229")
-    custom_subscribers.create_subscriber("56954225424", "56954225424", "730030540816243")
+    custom_subscribers.create_subscriber("5927589903", "5927589903", "738002002605001")
 
-    pcap = Pcap(pcap_path, DIAMETER_PORTS, BASE_FILTER, start_timestamp=1722520800)
+    pcap = Pcap(pcap_path, DIAMETER_PORTS, BASE_FILTER)
     session_manager = SessionManager(pcap=pcap, subscribers=custom_subscribers)
     # session_manager = SessionManager(pcap=pcap)
     cap = create_pyshark_object(pcap)
@@ -206,6 +202,6 @@ if __name__ == "__main__":
         except StopIteration:
             break
     # run_pyshark(pcap, session_manager)
-    session_manager.parse_sessions()
+    # session_manager.parse_sessions()
     # session_manager.to_csv()
-    session_manager.parse_voice_sessions()
+    # session_manager.parse_voice_sessions()
