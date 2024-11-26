@@ -45,6 +45,16 @@ class DataService():
     def sy(self):
         return self.sy_service
     
+    def start(self):
+        self.gx_service.app.node.start()
+        if self.sy_service:
+            self.sy_service.app.node.start()
+
+    def stop(self):
+        self.gx_service.app.node.stop()
+        if self.sy_service:
+            self.sy_service.app.node.stop()
+    
     def create_ccr_i(self, gx_session: GxSession):
         ccr_i = self.gx_service.create_ccr_i(gx_session)
         ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
@@ -93,6 +103,13 @@ class DataService():
             if sy_session:
                 sy_session.gx_session_id = gx_session.session_id
         return gx_session, sy_session
+    
+    def update_sy_session(self, sy_session: SySession, policy_counter_dict):
+        ssnr = self.create_ssnr(sy_session, policy_counter_dict)
+        ssna = self.sy_service.send_sy_request(sy_session, ssnr)
+        if not isinstance(ssna, SpendingStatusNotificationAnswer):
+            raise Exception("SSNA is not received")
+        return sy_session
     
     def update_gx_session(self, gx_session: GxSession):
         ccr_u = self.gx_service.create_ccr_u(gx_session)
