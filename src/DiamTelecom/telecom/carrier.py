@@ -64,6 +64,11 @@ class Carrier:
         self.voice_service = None
         self.data_realm = None
         self.voice_realm = None
+        self.gx_data_realm = None
+        self.sy_data_realm = None
+        self.gx_voice_realm = None
+        self.rx_voice_realm = None
+        self.realms = {}
         self.apns = {}
 
     def set_voice_service(self, voice_service: VoiceService):
@@ -71,16 +76,6 @@ class Carrier:
 
     def set_data_service(self, data_service: DataService):
         self.data_service = data_service
-
-    def set_data_realm(self, realm):
-        if not isinstance(realm, str):
-            raise Exception("Realm must be a string")
-        self.data_realm = realm
-
-    def set_voice_realm(self, realm):
-        if not isinstance(realm, str):
-            raise Exception("Realm must be a string")
-        self.voice_realm = realm
 
     def generate_subscribers(self, count: int):
         msisdn_template = f"{str(self.country_code)}0000000"
