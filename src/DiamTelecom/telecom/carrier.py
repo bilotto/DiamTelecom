@@ -75,6 +75,9 @@ class Carrier:
         self.voice_service = voice_service
 
     def set_data_service(self, data_service: DataService):
+        for i in self.subscribers.values():
+            data_service.gx_service.app.subscribers.add_subscriber(i)
+            data_service.sy_service.app.subscribers.add_subscriber(i)
         self.data_service = data_service
 
     def generate_subscribers(self, count: int):
