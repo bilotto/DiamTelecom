@@ -76,7 +76,7 @@ class DataService():
         # proxy_info.proxy_state = E_PROXY_STATE_LOOSE_ROUTING
         # I need to send this value in bytes c418000037913f67000000001f2a03000000000000
         # How?
-        proxy_info.proxy_state = b'\xc4\x18\x00\x00\x379\x13\xf6g\x00\x00\x00\x01\xf2\xa0\x03\x00\x00\x00\x00\x00\x00'
+        proxy_info.proxy_state = "ON".encode()
         ssnr.proxy_info.append(proxy_info)
         ssna = self.sy_service.send_sy_request(sy_session, ssnr)
         if wait_raa:
