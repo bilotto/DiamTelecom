@@ -85,7 +85,7 @@ class DataService():
         ssnr = self.create_ssnr(sy_session, policy_counter_dict)
         if proxy_info:
             proxy_info = ProxyInfo()
-            proxy_info.proxy_host = "proxy.host".encode(0)
+            proxy_info.proxy_host = "proxy.host".encode()
             proxy_info.proxy_state = "ON".encode()
             ssnr.proxy_info.append(proxy_info)
         ssna = self.sy_service.send_sy_request(sy_session, ssnr)
