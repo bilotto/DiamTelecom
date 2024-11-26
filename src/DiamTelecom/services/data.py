@@ -46,9 +46,11 @@ class DataService():
         return self.sy_service
     
     def start(self):
-        self.gx_service.app.node.start()
         if self.sy_service:
             self.sy_service.app.node.start()
+            self.sy_service.app.wait_for_ready()
+        self.gx_service.app.node.start()
+        self.gx_service.app.wait_for_ready()
 
     def stop(self):
         self.gx_service.app.node.stop()
