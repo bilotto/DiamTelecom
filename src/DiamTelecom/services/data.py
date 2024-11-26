@@ -67,21 +67,16 @@ class DataService():
         ssnr = self.sy_service.create_ssnr(sy_session, policy_counter_dict)
         return ssnr
 
-    def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, wait_raa=False):
+    def send_policy_counter_status_report(self, sy_session: SySession, policy_counter_dict, proxy_info=False):
         self.logger.info(f"Sending SSN Request: {policy_counter_dict}")
         gx_session = self.gx_service.gx_app.sessions.get_session(sy_session.gx_session_id)
         ssnr = self.create_ssnr(sy_session, policy_counter_dict)
-        proxy_info = ProxyInfo()
-        proxy_info.proxy_host = self.sy.app.node.origin_host.encode()
-        # proxy_info.proxy_state = E_PROXY_STATE_LOOSE_ROUTING
-        # I need to send this value in bytes c418000037913f67000000001f2a03000000000000
-        # How?
-        proxy_info.proxy_state = "ON".encode()
-        ssnr.proxy_info.append(proxy_info)
+        if proxy_info:
+            proxy_info = ProxyInfo()
+            proxy_info.proxy_host = self.sy.app.node.origin_host.encode()
+            proxy_info.proxy_state = "ON".encode()
+            ssnr.proxy_info.append(proxy_info)
         ssna = self.sy_service.send_sy_request(sy_session, ssnr)
-        if wait_raa:
-            self.logger.info(f"Waiting for RAA for {gx_session}")
-            self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
         if not isinstance(ssna, SpendingStatusNotificationAnswer):
             raise Exception("SSNA is not received")
         if ssna.result_code != E_RESULT_CODE_DIAMETER_SUCCESS:
