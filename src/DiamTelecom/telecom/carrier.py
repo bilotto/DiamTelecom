@@ -108,3 +108,19 @@ class Carrier:
 
     def voice_flow(self):
         pass
+
+
+
+class Carriers():
+    carriers: Dict[str, Carrier]
+    def __init__(self):
+        self.carriers = dict()
+
+    def add_carrier(self, carrier: Carrier):
+        self.carriers[carrier.name] = carrier
+
+    def get_carrier(self, carrier_name) -> Carrier:
+        return self.carriers.get(carrier_name)
+    
+    def values(self):
+        return self.carriers.values()
