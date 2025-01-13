@@ -1,2 +1,2 @@
 from .subscriber import Subscriber, Subscribers
-from .carrier import Carrier
+from .carrier import Carrier, Carriers
