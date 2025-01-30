@@ -14,14 +14,21 @@ def create_node(origin_host, realm, ip_addresses, port, sctp=False) -> Node:
     node.idle_timeout = 20
     return node
 
-def add_peers(node: Node, peers_list: List[Dict]) -> List[Peer]:
-    return [node.add_peer(f"aaa://{peer['host']}:{peer['port']};transport=tcp",
+def add_peers(node: Node, peers_list: List[Dict], sctp=False) -> List[Peer]:
+    if not sctp:
+        return [node.add_peer(f"aaa://{peer['host']}:{peer['port']};transport=tcp",
                           peer['realm'],
                           ip_addresses=peer.get('ip_addresses'),
                           is_persistent=peer['is_persistent'],
                           is_default=peer.get('is_default', False))
             for peer in peers_list]
-
+    else:
+        return [node.add_peer(f"aaa://{peer['host']}:{peer['port']};transport=sctp",
+                          peer['realm'],
+                          ip_addresses=peer.get('ip_addresses'),
+                          is_persistent=peer['is_persistent'],
+                          is_default=peer.get('is_default', False))
+            for peer in peers_list]
 
 def create_gx_app(max_threads, request_handler) -> GxApplication:
     return GxApplication(APP_3GPP_GX,
