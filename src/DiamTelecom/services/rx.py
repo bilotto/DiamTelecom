@@ -26,6 +26,12 @@ class RxService:
         return self.rx_app.node.realm_name
     
     @property
+    def origin_realm(self) -> str:
+        if self.rx_config.get('origin_realm'):
+            return self.rx_config['origin_realm']
+        return self.rx_app.node.realm_name 
+    
+    @property
     def sessions(self):
         return self.rx_app.sessions.values()
     
@@ -46,7 +52,7 @@ class RxService:
         aar.header.is_proxyable = True
         #
         origin_host = self.rx_app.node.origin_host
-        origin_realm = self.rx_app.node.realm_name
+        origin_realm = self.origin_realm
         destination_realm = self.destination_realm
         aar.origin_host = origin_host.encode()
         aar.origin_realm = origin_realm.encode()
@@ -65,31 +71,26 @@ class RxService:
 
         aar.media_component_description = MediaComponentDescription()
         mdc = aar.media_component_description
-        mdc.media_component_number = 0
-        # mdc.af_application_identifier = "urn:3gpp:service.ims.icsi.mmtel".encode()
+        mdc.media_component_number = 1
         mdc.af_application_identifier = "urn:urn-7:3gpp-service.ims.icsi.mmtel-4G".encode()
         mdc.media_type = E_MEDIA_TYPE_AUDIO
         mdc.max_requested_bandwidth_ul = 41000
         mdc.max_requested_bandwidth_dl = 41000
-        # 
+        #
         media_sub_component = MediaSubComponent()
         media_sub_component.flow_description.append("permit out 17 from 10.130.18.118 32380 to 10.4.25.194 1234".encode())
         media_sub_component.flow_description.append("permit in 17 from 10.4.25.194 to 10.130.18.118 32380".encode())
-        #
         media_sub_component.flow_usage = E_FLOW_USAGE_NO_INFORMATION
         media_sub_component.flow_status = E_FLOW_STATUS_ENABLED
         media_sub_component.flow_number = 1
-        #
         mdc.media_sub_component.append(media_sub_component)
         #
         media_sub_component = MediaSubComponent()
         media_sub_component.flow_description.append("flow3".encode())
         media_sub_component.flow_description.append("flow4".encode())
-        #
         media_sub_component.flow_usage = E_FLOW_USAGE_RTCP
         media_sub_component.flow_status = E_FLOW_STATUS_ENABLED
         media_sub_component.flow_number = 2
-        #
         mdc.media_sub_component.append(media_sub_component)
 
         return aar
