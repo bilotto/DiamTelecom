@@ -56,6 +56,12 @@ class GxService:
         return self.gx_app.node.realm_name
     
     @property
+    def destination_host(self):
+        if self.gx_config.get('destination_host'):
+            return self.gx_config['destination_host']
+        return self.gx_app.node.origin_host
+    
+    @property
     def sgsn_mcc_mnc(self):
         if self.gx_config.get('sgsn_mcc_mnc'):
             return self.gx_config['sgsn_mcc_mnc']
@@ -73,10 +79,16 @@ class GxService:
     def sessions(self) -> List[GxSession]:
         return self.gx_app.sessions.get_sessions_by_apn(self.apn.value)
     
-    def send_gx_request(self, gx_session: GxSession, request: Message, timeout=5):
+    def send_gx_request(self, request: Message, timeout=5):
         if not isinstance(request, Message):
             raise ValueError("request must be an instance of Message")
-        return self.gx_app.send_request_custom(request, timeout)
+        if self.origin_realm:
+            request.origin_realm = self.origin_realm.encode()
+        if self.origin_host:
+            request.origin_host = self.origin_host.encode()
+        if self.destination_realm:
+            request.destination_realm = self.destination_realm.encode()
+        return self.gx_app.send_request(request, timeout)
         
     def create_gx_session(self, subscriber: Subscriber, session_id=None) -> GxSession:
         if not session_id:

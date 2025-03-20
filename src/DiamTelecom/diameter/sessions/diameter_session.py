@@ -1,6 +1,7 @@
 
 from DiamTelecom.telecom import Subscriber
-from ..message import Message, DiameterMessage, DiameterMessages, create_diameter_message_from_message
+# from ..message_new import Message, DiameterMessage, DiameterMessages, create_diameter_message_from_message
+from ..message_new import Message, DiameterMessage, DiameterMessages
 from typing import Dict, List, Set
 import time
 import logging
@@ -61,15 +62,14 @@ class DiameterSession:
     def add_message(self, message):
         if not isinstance(message, Message) and not isinstance(message, DiameterMessage):
             raise ValueError("message must be an instance of Message or DiameterMessage")
-        self.logger.debug("\n" + dump(message))
         if isinstance(message, DiameterMessage):
             diameter_message = message
         elif isinstance(message, Message):
-            diameter_message = create_diameter_message_from_message(message)
+            diameter_message = DiameterMessage(message=message)
         else:
             raise ValueError("message must be an instance of Message or DiameterMessage")
         #
-        diameter_message.msisdn = self.subscriber.msisdn
+        # diameter_message.msisdn = self.subscriber.msisdn
         return self.messages.add_message(diameter_message)
 
     def get_messages(self):

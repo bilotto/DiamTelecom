@@ -94,10 +94,20 @@ class VoiceService():
         if not gx_session.active:
             self.logger.error(f"Cannot start voice session. GX session is not active: {gx_session}")
             return None, None
-        rx_session = self.create_rx_session(subscriber)
-        rx_session = self.start_rx_session(rx_session)
+        # rx_session = self.create_rx_session(subscriber)
+        # rx_session = self.start_rx_session(rx_session)
+        # self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
+        # gx_session.add_rx_session(rx_session)
+        return gx_session
+    
+    def stop_voice_session(self, gx_session: GxSession) -> Tuple[GxSession, RxSession]:
+        rx_session = self.rx_service.rx_app.sessions.get(gx_session.rx_session_id)
+        if not rx_session:
+            raise Exception("RX session is not found")
+        if not rx_session.active:
+            return gx_session, rx_session
+        self.stop_rx_session(rx_session)
         self.gx_service.wait_for_gx_raa(gx_session, timeout=5)
-        gx_session.add_rx_session(rx_session)
         return gx_session, rx_session
 
     # def create_aar_audio(self, rx_session: RxSession) -> AaRequest:

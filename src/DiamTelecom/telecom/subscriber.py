@@ -1,8 +1,8 @@
 from ..helpers import is_valid_msisdn, is_valid_imsi
 from typing import List, Dict
-
 import logging
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
+
 class Subscriber:
     id: str
     msisdn: str
@@ -77,6 +77,12 @@ class Subscribers(dict):
                 return subscriber
         return None
     
+    def get_subscriber_by_sip_uri(self, sip_uri: str) -> Subscriber:
+        for subscriber in self.get_subscribers():
+            if subscriber.msisdn in sip_uri or subscriber.imsi in sip_uri:
+                return subscriber
+        return None
+    
     def get_subscriber(self, id: str) -> Subscriber:
         return self.get(id)
     
@@ -97,3 +103,4 @@ class Subscribers(dict):
             if subscriber.msisdn == msisdn and subscriber.imsi == imsi:
                 return subscriber
         return None
+    

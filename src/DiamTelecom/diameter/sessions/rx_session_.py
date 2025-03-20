@@ -33,23 +33,23 @@ class RxSession(DiameterSession):
     def tshark_filter(self):
         return f"diameter.Framed-IP-Address.IPv4 == {self.framed_ip_address} || diameter.Session-Id == \"{self.gx_session_id}\" || diameter.Session-Id == \"{self.session_id}\""
 
-    @property
-    def is_voice_call(self):
-        message = self.messages.get_messages()[0]
-        if message.avps.get('Media-Type') == 'AUDIO':
-            return True
-        return False
+    # @property
+    # def is_voice_call(self):
+    #     message = self.messages.get_messages()[0]
+    #     if message.avps.get('Media-Type') == 'AUDIO':
+    #         return True
+    #     return False
     
     def add_message(self, message: DiameterMessage):
         message = super().add_message(message)
         #
-        if self.start_time and self.messages.n_messages == 1:
-            if self.is_voice_call:
-                logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} started voice call,{self.framed_ip_address}")
+        # if self.start_time and self.messages.n_messages == 1:
+        #     if self.is_voice_call:
+        #         logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} started voice call,{self.framed_ip_address}")
         
-        elif self.end_time:
-            if message.name == STA and self.is_voice_call:
-                logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} ended voice call. Duration: {self.duration} seconds,{self.framed_ip_address}")
+        # elif self.end_time:
+        #     if message.name == STA and self.is_voice_call:
+        #         logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} ended voice call. Duration: {self.duration} seconds,{self.framed_ip_address}")
 
 
     def create_aar(self):
