@@ -5,7 +5,7 @@ from diameter.message.commands import AaRequest, SessionTerminationRequest
 from diameter.message.avp.grouped import *
 from ..constants import *
 from DiamTelecom.helpers import ip_to_bytes
-
+from typing import List
 
 class RxSession(DiameterSession):
     subscriber: Subscriber
@@ -84,3 +84,6 @@ class RxSessions(DiameterSessions):
         self.add_rx_session(rx_session)
         return rx_session
 
+
+    def values(self) -> List[RxSession]:
+        return self.diameter_sessions.values()

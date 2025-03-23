@@ -32,6 +32,18 @@ class RxService:
         return self.rx_app.node.realm_name 
     
     @property
+    def origin_host(self) -> str:
+        if self.rx_config.get('origin_host'):
+            return self.rx_config['origin_host']
+        return self.rx_app.node.origin_host
+    
+    @property
+    def destination_host(self) -> str:
+        if self.rx_config.get('destination_host'):
+            return self.rx_config['destination_host']
+        return None
+    
+    @property
     def sessions(self):
         return self.rx_app.sessions.values()
     
@@ -47,6 +59,8 @@ class RxService:
             message.origin_realm = self.origin_realm.encode()
         if self.destination_realm:
             message.destination_realm = self.destination_realm.encode()
+        if self.origin_host:
+            message.origin_host = self.origin_host.encode()
         return self.rx_app.send_request_custom(message, timeout)
 
     # def create_aar(self, rx_session: RxSession) -> AaRequest:

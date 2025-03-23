@@ -2,6 +2,9 @@ from diameter.node.application import SimpleThreadingApplication, Node
 from ..sessions import DiameterSessions, DiameterSession
 from DiamTelecom.telecom.subscriber import Subscriber, Subscribers
 from .stats import DiameterStatistics
+import logging
+logger = logging.getLogger("DiamTelecom.diameter.app")
+
 
 class CustomSimpleThreadingApplication(SimpleThreadingApplication):
     def __init__(self, application_id,
@@ -23,19 +26,25 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         return f"{self.node.origin_host}: <{self.name} ({self.application_id})>"
 
     def send_request_custom(self, request, timeout=5):
+        # print(request)
         session_id = request.session_id
         session = self.get_session_by_id(session_id)
         if not session:
-            raise Exception(f"Session {session_id} not found. Add to the session store before sending request")
+            # raise Exception(f"Session {session_id} not found. Add to the session store before sending request")
+            logger.error(f"Session {session_id} not found. Add to the session store before sending request")
+            return None
         session.add_message(request)
+        # print(request)
         try:
             answer = self.send_request(request, timeout)
+            print(answer)
         except Exception as e:
+            print("here")
             self.stats.increment_transaction_count(success=False)
             raise e
         #
-        session.add_message(answer)
-        self.stats.increment_based_on_answer(answer)
+        # session.add_message(answer)
+        # self.stats.increment_based_on_answer(answer)
         # result_code = answer.result_code
         # self.stats.increment_rc_count(result_code)
         # self.stats.increment_request_count(success=True)

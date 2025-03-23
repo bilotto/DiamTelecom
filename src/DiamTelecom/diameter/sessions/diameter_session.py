@@ -1,7 +1,6 @@
 
 from DiamTelecom.telecom import Subscriber
-# from ..message_new import Message, DiameterMessage, DiameterMessages, create_diameter_message_from_message
-from ..message_new import Message, DiameterMessage, DiameterMessages
+from ..message import Message, DiameterMessage, DiameterMessages
 from typing import Dict, List, Set
 import time
 import logging
@@ -99,9 +98,9 @@ class DiameterSession:
             return int(time.time() - float(self.start_time))
         return None
     
-    def dump(self):
-        for message in self.messages.messages:
-            print(dump(message))
+    # def dump(self):
+    #     for message in self.messages.messages:
+    #         print(dump(message))
 
     def dump_xml(self, folder_path="output"):
         for n, message in enumerate(self.messages.get_messages()):
@@ -123,7 +122,6 @@ class DiameterSessions:
     def sessions(self):
         return self.diameter_sessions
     
-    @property
     def values(self):
         return self.diameter_sessions.values()
     
@@ -139,7 +137,6 @@ class DiameterSessions:
         if diameter_session.session_id in self.diameter_sessions:
             if diameter_session.active:
                 raise ValueError("DiameterSession already exists and is active")
-        # Adiciona a sessão usando o session_id como chave
         self.diameter_sessions[diameter_session.session_id] = diameter_session
         # Mapeia o MSISDN para o session_id
         if not diameter_session.subscriber.msisdn in self.msisdn_to_session_id:
