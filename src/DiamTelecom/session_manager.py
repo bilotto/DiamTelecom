@@ -33,7 +33,7 @@ class SessionManager:
         # self.gx_sessions = GxSessions()
         # self.rx_sessions = RxSessions()
         # self.sy_sessions = SySessions()
-        # self.all_messages = DiameterMessages()
+        self.all_messages = DiameterMessages()
 
     def parse_sessions(self):
         for subscriber in self.subscribers.get_subscribers():
