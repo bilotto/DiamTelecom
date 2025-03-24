@@ -49,7 +49,7 @@ class VoiceService():
         ccr_i = self.gx_service.create_ccr_i(gx_session)
         # Add specific voice parameters
         ccr_i.bearer_usage = E_BEARER_USAGE_IMS_SIGNALLING
-        cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
+        cca_i = self.gx_service.send_gx_request(ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
@@ -67,7 +67,7 @@ class VoiceService():
 
     def start_rx_session(self, rx_session: RxSession) -> RxSession:
         aar = self.rx_service.create_aar(rx_session)
-        aaa = self.rx_service.send_rx_request(rx_session, aar, timeout=5)
+        aaa = self.rx_service.send_rx_request(aar, timeout=5)
         if not isinstance(aaa, AaAnswer):
             raise Exception("AAA is not received")
         if aaa.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
