@@ -43,7 +43,7 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             self.stats.increment_transaction_count(success=False)
             raise e
         #
-        # session.add_message(answer)
+        session.add_message(answer)
         # self.stats.increment_based_on_answer(answer)
         # result_code = answer.result_code
         # self.stats.increment_rc_count(result_code)

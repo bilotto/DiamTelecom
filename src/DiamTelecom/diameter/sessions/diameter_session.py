@@ -64,11 +64,10 @@ class DiameterSession:
         if isinstance(message, DiameterMessage):
             diameter_message = message
         elif isinstance(message, Message):
-            diameter_message = DiameterMessage(message=message)
+            diameter_message = DiameterMessage(message)
         else:
             raise ValueError("message must be an instance of Message or DiameterMessage")
         #
-        # diameter_message.msisdn = self.subscriber.msisdn
         return self.messages.add_message(diameter_message)
 
     def get_messages(self):
@@ -102,13 +101,13 @@ class DiameterSession:
     #     for message in self.messages.messages:
     #         print(dump(message))
 
-    def dump_xml(self, folder_path="output"):
-        for n, message in enumerate(self.messages.get_messages()):
-            try:
-                filename = f"{folder_path}/{self.msisdn}_{n}_{message.name}.xml"
-                generate_xml(message._message, filename)
-            except:
-                pass
+    # def dump_xml(self, folder_path="output"):
+    #     for n, message in enumerate(self.messages.get_messages()):
+    #         try:
+    #             filename = f"{folder_path}/{self.msisdn}_{n}_{message.name}.xml"
+    #             generate_xml(message._message, filename)
+    #         except:
+    #             pass
 
 class DiameterSessions:
     diameter_sessions: Dict[str, DiameterSession]

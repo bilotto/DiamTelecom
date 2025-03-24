@@ -104,6 +104,10 @@ class DiameterMessage:
         if self.timestamp:
             return convert_timestamp(self.timestamp)
         return None
+    
+    @property
+    def hex_string(self):
+        return self.message.as_bytes().hex()
 
     def __repr__(self):
         return f"DiameterMessage({self.name}, {self.time})"
