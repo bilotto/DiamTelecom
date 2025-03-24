@@ -200,7 +200,7 @@ class GxService:
 
     def stop_gx_session(self, gx_session: GxSession) -> GxSession:
         ccr_t = self.create_ccr_t(gx_session)
-        cca_t = self.send_gx_request(gx_session, ccr_t, timeout=5)
+        cca_t = self.send_gx_request(ccr_t, timeout=5)
         if not isinstance(cca_t, CreditControlAnswer):
             raise Exception("CCA is not received")
         if cca_t.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:

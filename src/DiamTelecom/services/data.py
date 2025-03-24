@@ -68,7 +68,7 @@ class DataService():
 
     def start_gx_session(self, gx_session: GxSession) -> GxSession:
         ccr_i = self.create_ccr_i(gx_session)
-        cca_i = self.gx_service.send_gx_request(gx_session, ccr_i, timeout=10)
+        cca_i = self.gx_service.send_gx_request(ccr_i, timeout=10)
         if not isinstance(cca_i, CreditControlAnswer):
             raise Exception("CCA is not received")
         if cca_i.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
@@ -120,7 +120,7 @@ class DataService():
         # ccr_u.user_location_info = b"Tset"
         ccr_u.origin_state_id = 19
         ccr_u.rat_type = E_RAT_TYPE_UTRAN
-        cca_u = self.gx_service.send_gx_request(gx_session, ccr_u, timeout=5)
+        cca_u = self.gx_service.send_gx_request(ccr_u, timeout=5)
         if not isinstance(cca_u, CreditControlAnswer):
             raise Exception("CCA is not received")
         return gx_session

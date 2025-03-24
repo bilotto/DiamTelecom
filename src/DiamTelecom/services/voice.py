@@ -78,7 +78,7 @@ class VoiceService():
         if not rx_session.active:
             return
         str_ = self.rx_service.create_str(rx_session)
-        sta = self.rx_service.send_rx_request(rx_session, str_, timeout=5)
+        sta = self.rx_service.send_rx_request(str_, timeout=5)
         if not isinstance(sta, SessionTerminationAnswer):
             raise Exception("STA is not received")
         if sta.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
