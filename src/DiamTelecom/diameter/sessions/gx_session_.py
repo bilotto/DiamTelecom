@@ -99,7 +99,7 @@ class GxSession(DiameterSession):
                                 self.pcc_rules.remove(charging_rule_name)
             logger.info(f"current pcc_rules: {self.pcc_rules}")
         except Exception as e:
-            logger.error(f"Error adding message to GxSession: {e}")
+            logger.error(f"Error then trying to add/remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
         return message
 
     def create_ccr_i(self, ccr_i: CreditControlRequest = None):
