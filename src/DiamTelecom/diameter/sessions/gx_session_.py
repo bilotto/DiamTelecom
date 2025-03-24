@@ -1,6 +1,7 @@
 
 from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
-from diameter.message.commands import CreditControlRequest
+from diameter.message.commands import *
+from diameter.message.avp import *
 from diameter.message.avp.grouped import *
 from .rx_session_ import RxSession
 from typing import List, Dict
@@ -25,6 +26,7 @@ class GxSession(DiameterSession):
         self.cc_request_number = 0
         self.mcc_mnc = None
         self.rx_sessions = []
+        self.pcc_rules = []
         
     def __repr__(self):
         return f"""GxSession(msisdn={self.msisdn}
@@ -41,7 +43,6 @@ class GxSession(DiameterSession):
 
     def set_mcc_mnc(self, mcc_mnc: str):
         self.mcc_mnc = mcc_mnc
-
 
     def add_rx_session(self, rx_session):
         self.rx_sessions.append(rx_session)
@@ -62,45 +63,83 @@ class GxSession(DiameterSession):
                 messages.append(i)
         # Return messages sorted by timestamp
         return sorted(messages, key=lambda x: x.timestamp)
+    
+    def add_message(self, message: DiameterMessage):
+        message = super().add_message(message)
+        try:
+            if isinstance(message.message, CreditControlAnswer) or isinstance(message.message, ReAuthRequest):
+                if message.message.charging_rule_install:
+                    for i in message.message.charging_rule_install:
+                        if i.charging_rule_base_name:
+                            for j in i.charging_rule_base_name:
+                                self.pcc_rules.append(j)
+                        if i.charging_rule_name:
+                            for j in i.charging_rule_name:
+                                self.pcc_rules.append(j)
+                        if i.charging_rule_definition:
+                            for j in i.charging_rule_definition:
+                                charging_rule_name = j.charging_rule_name
+                                # if isinstance(charging_rule_name, bytes):
+                                #     charging_rule_name = charging_rule_name.decode()
+                                self.pcc_rules.append(charging_rule_name)
+            if isinstance(message.message, ReAuthRequest):
+                if message.message.charging_rule_remove:
+                    for i in message.message.charging_rule_remove:
+                        if i.charging_rule_base_name:
+                            for j in i.charging_rule_base_name:
+                                self.pcc_rules.remove(j)
+                        if i.charging_rule_name:
+                            for j in i.charging_rule_name:
+                                self.pcc_rules.remove(j)
+                        if i.charging_rule_definition:
+                            for j in i.charging_rule_definition:
+                                charging_rule_name = j.charging_rule_name
+                                # if isinstance(charging_rule_name, bytes):
+                                #     charging_rule_name = charging_rule_name.decode()
+                                self.pcc_rules.remove(charging_rule_name)
+            logger.info(f"current pcc_rules: {self.pcc_rules}")
+        except Exception as e:
+            logger.error(f"Error adding message to GxSession: {e}")
+        return message
 
-    # def create_ccr_i(self, ccr_i: CreditControlRequest = None):
-    #     if not ccr_i:
-    #         ccr_i = CreditControlRequest()
-    #         ccr_i.session_id = self.session_id
-    #         ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
-    #         ccr_i.cc_request_number = 0
-    #         ccr_i.framed_ip_address = ip_to_bytes(self.framed_ip_address)
-    #         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
-    #         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
-    #     else:
-    #         ccr_i.session_id = self.session_id
-    #         ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
-    #         ccr_i.cc_request_number = 0
-    #         ccr_i.subscription_id = []
-    #         ccr_i.framed_ip_address = ip_to_bytes(self.framed_ip_address)
-    #         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
-    #         ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
-    #     return ccr_i
+    def create_ccr_i(self, ccr_i: CreditControlRequest = None):
+        if not ccr_i:
+            ccr_i = CreditControlRequest()
+            ccr_i.session_id = self.session_id
+            ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+            ccr_i.cc_request_number = 0
+            ccr_i.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+            ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+            ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        else:
+            ccr_i.session_id = self.session_id
+            ccr_i.cc_request_type = E_CC_REQUEST_TYPE_INITIAL_REQUEST
+            ccr_i.cc_request_number = 0
+            ccr_i.subscription_id = []
+            ccr_i.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+            ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+            ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        return ccr_i
     
-    # def create_ccr_t(self, ccr_t: CreditControlRequest = None):
-    #     ccr_t = CreditControlRequest()
-    #     ccr_t.session_id = self.session_id
-    #     ccr_t.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
-    #     ccr_t.cc_request_number = self.cc_request_number + 1
-    #     ccr_t.framed_ip_address = ip_to_bytes(self.framed_ip_address)
-    #     ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
-    #     ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
-    #     return ccr_t
+    def create_ccr_t(self, ccr_t: CreditControlRequest = None):
+        ccr_t = CreditControlRequest()
+        ccr_t.session_id = self.session_id
+        ccr_t.cc_request_type = E_CC_REQUEST_TYPE_TERMINATION_REQUEST
+        ccr_t.cc_request_number = self.cc_request_number + 1
+        ccr_t.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+        ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+        ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        return ccr_t
     
-    # def create_ccr_u(self, ccr_u: CreditControlRequest = None):
-    #     ccr_u = CreditControlRequest()
-    #     ccr_u.session_id = self.session_id
-    #     ccr_u.cc_request_type = E_CC_REQUEST_TYPE_UPDATE_REQUEST
-    #     ccr_u.cc_request_number = self.cc_request_number + 1
-    #     ccr_u.framed_ip_address = ip_to_bytes(self.framed_ip_address)
-    #     ccr_u.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
-    #     ccr_u.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
-    #     return ccr_u
+    def create_ccr_u(self, ccr_u: CreditControlRequest = None):
+        ccr_u = CreditControlRequest()
+        ccr_u.session_id = self.session_id
+        ccr_u.cc_request_type = E_CC_REQUEST_TYPE_UPDATE_REQUEST
+        ccr_u.cc_request_number = self.cc_request_number + 1
+        ccr_u.framed_ip_address = ip_to_bytes(self.framed_ip_address)
+        ccr_u.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_E164, str(self.msisdn))
+        ccr_u.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
+        return ccr_u
 
 
 class GxSessions(DiameterSessions):
