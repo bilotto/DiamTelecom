@@ -31,4 +31,4 @@ class Assertions:
                         logger.error(f"Assertion failed for {key} == {value}")
                         self.failed = True
         if self.failed:
-            raise AssertionError("Assertion failed")
+            raise AssertionError("GxSession attributes assertion failed")
