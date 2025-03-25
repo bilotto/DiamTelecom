@@ -10,3 +10,4 @@ from .services import *
 
 # from diameter.message.constants import *
 # from diameter.message.commands import *
+from .assertions import Assertions

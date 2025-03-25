@@ -111,6 +111,12 @@ class DiameterMessage:
 
     def __repr__(self):
         return f"DiameterMessage({self.name}, {self.time})"
+    
+    def dump_hex_string(self, file_full_path):
+        print(file_full_path)
+        with open(file_full_path, 'w') as f:
+            f.write(self.hex_string)
+        logger.info(f"Hex string written to {file_full_path}")
         
 
 class DiameterMessages:

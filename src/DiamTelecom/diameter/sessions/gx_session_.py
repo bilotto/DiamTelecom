@@ -3,10 +3,12 @@ from .diameter_session import DiameterSession, DiameterSessions, Subscriber, Dia
 from diameter.message.commands import *
 from diameter.message.avp import *
 from diameter.message.avp.grouped import *
+from diameter.message.constants import *
 from .rx_session_ import RxSession
 from typing import List, Dict
 from ..constants import *
 from DiamTelecom.helpers import ip_to_bytes
+
 
 class GxSession(DiameterSession):
     session_id: str
@@ -26,7 +28,10 @@ class GxSession(DiameterSession):
         self.cc_request_number = 0
         self.mcc_mnc = None
         self.rx_sessions = []
-        self.pcc_rules = []
+        self.pcc_rules = set()
+        self.qos_class_identifier = None
+        self.priority_level = None
+        self.event_trigger = []
         
     def __repr__(self):
         return f"""GxSession(msisdn={self.msisdn}
@@ -61,47 +66,25 @@ class GxSession(DiameterSession):
         for rx_session in self.rx_sessions:
             for i in rx_session.get_messages():
                 messages.append(i)
-        # Return messages sorted by timestamp
         return sorted(messages, key=lambda x: x.timestamp)
     
     def add_message(self, message: DiameterMessage):
-        message = super().add_message(message)
+        diameter_message = super().add_message(message)
+        if diameter_message.name == CCA_I:
+            if diameter_message.message.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+                self.start()
+        elif diameter_message.name == CCA_T:
+            if diameter_message.message.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
+                self.end()
         try:
-            if isinstance(message.message, CreditControlAnswer) or isinstance(message.message, ReAuthRequest):
-                if message.message.charging_rule_install:
-                    for i in message.message.charging_rule_install:
-                        if i.charging_rule_base_name:
-                            for j in i.charging_rule_base_name:
-                                self.pcc_rules.append(j)
-                        if i.charging_rule_name:
-                            for j in i.charging_rule_name:
-                                self.pcc_rules.append(j)
-                        if i.charging_rule_definition:
-                            for j in i.charging_rule_definition:
-                                charging_rule_name = j.charging_rule_name
-                                # if isinstance(charging_rule_name, bytes):
-                                #     charging_rule_name = charging_rule_name.decode()
-                                self.pcc_rules.append(charging_rule_name)
-            if isinstance(message.message, ReAuthRequest):
-                if message.message.charging_rule_remove:
-                    for i in message.message.charging_rule_remove:
-                        if i.charging_rule_base_name:
-                            for j in i.charging_rule_base_name:
-                                self.pcc_rules.remove(j)
-                        if i.charging_rule_name:
-                            for j in i.charging_rule_name:
-                                self.pcc_rules.remove(j)
-                        if i.charging_rule_definition:
-                            for j in i.charging_rule_definition:
-                                charging_rule_name = j.charging_rule_name
-                                # if isinstance(charging_rule_name, bytes):
-                                #     charging_rule_name = charging_rule_name.decode()
-                                self.pcc_rules.remove(charging_rule_name)
-            logger.info(f"current pcc_rules: {self.pcc_rules}")
+            check_charging_rules(self, diameter_message)
+            check_qos(self, diameter_message)
+            check_event_trigger(self, diameter_message)
         except Exception as e:
-            logger.error(f"Error then trying to add/remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
-        return message
+            logger.error(f"Error when trying to set GxSession attributes Error: {e}")
+        return diameter_message
 
+    # todo: change to a functions file
     def create_ccr_i(self, ccr_i: CreditControlRequest = None):
         if not ccr_i:
             ccr_i = CreditControlRequest()
@@ -121,6 +104,7 @@ class GxSession(DiameterSession):
             ccr_i.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
         return ccr_i
     
+    # todo: change to a functions file
     def create_ccr_t(self, ccr_t: CreditControlRequest = None):
         ccr_t = CreditControlRequest()
         ccr_t.session_id = self.session_id
@@ -131,6 +115,7 @@ class GxSession(DiameterSession):
         ccr_t.add_subscription_id(E_SUBSCRIPTION_ID_TYPE_END_USER_IMSI, str(self.imsi))
         return ccr_t
     
+    # todo: change to a functions file
     def create_ccr_u(self, ccr_u: CreditControlRequest = None):
         ccr_u = CreditControlRequest()
         ccr_u.session_id = self.session_id
@@ -206,3 +191,55 @@ class GxSessions(DiameterSessions):
     #     # Retorna uma lista de sessões associadas a um MSISDN específico
     #     if msisdn in self.msisdn_to_session_id:
     #         return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]
+
+def check_charging_rules(gx_session: GxSession, diameter_message: DiameterMessage):
+    message = diameter_message.message
+    try:
+        if isinstance(message, CreditControlAnswer) or isinstance(message, ReAuthRequest):
+            if message.charging_rule_install:
+                for i in message.charging_rule_install:
+                    if i.charging_rule_base_name:
+                        for j in i.charging_rule_base_name:
+                            gx_session.pcc_rules.add(j)
+                    if i.charging_rule_name:
+                        for j in i.charging_rule_name:
+                            gx_session.pcc_rules.add(j)
+                    if i.charging_rule_definition:
+                        for j in i.charging_rule_definition:
+                            charging_rule_name = j.charging_rule_name
+                            gx_session.pcc_rules.add(charging_rule_name)
+        if isinstance(message, ReAuthRequest):
+            if message.charging_rule_remove:
+                for i in message.charging_rule_remove:
+                    if i.charging_rule_base_name:
+                        for j in i.charging_rule_base_name:
+                            gx_session.pcc_rules.remove(j)
+                    if i.charging_rule_name:
+                        for j in i.charging_rule_name:
+                            gx_session.pcc_rules.remove(j)
+                    if i.charging_rule_definition:
+                        for j in i.charging_rule_definition:
+                            charging_rule_name = j.charging_rule_name
+                            gx_session.pcc_rules.remove(charging_rule_name)
+        logger.info(f"current pcc_rules: {gx_session.pcc_rules}")
+    except Exception as e:
+        logger.error(f"Error then trying to add/remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
+
+
+def check_qos(gx_session: GxSession, diameter_message: DiameterMessage):
+    message = diameter_message.message
+    if hasattr(message, "default_eps_bearer_qos") and message.default_eps_bearer_qos:
+            default_eps_bearer_qos = message.default_eps_bearer_qos
+            qos_class_identifier = default_eps_bearer_qos.qos_class_identifier
+            arp = default_eps_bearer_qos.allocation_retention_priority
+            priority_level = arp.priority_level
+            gx_session.qos_class_identifier = qos_class_identifier
+            gx_session.priority_level = priority_level
+    if hasattr(message, "qos_information") and message.qos_information:
+        qos_information = message.qos_information
+
+def check_event_trigger(gx_session: GxSession, diameter_message: DiameterMessage):
+    message = diameter_message.message
+    if hasattr(message, "event_trigger") and message.event_trigger:
+        for i in message.event_trigger:
+            gx_session.event_trigger.append(i)
