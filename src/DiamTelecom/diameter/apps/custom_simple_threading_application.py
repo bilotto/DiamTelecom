@@ -30,8 +30,9 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
         session_id = request.session_id
         session = self.get_session_by_id(session_id)
         if not session:
-            raise Exception(f"Session {session_id} not found. Add to the session store before sending request")
-            # logger.error(f"Session {session_id} not found. Add to the session store before sending request")
+            # raise Exception(f"Session {session_id} not found. Add to the session store before sending request")
+            logger.error(f"Session {session_id} not found. Add to the session store before sending request")
+            return None
         session.add_message(request)
         try:
             answer = self.send_request(request, timeout)

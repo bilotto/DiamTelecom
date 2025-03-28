@@ -32,6 +32,8 @@ class GxSession(DiameterSession):
         self.qos_class_identifier = None
         self.priority_level = None
         self.event_trigger = []
+        self.framed_ipv6_prefix = None
+        self.rat_type = None
         
     def __repr__(self):
         return f"""GxSession(msisdn={self.msisdn}
@@ -42,6 +44,12 @@ class GxSession(DiameterSession):
           last_message={self.last_message})
 
 """
+    def __setattr__(self, name, value):
+        if value is not None:
+            if name == 'rat_type':
+                if value == E_RAT_TYPE_UTRAN:
+                    logger.info(f"Subscriber {self.subscriber.msisdn}, GxSession handover to 3G: {self.session_id}")
+        return super().__setattr__(name, value)
 
     def incr_cc_request_number(self):
         self.cc_request_number += 1
@@ -80,6 +88,7 @@ class GxSession(DiameterSession):
             check_charging_rules(self, diameter_message)
             check_qos(self, diameter_message)
             check_event_trigger(self, diameter_message)
+            check_rat_type(self, diameter_message)
         except Exception as e:
             logger.error(f"Error when trying to set GxSession attributes Error: {e}")
         return diameter_message
@@ -127,71 +136,6 @@ class GxSession(DiameterSession):
         return ccr_u
 
 
-class GxSessions(DiameterSessions):
-    framed_ip_address_to_session_id: Dict[str, List[str]]
-    apn_to_session_id: Dict[str, List[str]]
-
-    def __init__(self):
-        super().__init__()
-        self.framed_ip_address_to_session_id = {}
-        self.apn_to_session_id = {}
-
-    def __repr__(self):
-        return f"GxSessions({len(self.diameter_sessions)},{self.n_active_sessions})"
-
-    def add_gx_session(self, gx_session: GxSession):
-        self.add_session(gx_session)
-        #
-        # Here we want to fill two maps based on the session attributes framed_ip_address and apn
-        framed_ip_address = gx_session.framed_ip_address
-        apn = gx_session.apn
-        if not framed_ip_address:
-            raise ValueError("Framed IP Address is required")
-        if not apn:
-            raise ValueError("APN is required")
-        #
-        if self.framed_ip_address_to_session_id.get(gx_session.framed_ip_address) is None:
-            self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = []
-        if self.apn_to_session_id.get(gx_session.apn) is None:
-            self.apn_to_session_id[gx_session.apn] = []
-        self.framed_ip_address_to_session_id[gx_session.framed_ip_address].append(gx_session.session_id)
-        self.apn_to_session_id[gx_session.apn].append(gx_session.session_id)
-
-    def get(self, session_id: str) -> GxSession:
-        return self.diameter_sessions.get(session_id, None)
-    
-    def get_session_by_id(self, session_id: str) -> GxSession:
-        return self.get(session_id)
-    
-    def get_gx_session_by_framed_ip_address(self, framed_ip_address: str) -> GxSession:
-        session_id_list = self.framed_ip_address_to_session_id.get(framed_ip_address)
-        # if session_id_list is None:
-        #     raise ValueError(f"No GxSession found with framed IP address {framed_ip_address}")
-        # Return the first active session
-        for session_id in session_id_list:
-            gx_session = self.get_session(session_id)
-            # need to return the session even though its not active
-            # it was causing a bug when Rx messages continue to be sent after the session is closed
-            # if gx_session.active:
-            #     return gx_session
-            return gx_session
-
-    def create_session(self, subscriber, session_id: str, framed_ip_address: str, apn: str) -> GxSession:
-        gx_session = GxSession(subscriber, session_id, framed_ip_address, apn)
-        self.add_gx_session(gx_session)
-        return gx_session
-    
-    def add_message(self, session_id: str, message):
-        self.get_session(session_id).add_message(message)
-
-    def get_sessions_by_apn(self, apn: str) -> List[GxSession]:
-        return [self.diameter_sessions[session_id] for session_id in self.apn_to_session_id.get(apn, [])]
-
-    # def get_msisdn_sessions(self, msisdn: str) -> List[GxSession]:
-    #     # Retorna uma lista de sessões associadas a um MSISDN específico
-    #     if msisdn in self.msisdn_to_session_id:
-    #         return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]
-
 def check_charging_rules(gx_session: GxSession, diameter_message: DiameterMessage):
     message = diameter_message.message
     try:
@@ -221,7 +165,7 @@ def check_charging_rules(gx_session: GxSession, diameter_message: DiameterMessag
                         for j in i.charging_rule_definition:
                             charging_rule_name = j.charging_rule_name
                             gx_session.pcc_rules.remove(charging_rule_name)
-        logger.info(f"current pcc_rules: {gx_session.pcc_rules}")
+        # logger.info(f"current pcc_rules: {gx_session.pcc_rules}")
     except Exception as e:
         logger.error(f"Error then trying to add/remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
 
@@ -243,3 +187,121 @@ def check_event_trigger(gx_session: GxSession, diameter_message: DiameterMessage
     if hasattr(message, "event_trigger") and message.event_trigger:
         for i in message.event_trigger:
             gx_session.event_trigger.append(i)
+
+def check_rat_type(gx_session: GxSession, diameter_message: DiameterMessage):
+    message = diameter_message.message
+    if hasattr(message, "rat_type") and message.rat_type:
+        gx_session.rat_type = message.rat_type
+
+
+
+
+class GxSessions(DiameterSessions):
+    framed_ip_address_to_session_id: Dict[str, List[str]]
+    apn_to_session_id: Dict[str, List[str]]
+
+    def __init__(self):
+        super().__init__()
+        self.framed_ip_address_to_session_id = {}
+        self.apn_to_session_id = {}
+        self.framed_ipv6_prefix_to_session_id = {}
+
+    def __repr__(self):
+        return f"GxSessions({len(self.diameter_sessions)},{self.n_active_sessions})"
+
+    def add_gx_session(self, gx_session: GxSession):
+        if not isinstance(gx_session, GxSession):
+            raise ValueError(f"Invalid GxSession: {gx_session}")
+        self.add_session(gx_session)
+        #
+        # Here we want to fill two maps based on the session attributes framed_ip_address and apn
+        framed_ip_address = gx_session.framed_ip_address
+        apn = gx_session.apn
+        # if not framed_ip_address:
+        #     raise ValueError("Framed IP Address is required")
+        # if not apn:
+        #     raise ValueError("APN is required")
+        #
+        if gx_session.framed_ip_address:
+            if self.framed_ip_address_to_session_id.get(gx_session.framed_ip_address) is None:
+                self.framed_ip_address_to_session_id[gx_session.framed_ip_address] = []
+            self.framed_ip_address_to_session_id[gx_session.framed_ip_address].append(gx_session.session_id)
+
+        if gx_session.apn:
+            if self.apn_to_session_id.get(gx_session.apn) is None:
+                self.apn_to_session_id[gx_session.apn] = []
+            self.apn_to_session_id[gx_session.apn].append(gx_session.session_id)
+        
+        if gx_session.framed_ipv6_prefix:
+            if self.framed_ipv6_prefix_to_session_id.get(gx_session.framed_ipv6_prefix) is None:
+                self.framed_ipv6_prefix_to_session_id[gx_session.framed_ipv6_prefix] = []
+            self.framed_ipv6_prefix_to_session_id[gx_session.framed_ipv6_prefix].append(gx_session.session_id)
+
+    def get(self, session_id: str) -> GxSession:
+        return self.diameter_sessions.get(session_id, None)
+    
+    def get_session_by_id(self, session_id: str) -> GxSession:
+        return self.get(session_id)
+    
+    def get_gx_session_by_framed_ip_address(self, framed_ip_address: str) -> GxSession:
+        session_id_list = self.framed_ip_address_to_session_id.get(framed_ip_address)
+        if session_id_list:
+            for session_id in session_id_list:
+                gx_session = self.get_session(session_id)
+                return gx_session
+        
+    def gx_session_by_framed_ipv6_prefix(self, desired_framed_ipv6_prefix: str) -> GxSession:
+        for framed_ipv6_prefix in self.framed_ipv6_prefix_to_session_id.keys():
+            parsed_framed_ipv6_prefix = str(framed_ipv6_prefix.split("/")[0].replace("::", ""))
+            if parsed_framed_ipv6_prefix in desired_framed_ipv6_prefix:
+                session_id_list = self.framed_ipv6_prefix_to_session_id.get(framed_ipv6_prefix)
+                for session_id in session_id_list:
+                    gx_session = self.get_session(session_id)
+                    return gx_session
+
+        # else:
+        #     for framed_ip_v6 in self.framed_ip_address_to_session_id.keys():
+        #         if framed_ip_address in framed_ip_v6:
+        #             session_id_list = self.framed_ip_address_to_session_id.get(framed_ip_v6)
+        #             for session_id in session_id_list:
+        #                 gx_session = self.get_session(session_id)
+        #                 return gx_session
+
+    def create_session(self, subscriber, session_id: str, framed_ip_address: str, apn: str) -> GxSession:
+        gx_session = GxSession(subscriber, session_id, framed_ip_address, apn)
+        self.add_gx_session(gx_session)
+        return gx_session
+    
+    def add_message(self, session_id: str, message):
+        self.get_session(session_id).add_message(message)
+
+    def get_sessions_by_apn(self, apn: str) -> List[GxSession]:
+        return [self.diameter_sessions[session_id] for session_id in self.apn_to_session_id.get(apn, [])]
+    
+    def remove_session(self, gx_session: GxSession):
+        if not isinstance(gx_session, GxSession):
+            raise ValueError(f"gx_session must be a GxSession object. Passed: {gx_session}")
+        session_id = gx_session.session_id
+        if session_id in self.diameter_sessions:
+            del self.diameter_sessions[session_id]
+        framed_ip_address = gx_session.framed_ip_address
+        if self.framed_ip_address_to_session_id.get(framed_ip_address):
+            session_list = self.framed_ip_address_to_session_id.get(framed_ip_address)
+            if session_id in session_list:
+                session_list.remove(session_id)
+        if gx_session.apn:
+            if self.apn_to_session_id.get(gx_session.apn):
+                session_list = self.apn_to_session_id.get(gx_session.apn)
+                if session_id in session_list:
+                    session_list.remove(session_id)
+        if gx_session.framed_ipv6_prefix:
+            if self.framed_ipv6_prefix_to_session_id.get(gx_session.framed_ipv6_prefix):
+                session_list = self.framed_ipv6_prefix_to_session_id.get(gx_session.framed_ipv6_prefix)
+                if session_id in session_list:
+                    session_list.remove(session_id)
+        # raise ValueError("DiameterSession not found")
+
+    # def get_msisdn_sessions(self, msisdn: str) -> List[GxSession]:
+    #     # Retorna uma lista de sessões associadas a um MSISDN específico
+    #     if msisdn in self.msisdn_to_session_id:
+    #         return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]

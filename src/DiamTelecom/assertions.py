@@ -9,7 +9,7 @@ class Assertions:
         self.values = assertions
         self.failed = False
 
-    def assert_gx_session(self, gx_session: GxSession):
+    def assert_gx_session(self, gx_session: GxSession, raise_error: bool = True):
         gx_session_assertions = self.values.get("gx_session")
         for key, value in gx_session_assertions.items():
             if hasattr(gx_session, key):
@@ -30,5 +30,5 @@ class Assertions:
                     except:
                         logger.error(f"Assertion failed for {key} == {value}")
                         self.failed = True
-        if self.failed:
+        if raise_error and self.failed:
             raise AssertionError("GxSession attributes assertion failed")

@@ -51,7 +51,7 @@ def handle_slr(app: SyApplication, message: SpendingLimitRequest):
     carrier_id = int(subscriber.carrier_id)
     session = app.sessions.create_sy_session(subscriber, session_id)
     session.add_message(message)
-    print(session)
+    # print(session)
     answer = message.to_answer()
     if isinstance(answer, SpendingLimitAnswer):
         answer.session_id = message.session_id
@@ -76,7 +76,7 @@ def handle_str(app: SyApplication, message: SessionTerminationRequest):
     session_id = message.session_id
     session = app.get_session_by_id(session_id)
     session.add_message(message)
-    print(session)
+    # print(session)
     if isinstance(answer, SessionTerminationAnswer):
         answer.session_id = message.session_id
         answer.origin_host = message.destination_host

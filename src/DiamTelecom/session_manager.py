@@ -79,3 +79,13 @@ class SessionManager:
                     'apn': gx_session.apn,
                     'session_id': message.session_id,
                 })
+
+
+    def dump_hex_string(self, output_directory):
+        print("Dumping hex strings")
+        self.parse_sessions()
+        for idx, message in enumerate(self.all_messages.get_messages()):
+            filename = f"{message.name}_{idx}.txt"
+            with open(f"{output_directory}/{filename}", "w") as f:
+                f.write(message.hex_string)
+            

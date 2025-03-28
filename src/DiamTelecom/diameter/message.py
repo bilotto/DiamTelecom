@@ -7,6 +7,19 @@ logger = logging.getLogger(__name__)
 from ..helpers import convert_timestamp
 from DiamTelecom.services.ip_queue import bytes_to_ip
 from DiamTelecom.telecom import Subscriber
+import ipaddress
+
+def decode_framed_ipv6(raw_bytes):
+    try:
+        reserved_byte = raw_bytes[0]
+        prefix_length = raw_bytes[1]
+        ipv6_prefix_bytes = raw_bytes[2:]
+        ipv6_prefix_bytes_padded = ipv6_prefix_bytes.ljust(16, b'\x00')
+        ipv6_address = ipaddress.IPv6Address(ipv6_prefix_bytes_padded)
+        return f"{ipv6_address}/{prefix_length}"
+    except:
+        return None
+
 
 def parse_subscription_id(subscription_id: List[SubscriptionId]):
     msisdn = None
@@ -38,7 +51,7 @@ class DiameterMessage:
             except ValueError:
                 raise ValueError("Invalid hex string provided.")
         else:
-            raise TypeError("Parameter must be a hex string or a Message instance.")
+            raise TypeError(f"Parameter must be a hex string or a Message instance. Provided: {obj},{type(obj)}")
         
         self.timestamp = None
         self.subscriber = None
@@ -82,6 +95,15 @@ class DiameterMessage:
     def framed_ip_address(self):
         if self.message.framed_ip_address:
             return bytes_to_ip(self.message.framed_ip_address)
+        return None
+    
+    @property
+    def framed_ipv6_prefix(self):
+        if self.message.framed_ipv6_prefix:
+            framed_ipv6_prefix = self.message.framed_ipv6_prefix
+            if isinstance(framed_ipv6_prefix, list):
+                framed_ipv6_prefix = framed_ipv6_prefix[0]
+            return decode_framed_ipv6(framed_ipv6_prefix)
         return None
     
     @property

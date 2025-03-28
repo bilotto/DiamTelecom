@@ -7,6 +7,7 @@ import logging
 from diameter.message import dump
 from ..helpers import generate_xml
 import os
+logger = logging.getLogger("DiamTelecom.diameter.session")
 
 class DiameterSession:
     subscriber: Subscriber
@@ -56,7 +57,7 @@ class DiameterSession:
     def set_end_time(self, end_time: str):
         self.end_time = end_time
         self.active = False
-        self.logger.info(f"Session {self.session_id} ended at {self.end_time}")
+        # self.logger.info(f"Session {self.session_id} ended at {self.end_time}")
 
     def add_message(self, message):
         if not isinstance(message, Message) and not isinstance(message, DiameterMessage):
@@ -146,21 +147,33 @@ class DiameterSessions:
         return self.diameter_sessions.get(session_id)
 
     def remove_session(self, session_id: str):
+        if not isinstance(session_id, str):
+            raise ValueError(f"session_id must be a string. Passed: {session_id}")
         if session_id in self.diameter_sessions:
             del self.diameter_sessions[session_id]
             return
         raise ValueError("DiameterSession not found")
     
     def get_msisdn_sessions(self, msisdn: str) -> List[DiameterSession]:
+        msisdn_sessions = []
         if msisdn in self.msisdn_to_session_id:
-            return [self.diameter_sessions[session_id] for session_id in self.msisdn_to_session_id[msisdn]]
-        return []
+            for session_id in self.msisdn_to_session_id[msisdn]:
+                session = self.get_session(session_id)
+                if session:
+                    msisdn_sessions.append(session)
+        return msisdn_sessions
     
     def get_subscriber_active_session(self, msisdn: int):
+        active_sessions = []
         if self.get_msisdn_sessions(msisdn):
             for session in self.get_msisdn_sessions(msisdn):
                 if session.active:
-                    return session
+                    active_sessions.append(session)
+        if not active_sessions:
+            return None
+        if len(active_sessions) > 1:
+            logger.warning(f"More than one active session found for MSISDN {msisdn}")
+        return active_sessions[0]
 
     def create_diameter_session(self, subscriber: Subscriber, session_id: str) -> DiameterSession:
         # Needs to be implemented in the upper classes

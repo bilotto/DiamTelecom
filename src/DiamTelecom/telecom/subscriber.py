@@ -19,6 +19,12 @@ class Subscriber:
                  carrier_id: int = None,
                  type: str = None,):
         self.id = id
+        if not id:
+            raise ValueError("Subscriber ID is required")
+        if not msisdn:
+            raise ValueError("MSISDN is required")
+        if not imsi:
+            logger.error("Subscriber created without IMSI")
         msisdn = str(msisdn)
         imsi = str(imsi)
         self.msisdn = msisdn
@@ -64,6 +70,19 @@ class Subscribers(dict):
         subscriber = Subscriber(id, msisdn, imsi)
         self[id] = subscriber
         return subscriber
+    
+    def get_subscriber_by_subscription_id(self, parsed_subscription_id: tuple) -> Subscriber:
+            msisdn = parsed_subscription_id[0]
+            imsi = parsed_subscription_id[1]
+            sip_uri = parsed_subscription_id[2]
+            if msisdn:
+                return self.get_subscriber_by_msisdn(msisdn)
+            elif imsi:
+                return self.get_subscriber_by_imsi(imsi)
+            elif sip_uri:
+                return self.get_subscriber_by_sip_uri(sip_uri)
+            return None
+
     
     def get_subscriber_by_msisdn(self, msisdn: str) -> Subscriber:
         for subscriber in self.values():

@@ -54,13 +54,13 @@ def handle_slr(app: SyApplication, message: SpendingLimitRequest):
             elif i.subscription_id_type == 1:
                 subscriber_imsi = i.subscription_id_data
     if app.subscribers:
-        print(app.subscribers)
+        # print(app.subscribers)
         # Get carrier_id
         subscriber = app.subscribers.get_subscriber_by_msisdn_imsi(subscriber_msisdn, subscriber_imsi)
         carrier_id = int(subscriber.carrier_id)
         session = app.sessions.create_sy_session(subscriber, session_id)
         session.add_message(message)
-        print(session)
+        # print(session)
     answer = message.to_answer()
     if isinstance(answer, SpendingLimitAnswer):
         answer.session_id = message.session_id
@@ -70,7 +70,7 @@ def handle_slr(app: SyApplication, message: SpendingLimitRequest):
         answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
         #
         if subscriber.use_case:
-            print(subscriber.use_case)
+            # print(subscriber.use_case)
             if subscriber.use_case.sla_policy_counter_dict:
                 answer.policy_counter_status_report = []
                 for k, v in subscriber.use_case.sla_policy_counter_dict.items():
@@ -104,7 +104,7 @@ def handle_str(app: CustomSimpleThreadingApplication, message: SessionTerminatio
     session_id = message.session_id
     session = app.get_session_by_id(session_id)
     session.add_message(message)
-    print(session)
+    # print(session)
     if isinstance(answer, SessionTerminationAnswer):
         answer.session_id = message.session_id
         answer.origin_host = message.destination_host
