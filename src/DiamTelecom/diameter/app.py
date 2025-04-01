@@ -1,1 +1,1 @@
-from .apps import CustomSimpleThreadingApplication, GxApplication, GyApplication, RxApplication, SyApplication, DiameterApplications
+from .apps import GxApplication, GyApplication, RxApplication, SyApplication

@@ -71,6 +71,7 @@ class RxSessions(DiameterSessions):
         super().__init__()
 
     def add_rx_session(self, rx_session: RxSession):
+        print(f"Adding new Rx Session {rx_session}")
         self.add_session(rx_session)
 
     def get_rx_session(self, session_id: str) -> RxSession:

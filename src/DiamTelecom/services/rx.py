@@ -50,6 +50,8 @@ class RxService:
     def create_rx_session(self, gx_session: GxSession, session_id: str = None) -> RxSession:
         if not session_id:
             session_id = self.rx_app.node.session_generator.next_id()
+        if not isinstance(gx_session, GxSession):
+            raise ValueError("gx_session must be an instance of GxSession")
         rx_session = self.rx_app.sessions.create_session(gx_session.subscriber, session_id, gx_session.session_id)
         rx_session.framed_ip_address = gx_session.framed_ip_address
         return rx_session

@@ -8,10 +8,11 @@ from diameter.message.avp.grouped import *
 
 def create_node(origin_host, realm, ip_addresses, port, sctp=False) -> Node:
     if not sctp:
-        node = Node(origin_host, realm, ip_addresses=ip_addresses, tcp_port=port, vendor_ids=[VENDOR_ETSI, VENDOR_TGPP, VENDOR_TGPP2])
+        node = Node(origin_host, realm, ip_addresses=ip_addresses, tcp_port=port)
     else:
-        node = Node(origin_host, realm, ip_addresses=ip_addresses, sctp_port=port, vendor_ids=[VENDOR_ETSI, VENDOR_TGPP, VENDOR_TGPP2])
+        node = Node(origin_host, realm, ip_addresses=ip_addresses, sctp_port=port)
     node.idle_timeout = 20
+    node.vendor_id
     return node
 
 def add_peers(node: Node, peers_list: List[Dict], sctp=False) -> List[Peer]:

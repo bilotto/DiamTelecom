@@ -109,6 +109,22 @@ class Carrier:
     def voice_flow(self):
         pass
 
+    def get_subscriber_by_msisdn(self, msisdn):
+        for subscriber in self.subscribers.values():
+            if not isinstance(subscriber, Subscriber):
+                logger.error(f"Subscriber is not an instance of Subscriber class: {subscriber}")
+                continue
+            if subscriber.msisdn == msisdn:
+                return subscriber
+        return None
+    
+    def add_subscriber(self, subscriber: Subscriber):
+        if subscriber.id in self.subscribers:
+            raise ValueError("Subscriber ID already exists")
+        self.subscribers[subscriber.id] = subscriber
+
+
+
 
 
 class Carriers():

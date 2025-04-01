@@ -1,5 +1,7 @@
 import os
 import subprocess
+import logging
+logger = logging.getLogger(__name__)
 
 class Pcap:
     def __init__(self, filepath, ports: list = [], sctp=False, filter='diameter'):
@@ -10,7 +12,7 @@ class Pcap:
         # if start_timestamp:
         #     self.filter += f" && frame.time_epoch >= {start_timestamp}"
         self.pid_file = None
-        print(f"decode_as: {self.decode_as}")
+        # print(f"decode_as: {self.decode_as}")
 
     @property
     def filename(self):
@@ -61,3 +63,27 @@ class Pcap:
 def create_pyshark_object(pcap_file: Pcap):
     import pyshark
     return pyshark.FileCapture(pcap_file.filepath, decode_as=pcap_file.decode_as, display_filter=pcap_file.filter, include_raw=True, use_json=True, debug=False)
+
+
+from .diameter.message import DiameterMessage, Message
+
+def get_diameter_messages_from_pkt(pkt):
+    pkt_diameter_messages = []
+    if isinstance(pkt.diameter_raw.value, list):
+        payload_hex = pkt.diameter_raw.value[0]
+    else:
+        payload_hex = pkt.diameter_raw.value
+    diameter_message = DiameterMessage(payload_hex)
+    pkt_diameter_messages.append(diameter_message)
+    if pkt.diameter_raw.duplicate_layers:
+        for i in pkt.diameter_raw.duplicate_layers:
+            payload_hex = i.value
+            if isinstance(payload_hex, list):
+                logger.error("payload_hex is list")
+            if not isinstance(payload_hex, str):
+                continue
+            diameter_bytes = bytes.fromhex(i.value)
+            diameter_message = DiameterMessage(Message.from_bytes(diameter_bytes))
+            pkt_diameter_messages.append(diameter_message)
+
+    return pkt_diameter_messages

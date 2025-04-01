@@ -42,31 +42,43 @@ class CustomSimpleThreadingApplication(SimpleThreadingApplication):
             raise e
         #
         session.add_message(answer)
-        # self.stats.increment_based_on_answer(answer)
-        # result_code = answer.result_code
-        # self.stats.increment_rc_count(result_code)
+        self.stats.increment_based_on_answer(answer)
+        result_code = answer.result_code
+        self.stats.increment_rc_count(result_code)
         # self.stats.increment_request_count(success=True)
         return answer
 
         
-    def set_subscribers(self, subscribers: Subscribers):
-        for i in subscribers.values():
-            self.subscribers.add_subscriber(i)
+    # def set_subscribers(self, subscribers: Subscribers):
+    #     for i in subscribers.values():
+    #         self.subscribers.add_subscriber(i)
 
-    def add_subscriber(self, subscriber: Subscriber):
-        self.subscribers.add_subscriber(subscriber)
+    # def add_subscriber(self, subscriber: Subscriber):
+    #     self.subscribers.add_subscriber(subscriber)
 
     def get_session_by_id(self, session_id: str) -> DiameterSession:
         return self.sessions.get_session(session_id)
     
-    def get_subscriber_sessions_by_msisdn(self, msisdn: int):
-        return self.sessions.get_msisdn_sessions(msisdn)
-    
-    def get_subscriber_active_session(self, msisdn: int):
-        if self.sessions.get_msisdn_sessions(msisdn):
-            for session in self.sessions.get_msisdn_sessions(msisdn):
+    def get_subscriber_active_session_by_msisdn(self, msisdn: int) -> DiameterSession:
+        active_sessions = []
+        if self.get_msisdn_sessions(msisdn):
+            for session in self.get_msisdn_sessions(msisdn):
                 if session.active:
-                    return session
+                    active_sessions.append(session)
+        if not active_sessions:
+            return None
+        if len(active_sessions) > 1:
+            logger.warning(f"More than one active session found for MSISDN {msisdn}")
 
-    def create_session(self, session_id: str, subscriber: Subscriber):
-        return self.sessions.create_diameter_session(session_id, subscriber)
+    
+    # def get_subscriber_sessions_by_msisdn(self, msisdn: int):
+    #     return self.sessions.get_msisdn_sessions(msisdn)
+    
+    # def get_subscriber_active_session(self, msisdn: int):
+    #     if self.sessions.get_msisdn_sessions(msisdn):
+    #         for session in self.sessions.get_msisdn_sessions(msisdn):
+    #             if session.active:
+    #                 return session
+
+    # def create_session(self, session_id: str, subscriber: Subscriber):
+    #     return self.sessions.create_diameter_session(session_id, subscriber)

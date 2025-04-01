@@ -21,11 +21,13 @@ class DiameterStatistics:
         else:
             self.transaction_count['failure'] += 1
 
-    # def increment_rc_count(self, rc):
-    #     if rc not in self.rc_count:
-    #         self.rc_count[rc] = 1
-    #     else:
-    #         self.rc_count[rc] += 1
+    def increment_rc_count(self, rc):
+        if not rc:
+            return
+        if rc not in self.rc_count:
+            self.rc_count[rc] = 1
+        else:
+            self.rc_count[rc] += 1
 
     def increment_cmd_code_count(self, cmd_code, result_code):
         if cmd_code not in self.cmd_code_count:
