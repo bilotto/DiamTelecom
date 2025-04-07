@@ -9,6 +9,7 @@ from DiamTelecom.services.ip_queue import bytes_to_ip
 from DiamTelecom.telecom import Subscriber
 import ipaddress
 
+
 def decode_framed_ipv6(raw_bytes):
     try:
         reserved_byte = raw_bytes[0]
@@ -55,6 +56,7 @@ class DiameterMessage:
         
         self.timestamp = None
         self.subscriber = None
+        self.pkt_number = None
         logger.debug(f"Created DiameterMessage: {self.message.__class__.__name__}")
     
     def __getattr__(self, attr):
@@ -130,6 +132,13 @@ class DiameterMessage:
     @property
     def hex_string(self):
         return self.message.as_bytes().hex()
+    
+    @property
+    def result_code(self):
+        if not self.is_request:
+            if hasattr(self.message, "result_code") and self.message.result_code:
+                return self.message.result_code
+        return None
 
     def __repr__(self):
         return f"DiameterMessage({self.name}, {self.time})"
@@ -139,6 +148,88 @@ class DiameterMessage:
         with open(file_full_path, 'w') as f:
             f.write(self.hex_string)
         logger.info(f"Hex string written to {file_full_path}")
+
+
+def check_charging_rule_remove(diameter_message: DiameterMessage):
+    message = diameter_message.message
+    pcc_rules = set()
+    try:
+        if hasattr(message, "charging_rule_remove") and message.charging_rule_remove:
+            for i in message.charging_rule_remove:
+                if i.charging_rule_base_name:
+                    for j in i.charging_rule_base_name:
+                        pcc_rules.add(j)
+                if i.charging_rule_name:
+                    for j in i.charging_rule_name:
+                        pcc_rules.add(j)
+                if i.charging_rule_definition:
+                    for j in i.charging_rule_definition:
+                        charging_rule_name = j.charging_rule_name
+                        pcc_rules.add(charging_rule_name)
+            return pcc_rules
+    except Exception as e:
+        logger.error(f"Error then trying to remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
+
+def check_charging_rule_install(diameter_message: DiameterMessage):
+    message = diameter_message.message
+    pcc_rules = set()
+    try:
+        if hasattr(message, "charging_rule_install") and message.charging_rule_install:
+            for i in message.charging_rule_install:
+                if i.charging_rule_base_name:
+                    for j in i.charging_rule_base_name:
+                        pcc_rules.add(j)
+                if i.charging_rule_name:
+                    for j in i.charging_rule_name:
+                        pcc_rules.add(j)
+                if i.charging_rule_definition:
+                    for j in i.charging_rule_definition:
+                        charging_rule_name = j.charging_rule_name
+                        pcc_rules.add(charging_rule_name)
+            return pcc_rules
+    except Exception as e:
+        logger.error(f"Error then trying to add pcc_rules from GxSession: {e}. This error is not relevant to the flow")
+
+
+def check_qos(diameter_message: DiameterMessage):
+    message = diameter_message.message
+    try:
+        if hasattr(message, "default_eps_bearer_qos") and message.default_eps_bearer_qos:
+                default_eps_bearer_qos = message.default_eps_bearer_qos
+                qos_class_identifier = default_eps_bearer_qos.qos_class_identifier
+                arp = default_eps_bearer_qos.allocation_retention_priority
+                priority_level = arp.priority_level
+                return qos_class_identifier, priority_level
+        # if hasattr(message, "qos_information") and message.qos_information:
+        #     qos_information = message.qos_information
+    except:
+        logger.error(f"Error then trying to set QoS attributes from GxSession")
+        pass
+
+def check_event_trigger(diameter_message: DiameterMessage):
+    message = diameter_message.message
+    event_trigger = []
+    try:
+        if hasattr(message, "event_trigger") and message.event_trigger:
+            for i in message.event_trigger:
+                event_trigger.append(i)
+            return event_trigger
+    except:
+        logger.error(f"Error then trying to set Event Trigger from GxSession")
+        pass
+
+def check_rat_type(diameter_message: DiameterMessage):
+    message = diameter_message.message
+    try:
+        if hasattr(message, "rat_type") and message.rat_type:
+            return message.rat_type
+    except:
+        logger.error(f"Error then trying to set RAT Type from GxSession")
+        pass
+
+
+
+
         
 
 class DiameterMessages:
@@ -250,4 +341,4 @@ def name_diameter_message_new(diameter_message: DiameterMessage):
         return AAR if message.header.is_request else AAA
     
     return None
-    
+

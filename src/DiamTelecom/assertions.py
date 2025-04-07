@@ -3,10 +3,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Assertions:
-    def __init__(self, assertions: dict):
+    def __init__(self, assertions: dict, raise_error: bool = True):
         if not isinstance(assertions, dict):
             raise ValueError("assertions must be a dictionary")
         self.values = assertions
+        self.raise_error = raise_error
         self.failed = False
 
     def assert_gx_session(self, gx_session: GxSession, raise_error: bool = True):
@@ -16,12 +17,12 @@ class Assertions:
                 logger.debug(f"Asserting {key} == {value}")
                 if isinstance(value, list):
                     if isinstance(getattr(gx_session, key), list):
-                        try:
-                            for item in value:
+                        for item in value:
+                            try:
                                 assert item in getattr(gx_session, key)
-                        except:
-                            logger.error(f"Assertion failed for {key} == {item}")
-                            self.failed = True
+                            except:
+                                logger.error(f"Assertion failed for {key} == {item}")
+                                self.failed = True
                 elif isinstance(value, dict):
                     pass
                 else:
@@ -30,5 +31,5 @@ class Assertions:
                     except:
                         logger.error(f"Assertion failed for {key} == {value}")
                         self.failed = True
-        if raise_error and self.failed:
+        if self.raise_error and self.failed:
             raise AssertionError("GxSession attributes assertion failed")

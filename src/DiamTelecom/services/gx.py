@@ -8,24 +8,30 @@ from .ip_queue import APN
 from ..telecom.subscriber import Subscriber
 from typing import List
 
+# GxService class is a service class that provides methods to interact with the GxApplication
+# this is because GxApplication is generic and can be used for multiple services and carriers
+
 class GxService:
     gx_app: GxApplication
     apn: APN
     gx_config: dict
     def __init__(self,
                  gx_app: GxApplication,
-                 apn: APN,
+                 apn: APN = None,
                  gx_config: dict = None,
                  ):
         if not isinstance(gx_app, GxApplication):
             raise ValueError("gx_app must be an instance of GxApplication")
-        if not isinstance(apn, APN):
-            raise ValueError("apn must be an instance of APN")
+        # if not isinstance(apn, APN):
+        #     raise ValueError("apn must be an instance of APN")
         self.gx_app = gx_app
         self.apn = apn
         self.gx_config = gx_config
         #
         self.logger = logging.getLogger("DiamTelecom.services")
+
+    def __str__(self):
+        return f"GxService: {self.gx_app.name},{self.gx_config}"
 
     def set_gx_config(self, gx_config: dict):
         self.gx_config = gx_config

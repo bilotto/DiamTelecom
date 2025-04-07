@@ -1,13 +1,16 @@
 
-from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
 from diameter.message.commands import *
 from diameter.message.avp import *
 from diameter.message.avp.grouped import *
 from diameter.message.constants import *
+# from .diameter_session import DiameterSession, DiameterSessions, Subscriber, DiameterMessage
+from .diameter_session import DiameterSession
+from ..message import DiameterMessage, check_charging_rule_install, check_charging_rule_remove, check_event_trigger, check_qos, check_rat_type
 from .rx_session_ import RxSession
 from typing import List, Dict
 from ..constants import *
 from DiamTelecom.helpers import ip_to_bytes
+
 
 
 class GxSession(DiameterSession):
@@ -60,6 +63,25 @@ class GxSession(DiameterSession):
     def add_rx_session(self, rx_session):
         self.rx_sessions.append(rx_session)
 
+    # @property
+    # def properties(self):
+    #     return_dict = {}
+    #     if self.pcc_rules_string:
+    #         return_dict["pcc_rules"] = self.pcc_rules_string
+    #     if self.rat_type:
+    #         return_dict["rat_type"] = self.rat_type
+
+    @property
+    def pcc_rules_string(self):
+        if self.pcc_rules:
+            pcc_str = ""
+            for i in self.pcc_rules:
+                if isinstance(i, bytes):
+                    i = i.decode("utf-8")
+                pcc_str += f"{i}, "
+            return pcc_str[:-2]
+        return None
+    
     @property
     def tshark_filter(self):
         filter = f"diameter.Framed-IP-Address.IPv4 == {self.framed_ip_address} || diameter.Session-Id == \"{self.session_id}\""
@@ -76,6 +98,37 @@ class GxSession(DiameterSession):
                 messages.append(i)
         return sorted(messages, key=lambda x: x.timestamp)
     
+
+    def parse_message(self, diameter_message: DiameterMessage):
+        charging_rule_install = check_charging_rule_install(diameter_message)
+        if charging_rule_install:
+            for i in charging_rule_install:
+                self.pcc_rules.add(i)
+        charging_rule_remove = check_charging_rule_remove(diameter_message)
+        if charging_rule_remove:
+            for i in charging_rule_remove:
+                self.pcc_rules.remove(i)
+        # event_trigger = check_event_trigger(diameter_message)
+        # if event_trigger:
+        #     self.event_trigger.append(event_trigger)
+        
+        # if check_charging_rule_remove(diameter_message):
+        #     for i in check_charging_rule_remove(diameter_message):
+        #         self.pcc_rules.remove(i)
+        # if check_event_trigger(diameter_message):
+        #     self.event_trigger.append(check_event_trigger(diameter_message))
+        # if check_rat_type(diameter_message):
+        #     self.rat_type = check_rat_type(diameter_message)
+        if check_qos(diameter_message):
+            self.qos_class_identifier = check_qos(diameter_message)[0]
+            self.priority_level = check_qos(diameter_message)[1]
+        rat_type = check_rat_type(diameter_message)
+        if rat_type:
+            self.rat_type = rat_type
+
+
+
+    
     def add_message(self, message: DiameterMessage):
         diameter_message = super().add_message(message)
         if diameter_message.name == CCA_I:
@@ -84,13 +137,15 @@ class GxSession(DiameterSession):
         elif diameter_message.name == CCA_T:
             if diameter_message.message.result_code == E_RESULT_CODE_DIAMETER_SUCCESS:
                 self.end()
-        try:
-            check_charging_rules(self, diameter_message)
-            check_qos(self, diameter_message)
-            check_event_trigger(self, diameter_message)
-            check_rat_type(self, diameter_message)
-        except Exception as e:
-            logger.error(f"Error when trying to set GxSession attributes Error: {e}")
+        #
+        self.parse_message(diameter_message)
+        # if check_charging_rule_install(diameter_message):
+        #     for i in check_charging_rule_install:
+        #         self.pcc_rules.add(i)
+        # check_charging_rules(self, diameter_message)
+        # check_qos(self, diameter_message)
+        # check_event_trigger(self, diameter_message)
+        # check_rat_type(self, diameter_message)
         return diameter_message
 
     # todo: change to a functions file
@@ -136,65 +191,75 @@ class GxSession(DiameterSession):
         return ccr_u
 
 
-def check_charging_rules(gx_session: GxSession, diameter_message: DiameterMessage):
-    message = diameter_message.message
-    try:
-        if isinstance(message, CreditControlAnswer) or isinstance(message, ReAuthRequest):
-            if message.charging_rule_install:
-                for i in message.charging_rule_install:
-                    if i.charging_rule_base_name:
-                        for j in i.charging_rule_base_name:
-                            gx_session.pcc_rules.add(j)
-                    if i.charging_rule_name:
-                        for j in i.charging_rule_name:
-                            gx_session.pcc_rules.add(j)
-                    if i.charging_rule_definition:
-                        for j in i.charging_rule_definition:
-                            charging_rule_name = j.charging_rule_name
-                            gx_session.pcc_rules.add(charging_rule_name)
-        if isinstance(message, ReAuthRequest):
-            if message.charging_rule_remove:
-                for i in message.charging_rule_remove:
-                    if i.charging_rule_base_name:
-                        for j in i.charging_rule_base_name:
-                            gx_session.pcc_rules.remove(j)
-                    if i.charging_rule_name:
-                        for j in i.charging_rule_name:
-                            gx_session.pcc_rules.remove(j)
-                    if i.charging_rule_definition:
-                        for j in i.charging_rule_definition:
-                            charging_rule_name = j.charging_rule_name
-                            gx_session.pcc_rules.remove(charging_rule_name)
-        # logger.info(f"current pcc_rules: {gx_session.pcc_rules}")
-    except Exception as e:
-        logger.error(f"Error then trying to add/remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
+# def check_charging_rules(gx_session: GxSession, diameter_message: DiameterMessage):
+#     message = diameter_message.message
+#     try:
+#         if hasattr(message, "charging_rule_install") and message.charging_rule_install:
+#             for i in message.charging_rule_install:
+#                 if i.charging_rule_base_name:
+#                     for j in i.charging_rule_base_name:
+#                         gx_session.pcc_rules.add(j)
+#                 if i.charging_rule_name:
+#                     for j in i.charging_rule_name:
+#                         gx_session.pcc_rules.add(j)
+#                 if i.charging_rule_definition:
+#                     for j in i.charging_rule_definition:
+#                         charging_rule_name = j.charging_rule_name
+#                         gx_session.pcc_rules.add(charging_rule_name)
+#         if hasattr(message, "charging_rule_remove") and message.charging_rule_remove:
+#             for i in message.charging_rule_remove:
+#                 if i.charging_rule_base_name:
+#                     for j in i.charging_rule_base_name:
+#                         gx_session.pcc_rules.remove(j)
+#                 if i.charging_rule_name:
+#                     for j in i.charging_rule_name:
+#                         gx_session.pcc_rules.remove(j)
+#                 if i.charging_rule_definition:
+#                     for j in i.charging_rule_definition:
+#                         charging_rule_name = j.charging_rule_name
+#                         gx_session.pcc_rules.remove(charging_rule_name)
+#         # logger.info(f"current pcc_rules: {gx_session.pcc_rules}")
+#     except Exception as e:
+#         logger.error(f"Error then trying to add/remove pcc_rules from GxSession: {e}. This error is not relevant to the flow")
 
 
-def check_qos(gx_session: GxSession, diameter_message: DiameterMessage):
-    message = diameter_message.message
-    if hasattr(message, "default_eps_bearer_qos") and message.default_eps_bearer_qos:
-            default_eps_bearer_qos = message.default_eps_bearer_qos
-            qos_class_identifier = default_eps_bearer_qos.qos_class_identifier
-            arp = default_eps_bearer_qos.allocation_retention_priority
-            priority_level = arp.priority_level
-            gx_session.qos_class_identifier = qos_class_identifier
-            gx_session.priority_level = priority_level
-    if hasattr(message, "qos_information") and message.qos_information:
-        qos_information = message.qos_information
+# def check_qos(gx_session: GxSession, diameter_message: DiameterMessage):
+#     message = diameter_message.message
+#     try:
+#         if hasattr(message, "default_eps_bearer_qos") and message.default_eps_bearer_qos:
+#                 default_eps_bearer_qos = message.default_eps_bearer_qos
+#                 qos_class_identifier = default_eps_bearer_qos.qos_class_identifier
+#                 arp = default_eps_bearer_qos.allocation_retention_priority
+#                 priority_level = arp.priority_level
+#                 gx_session.qos_class_identifier = qos_class_identifier
+#                 gx_session.priority_level = priority_level
+#         if hasattr(message, "qos_information") and message.qos_information:
+#             qos_information = message.qos_information
+#     except:
+#         logger.error(f"Error then trying to set QoS attributes from GxSession")
+#         pass
 
-def check_event_trigger(gx_session: GxSession, diameter_message: DiameterMessage):
-    message = diameter_message.message
-    if hasattr(message, "event_trigger") and message.event_trigger:
-        for i in message.event_trigger:
-            gx_session.event_trigger.append(i)
+# def check_event_trigger(gx_session: GxSession, diameter_message: DiameterMessage):
+#     message = diameter_message.message
+#     try:
+#         if hasattr(message, "event_trigger") and message.event_trigger:
+#             for i in message.event_trigger:
+#                 gx_session.event_trigger.append(i)
+#     except:
+#         logger.error(f"Error then trying to set Event Trigger from GxSession")
+#         pass
 
-def check_rat_type(gx_session: GxSession, diameter_message: DiameterMessage):
-    message = diameter_message.message
-    if hasattr(message, "rat_type") and message.rat_type:
-        gx_session.rat_type = message.rat_type
+# def check_rat_type(gx_session: GxSession, diameter_message: DiameterMessage):
+#     message = diameter_message.message
+#     try:
+#         if hasattr(message, "rat_type") and message.rat_type:
+#             gx_session.rat_type = message.rat_type
+#     except:
+#         logger.error(f"Error then trying to set RAT Type from GxSession")
+#         pass
 
 
-
+from .diameter_session import DiameterSessions
 
 class GxSessions(DiameterSessions):
     framed_ip_address_to_session_id: Dict[str, List[str]]
@@ -215,8 +280,8 @@ class GxSessions(DiameterSessions):
         self.add_session(gx_session)
         #
         # Here we want to fill two maps based on the session attributes framed_ip_address and apn
-        framed_ip_address = gx_session.framed_ip_address
-        apn = gx_session.apn
+        # framed_ip_address = gx_session.framed_ip_address
+        # apn = gx_session.apn
         # if not framed_ip_address:
         #     raise ValueError("Framed IP Address is required")
         # if not apn:

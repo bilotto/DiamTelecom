@@ -6,8 +6,9 @@ from diameter.message.constants import APP_3GPP_GX
 
 class GxApplication(CustomSimpleThreadingApplication):
     sessions: GxSessions
-    def __init__(self, application_id=APP_3GPP_GX, is_acct_application=False, is_auth_application=True, max_threads=1, request_handler=None):
+    def __init__(self, application_id=APP_3GPP_GX, is_acct_application=False, is_auth_application=True, max_threads=1, request_handler=None, name=None):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+        self.name = name
         self.sessions = GxSessions()
         self.sy_app = None
 

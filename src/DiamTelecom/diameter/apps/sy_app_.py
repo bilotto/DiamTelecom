@@ -6,8 +6,9 @@ from diameter.message.commands import *
 
 class SyApplication(CustomSimpleThreadingApplication):
     sessions: SySessions
-    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler):
+    def __init__(self, application_id, is_acct_application, is_auth_application, max_threads, request_handler, name=None):
         super().__init__(application_id, is_acct_application, is_auth_application, max_threads, request_handler)
+        self.name = name
         self.sessions = SySessions()
 
     def create_slr(self, sy_session: SySession) -> SpendingLimitRequest:

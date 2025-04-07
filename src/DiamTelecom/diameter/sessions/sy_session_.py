@@ -3,6 +3,9 @@ from diameter.message.commands import *
 from diameter.message.constants import *
 from diameter.message.avp.grouped import PolicyCounterStatusReport
 from diameter.message import Message
+from ..message import DiameterMessage
+import logging
+logger = logging.getLogger(__name__)
 
 class SySession(DiameterSession):
     session_id: str
@@ -37,15 +40,10 @@ class SySession(DiameterSession):
         return message
         
     def add_message(self, message: Message):
-        super().add_message(message)
-        if isinstance(message, SpendingLimitAnswer):
-            for i in message.policy_counter_status_report:
-                pc_id = i.policy_counter_identifier
-                pc_status = i.policy_counter_status
-                self.policy_counter_status_report[pc_id] = pc_status
-
-        # if isinstance(message, SessionTerminationAnswer):
-        #     self.end()
+        diameter_message = super().add_message(message)
+        check_policy_counters(self, diameter_message)
+        return diameter_message
+        
 
     def __repr__(self):
         return f"""SySession(msisdn={self.msisdn},
@@ -55,6 +53,18 @@ class SySession(DiameterSession):
           n_messages={self.n_messages}
           last_message={self.last_message})
           """
+
+def check_policy_counters(sy_session: SySession, diameter_message: DiameterMessage):
+    message = diameter_message.message
+    try:
+        if hasattr(message, "policy_counter_status_report") and message.policy_counter_status_report:
+            for i in message.policy_counter_status_report:
+                pc_id = i.policy_counter_identifier
+                pc_status = i.policy_counter_status
+                sy_session.policy_counter_status_report[pc_id] = pc_status
+    except:
+        logger.error(f"Error checking policy counters: {diameter_message}")
+
 
 class SySessions(DiameterSessions):
     def __init__(self):
