@@ -96,7 +96,8 @@ class GxService:
             request.destination_realm = self.destination_realm.encode()
         if self.destination_host:
             request.destination_host = self.destination_host.encode()
-        return self.gx_app.send_request(request, timeout)
+        session_id = request.session_id
+        return self.gx_app.send_request_custom(request, timeout)
         
     def create_gx_session(self, subscriber: Subscriber, session_id=None) -> GxSession:
         if not session_id:
