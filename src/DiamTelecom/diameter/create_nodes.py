@@ -16,18 +16,18 @@ def create_node(origin_host, realm, ip_addresses, port, sctp=False) -> Node:
     return node
 
 def add_peers(node: Node, peers_list: List[Dict], sctp=False) -> List[Peer]:
-    if not sctp:
+    if node.tcp_port:
         return [node.add_peer(f"aaa://{peer['host']}:{peer['port']};transport=tcp",
                           peer['realm'],
-                          ip_addresses=peer.get('ip_addresses'),
-                          is_persistent=peer['is_persistent'],
+                          ip_addresses=peer['ip_addresses'],
+                          is_persistent=peer.get('is_persistent', True),
                           is_default=peer.get('is_default', False))
             for peer in peers_list]
-    else:
+    elif node.sctp_port:
         return [node.add_peer(f"aaa://{peer['host']}:{peer['port']};transport=sctp",
                           peer['realm'],
-                          ip_addresses=peer.get('ip_addresses'),
-                          is_persistent=peer['is_persistent'],
+                          ip_addresses=peer['ip_addresses'],
+                          is_persistent=peer.get('is_persistent', True),
                           is_default=peer.get('is_default', False))
             for peer in peers_list]
 
