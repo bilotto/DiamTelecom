@@ -29,6 +29,8 @@ class GxService:
         self.gx_config = gx_config
         #
         self.logger = logging.getLogger("DiamTelecom.services")
+        #
+        self.ccr_i_template = None
 
     def __str__(self):
         return f"GxService: {self.gx_app.name},{self.gx_config}"
@@ -109,60 +111,65 @@ class GxService:
         apn = self.apn.value
         gx_session = self.gx_app.sessions.create_session(subscriber, gx_session_id, framed_ip_address, apn)
         return gx_session
-
-    def create_ccr_i(self,
-                     gx_session: GxSession,
-                     sgsn_mcc_mnc=None,
-                     called_station_id=None) -> CreditControlRequest:
-        ccr_i = gx_session.create_ccr_i()
-        ccr_i.auth_application_id = APP_3GPP_GX
-        #
-        origin_host = self.origin_host
-        origin_realm = self.origin_realm
-        destination_realm = self.destination_realm
-        ccr_i.origin_host = origin_host.encode()
-        ccr_i.origin_realm = origin_realm.encode()
-        ccr_i.destination_realm = destination_realm.encode()
-        #
-        ccr_i.header.hop_by_hop_identifier = 2
-        ccr_i.header.end_to_end_identifier = 2
-        ccr_i.header.is_proxyable = True
-        ccr_i.header.application_id = APP_3GPP_GX
-        #
-        ccr_i.rat_type = E_RAT_TYPE_EUTRAN
-        ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
-        if not sgsn_mcc_mnc and gx_session.mcc_mnc:
-            sgsn_mcc_mnc = gx_session.mcc_mnc
-        #
-        if sgsn_mcc_mnc:
-            ccr_i.sgsn_mcc_mnc = str(sgsn_mcc_mnc)
-        else:
-            ccr_i.sgsn_mcc_mnc = str(self.sgsn_mcc_mnc)
-        if called_station_id:
-            ccr_i.called_station_id = str(called_station_id)
-        else:
-            ccr_i.called_station_id = str(self.called_station_id)
-        #
-        ccr_i.supported_features = SupportedFeatures()
-        ccr_i.supported_features.vendor_id = VENDOR_TGPP
-        ccr_i.supported_features.feature_list = 1032
-        ccr_i.supported_features.feature_list_id = 1
-        #
-        ccr_i.qos_information = QosInformation()
-        ccr_i.qos_information.apn_aggregate_max_bitrate_ul = 300000000
-        ccr_i.qos_information.apn_aggregate_max_bitrate_dl = 150000000
-        #
-        ccr_i.default_eps_bearer_qos = DefaultEpsBearerQos()
-        ccr_i.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
-        ccr_i.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
-        ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
-        ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
-        #
-        ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
-        ccr_i.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
-        ccr_i.origin_state_id = 1448374171
+    
+    def create_ccr_i(self, gx_session: GxSession) -> CreditControlRequest:
+        ccr_i = gx_session.create_ccr_i(self.ccr_i_template)
         #
         return ccr_i
+
+    # def create_ccr_i(self,
+    #                  gx_session: GxSession,
+    #                  sgsn_mcc_mnc=None,
+    #                  called_station_id=None) -> CreditControlRequest:
+    #     ccr_i = gx_session.create_ccr_i()
+    #     ccr_i.auth_application_id = APP_3GPP_GX
+    #     #
+    #     origin_host = self.origin_host
+    #     origin_realm = self.origin_realm
+    #     destination_realm = self.destination_realm
+    #     ccr_i.origin_host = origin_host.encode()
+    #     ccr_i.origin_realm = origin_realm.encode()
+    #     ccr_i.destination_realm = destination_realm.encode()
+    #     #
+    #     ccr_i.header.hop_by_hop_identifier = 2
+    #     ccr_i.header.end_to_end_identifier = 2
+    #     ccr_i.header.is_proxyable = True
+    #     ccr_i.header.application_id = APP_3GPP_GX
+    #     #
+    #     ccr_i.rat_type = E_RAT_TYPE_EUTRAN
+    #     ccr_i.ip_can_type = E_IP_CAN_TYPE_3GPP_EPS
+    #     if not sgsn_mcc_mnc and gx_session.mcc_mnc:
+    #         sgsn_mcc_mnc = gx_session.mcc_mnc
+    #     #
+    #     if sgsn_mcc_mnc:
+    #         ccr_i.sgsn_mcc_mnc = str(sgsn_mcc_mnc)
+    #     else:
+    #         ccr_i.sgsn_mcc_mnc = str(self.sgsn_mcc_mnc)
+    #     if called_station_id:
+    #         ccr_i.called_station_id = str(called_station_id)
+    #     else:
+    #         ccr_i.called_station_id = str(self.called_station_id)
+    #     #
+    #     ccr_i.supported_features = SupportedFeatures()
+    #     ccr_i.supported_features.vendor_id = VENDOR_TGPP
+    #     ccr_i.supported_features.feature_list = 1032
+    #     ccr_i.supported_features.feature_list_id = 1
+    #     #
+    #     ccr_i.qos_information = QosInformation()
+    #     ccr_i.qos_information.apn_aggregate_max_bitrate_ul = 300000000
+    #     ccr_i.qos_information.apn_aggregate_max_bitrate_dl = 150000000
+    #     #
+    #     ccr_i.default_eps_bearer_qos = DefaultEpsBearerQos()
+    #     ccr_i.default_eps_bearer_qos.qos_class_identifier = E_QOS_CLASS_IDENTIFIER_QCI_9
+    #     ccr_i.default_eps_bearer_qos.allocation_retention_priority.priority_level = 8
+    #     ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_capability = E_PRE_EMPTION_CAPABILITY_PRE_EMPTION_CAPABILITY_DISABLED
+    #     ccr_i.default_eps_bearer_qos.allocation_retention_priority.pre_emption_vulnerability = E_PRE_EMPTION_VULNERABILITY_PRE_EMPTION_VULNERABILITY_ENABLED
+    #     #
+    #     ccr_i.bearer_usage = E_BEARER_USAGE_GENERAL
+    #     ccr_i.network_request_support = E_NETWORK_REQUEST_SUPPORT_NETWORK_REQUEST_SUPPORTED
+    #     ccr_i.origin_state_id = 1448374171
+    #     #
+    #     return ccr_i
     
     def create_ccr_t(self, gx_session: GxSession) -> CreditControlRequest:
         ccr_t = gx_session.create_ccr_t()
