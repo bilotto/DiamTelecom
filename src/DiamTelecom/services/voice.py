@@ -57,7 +57,7 @@ class VoiceService():
         return gx_session
     
     def create_rx_session(self, subscriber: Subscriber) -> RxSession:
-        gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
+        gx_session = self.gx_service.gx_app.sessions.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:
             return None
         rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
