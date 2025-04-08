@@ -86,7 +86,7 @@ class VoiceService():
         return rx_session
     
     def start_voice_session(self, subscriber: Subscriber) -> Tuple[GxSession, RxSession]:
-        gx_session = self.gx_service.gx_app.get_subscriber_active_session(subscriber.msisdn)
+        gx_session = self.gx_service.gx_app.sessions.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:
             gx_session = self.start_gx_session(self.gx_service.create_gx_session(subscriber))
         if not gx_session:
