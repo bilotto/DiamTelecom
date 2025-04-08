@@ -4,11 +4,16 @@ from diameter.message.avp.grouped import *
 from ..app import RxApplication
 from ..session import *
 from ..message import DiameterMessage
-
+logger = logging.getLogger(__name__)
 
 def handle_request_rx(app: RxApplication, message: Message):
+    logger.info(f"Handling RX request: {message}")
     answer = None
     rx_session = app.get_session_by_id(message.session_id)
+    if not rx_session:
+        answer = message.to_answer()
+        answer.result_code = E_RESULT_CODE_DIAMETER_UNKNOWN_SESSION_ID
+        return answer
     if isinstance(message, ReAuthRequest):
         answer = handle_rar(app, message)
     elif isinstance(message, AbortSessionRequest):
