@@ -60,7 +60,9 @@ class VoiceService():
         gx_session = self.gx_service.gx_app.sessions.get_subscriber_active_session(subscriber.msisdn)
         if not gx_session:
             return None
-        rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
+        # rx_session_id = self.rx_service.rx_app.node.session_generator.next_id()
+        timestamp = int(time.time())
+        rx_session_id = f"RxSession_{timestamp}_{subscriber.msisdn}_{subscriber.imsi}"
         rx_session = self.rx_service.rx_app.sessions.create_session(subscriber, rx_session_id, gx_session.session_id)
         rx_session.framed_ip_address = gx_session.framed_ip_address
         return rx_session
