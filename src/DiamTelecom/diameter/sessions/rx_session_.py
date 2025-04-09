@@ -52,16 +52,18 @@ class RxSession(DiameterSession):
         #         logger.info(f"{message.time},{message.pkt_number},{message.name},{self.subscriber.msisdn} ended voice call. Duration: {self.duration} seconds,{self.framed_ip_address}")
 
 
-    def create_aar(self):
-        aar = AaRequest()
+    def create_aar(self, aar: AaRequest = None) -> AaRequest:
+        if not aar:
+            aar = AaRequest()
         aar.auth_application_id = APP_3GPP_RX
         aar.session_id = self.session_id
         if self.framed_ip_address:
             aar.framed_ip_address = ip_to_bytes(self.framed_ip_address)
         return aar
 
-    def create_str(self):
-        str_ = SessionTerminationRequest()
+    def create_str(self, str_: SessionTerminationRequest = None) -> SessionTerminationRequest:
+        if not str_:
+            str_ = SessionTerminationRequest()
         str_.auth_application_id = APP_3GPP_RX
         str_.session_id = self.session_id
         return str_
