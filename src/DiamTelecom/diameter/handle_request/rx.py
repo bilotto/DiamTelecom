@@ -61,9 +61,10 @@ def handle_asr(app: RxApplication, message: AbortSessionRequest):
     session = app.get_session_by_id(session_id)
     if not session:
         answer.result_code = E_RESULT_CODE_DIAMETER_UNKNOWN_SESSION_ID
-    else:
-        req_diameter_message = DiameterMessage(message)
-        session.add_message(req_diameter_message)
-        answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
-        session.add_message(answer)
+        return answer
+    req_diameter_message = DiameterMessage(message)
+    session.add_message(req_diameter_message)
+    answer.result_code = E_RESULT_CODE_DIAMETER_SUCCESS
+    session.add_message(answer)
+    app.sessions.remove_session(session_id)
     return answer
