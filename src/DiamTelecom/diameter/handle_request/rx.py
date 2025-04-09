@@ -12,6 +12,11 @@ def handle_request_rx(app: RxApplication, message: Message):
     rx_session = app.get_session_by_id(message.session_id)
     if not rx_session:
         answer = message.to_answer()
+        answer.session_id = message.session_id
+        answer.origin_host = message.destination_host
+        answer.origin_realm = message.destination_realm
+        answer.destination_host = message.origin_host
+        answer.destination_realm = message.origin_realm
         answer.result_code = E_RESULT_CODE_DIAMETER_UNKNOWN_SESSION_ID
         return answer
     if isinstance(message, ReAuthRequest):
