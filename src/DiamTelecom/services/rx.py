@@ -63,6 +63,8 @@ class RxService:
             message.destination_realm = self.destination_realm.encode()
         if self.origin_host:
             message.origin_host = self.origin_host.encode()
+        if self.destination_host:
+            message.destination_host = self.destination_host.encode()
         return self.rx_app.send_request_custom(message, timeout)
 
     def create_aar(self, rx_session: RxSession) -> AaRequest:
